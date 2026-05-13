@@ -11,10 +11,13 @@ if not exist static-web-server.exe (
 
 start powershell -ExecutionPolicy Bypass -File generate-index.ps1
 
-start http://127.0.0.1:8000
+
+set /p LOCALIP=Enter your local IP address (e.g., 192.168.1.2) or leave blank for 127.0.0.1: 
+if "%LOCALIP%"=="" set LOCALIP=127.0.0.1
+start http://%LOCALIP%:8000
 
 static-web-server.exe ^
---host 127.0.0.1 ^
+--host 0.0.0.0 ^
 --port 8000 ^
 --root .
 
