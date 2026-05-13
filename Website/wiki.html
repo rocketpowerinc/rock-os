@@ -26,9 +26,15 @@
 
 <div class="layout">
 
+
 <div class="sidebar" id="sidebar">
-<h3>Wiki</h3>
+	<div class="sidebar-header">
+		<h3>Wiki</h3>
+		<button id="collapseSidebarBtn" class="collapse-sidebar-btn" aria-label="Collapse Sidebar">&#x25C0;</button>
+	</div>
+	<div id="sidebarListContainer"></div>
 </div>
+<button id="expandSidebarBtn" class="expand-sidebar-btn" aria-label="Expand Sidebar" style="display:none;">&#x25B6;</button>
 
 <div class="content" id="content">
 
@@ -40,8 +46,30 @@
 
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 <script src="js/wiki.js"></script>
+<script>
+// Sidebar collapse/expand logic
+const sidebar = document.getElementById('sidebar');
+const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+const expandSidebarBtn = document.getElementById('expandSidebarBtn');
+const content = document.getElementById('content');
+
+collapseSidebarBtn.addEventListener('click', function() {
+	sidebar.classList.add('collapsed');
+	expandSidebarBtn.style.display = 'block';
+	sidebar.style.display = 'none';
+	content.classList.add('fullwidth');
+});
+
+expandSidebarBtn.addEventListener('click', function() {
+	sidebar.classList.remove('collapsed');
+	expandSidebarBtn.style.display = 'none';
+	sidebar.style.display = '';
+	content.classList.remove('fullwidth');
+});
+</script>
 
 </body>
 </html>
