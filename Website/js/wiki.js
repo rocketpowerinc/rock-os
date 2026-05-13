@@ -33,10 +33,6 @@ const files = await response.json();
 
 const sidebarListContainer = document.getElementById('sidebarListContainer');
 if (sidebarListContainer) {
-	sidebarListContainer.innerHTML = `
-		<h3>ARCHIVE</h3>
-		<button class="cyber-button" onclick="refreshIndex()">REFRESH</button>
-	`;
 	files.forEach(file => {
 		const link = document.createElement('a');
 		link.className = 'doc-link';
@@ -50,32 +46,5 @@ if (sidebarListContainer) {
 
 }
 
-async function refreshIndex(){
-await loadIndex();
-}
-
 
 loadIndex();
-
-// Collapse/expand sidebar list
-document.addEventListener('DOMContentLoaded', function() {
-	const collapseBtn = document.getElementById('collapseListBtn');
-	const sidebarList = document.getElementById('sidebarListContainer');
-	let collapsed = false;
-	if (collapseBtn && sidebarList) {
-		collapseBtn.addEventListener('click', function() {
-			collapsed = !collapsed;
-			if (collapsed) {
-				sidebarList.style.display = 'none';
-				collapseBtn.innerHTML = '&#x25B6;'; // right arrow
-				collapseBtn.setAttribute('aria-label', 'Expand List');
-			} else {
-				sidebarList.style.display = '';
-				collapseBtn.innerHTML = '&#x25C0;'; // left arrow
-				collapseBtn.setAttribute('aria-label', 'Collapse List');
-			}
-		});
-	}
-});
-
-setInterval(loadIndex, 3000);
