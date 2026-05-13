@@ -3,9 +3,10 @@
 # Change to script directory
 Set-Location -Path $PSScriptRoot
 
-# Check for static-web-server.exe
-if (-not (Test-Path "static-web-server.exe")) {
-  Write-Host "static-web-server.exe missing."
+# Check for static-web-server.exe in the static-web-server subfolder
+$serverExe = Join-Path $PSScriptRoot 'static-web-server/static-web-server.exe'
+if (-not (Test-Path $serverExe)) {
+  Write-Host "static-web-server.exe missing in static-web-server/ folder."
   Pause
   exit
 }
@@ -40,10 +41,10 @@ catch {
 $server = Start-Process `
   -PassThru `
   -NoNewWindow `
-  -FilePath "static-web-server.exe" `
+  -FilePath $serverExe `
   -ArgumentList "--host 0.0.0.0 --port 8000 --root ."
 
-Write-Host "Started static-web-server.exe with PID $($server.Id)"
+Write-Host "Started static-web-server.exe with PID $($server.Id) from $serverExe"
 
 # Start the markdown index generator as a background job
 $indexJob = Start-Job -ScriptBlock {
