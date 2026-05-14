@@ -170,6 +170,29 @@ position:absolute;
 	background: rgba(208,255,0,0.08);
 }
 
+.doc-link {
+	color: #d0ff00;
+	text-decoration: none;
+	display: block;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: background 0.2s;
+	margin-bottom: 2px;
+}
+
+.doc-link:hover {
+	background: rgba(208,255,0,0.08);
+	text-shadow: 0 0 10px #d0ff00;
+}
+
+.folder-item {
+	margin-bottom: 5px;
+}
+
+.folder-children {
+	margin-top: 5px;
+}
+
 .hero-logo{
 width:280px;
 filter:drop-shadow(0 0 25px #d0ff00);

@@ -49,6 +49,10 @@ Write-Host "Started static-web-server.exe with PID $($server.Id) from $serverExe
 # Start the markdown index generator as a background job
 $indexJob = Start-Job -ScriptBlock {
 
+  param($scriptRoot)
+
+  Set-Location $scriptRoot
+
   while ($true) {
 
     $root = "markdown"
@@ -61,7 +65,7 @@ $indexJob = Start-Job -ScriptBlock {
 
       }
 
-      $files | ConvertTo-Json | Set-Content "markdown-index.json"
+      @($files) | ConvertTo-Json | Set-Content "markdown-index.json"
 
       Write-Host "Updated markdown-index.json"
     }
@@ -71,7 +75,7 @@ $indexJob = Start-Job -ScriptBlock {
 
     Start-Sleep -Seconds 2
   }
-}
+} -ArgumentList $PSScriptRoot
 
 Write-Host "Started index generator as Job Id $($indexJob.Id)"
 
