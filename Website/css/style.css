@@ -124,7 +124,7 @@ position:absolute;
 .expand-sidebar-btn {
 	position: absolute;
 	left: 0;
-	top: 80px;
+	top: 0px;
 	z-index: 10;
 	background: #0a0a0a;
 	border: 1px solid #d0ff00;
