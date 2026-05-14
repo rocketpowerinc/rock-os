@@ -87,6 +87,7 @@ z-index:1;
 
 .hero-glow{
 position:absolute;
+}
 
 .sidebar {
 	width: 300px;
@@ -167,8 +168,6 @@ position:absolute;
 }
 .collapse-list-btn:hover {
 	background: rgba(208,255,0,0.08);
-}
-pointer-events:none;
 }
 
 .hero-logo{
