@@ -1,7 +1,11 @@
 const expandedFolders = new Set();
+const stateStorageKey = 'rock-os-wiki-state';
 
 let lastIndexText = '';
 let activeDocPath = '';
+let indexLoadInProgress = false;
+
+loadSavedState();
 
 function getSidebar() {
 
@@ -17,10 +21,69 @@ function normalizeFiles(parsed) {
         ? parsed
         : [parsed];
 
-    return files.filter(file =>
-        typeof file === 'string' &&
-        file.trim().toLowerCase().endsWith('.md')
-    );
+    return files
+        .filter(file =>
+            typeof file === 'string' &&
+            file.trim().toLowerCase().endsWith('.md')
+        )
+        .map(file =>
+            file.trim()
+        )
+        .sort((a, b) =>
+            a.toLowerCase()
+                .localeCompare(b.toLowerCase())
+        );
+}
+
+function loadSavedState() {
+
+    try {
+
+        const saved =
+            JSON.parse(
+                localStorage.getItem(stateStorageKey) || '{}'
+            );
+
+        activeDocPath =
+            typeof saved.activeDocPath === 'string'
+            ? saved.activeDocPath
+            : '';
+
+        if (Array.isArray(saved.expandedFolders)) {
+
+            saved.expandedFolders
+                .filter(folderPath =>
+                    typeof folderPath === 'string'
+                )
+                .forEach(folderPath =>
+                    expandedFolders.add(folderPath)
+                );
+        }
+    }
+    catch (err) {
+
+        console.warn('Could not load wiki state:', err);
+    }
+}
+
+function saveState() {
+
+    try {
+
+        localStorage.setItem(
+            stateStorageKey,
+            JSON.stringify({
+                activeDocPath,
+                expandedFolders: Array.from(
+                    expandedFolders
+                )
+            })
+        );
+    }
+    catch (err) {
+
+        console.warn('Could not save wiki state:', err);
+    }
 }
 
 function renderEmptyState(container) {
@@ -105,6 +168,64 @@ function rememberActiveDoc(path) {
         .forEach(folderPath =>
             expandedFolders.add(folderPath)
         );
+
+    saveState();
+}
+
+function updateActiveDocLinks() {
+
+    const sidebar =
+        getSidebar();
+
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.querySelectorAll('.doc-link')
+        .forEach(link => {
+
+            link.classList.toggle(
+                'active',
+                link.dataset.path === activeDocPath
+            );
+        });
+}
+
+function syncExpandedFoldersFromDom() {
+
+    const sidebar =
+        getSidebar();
+
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.querySelectorAll('[data-folder-path]')
+        .forEach(folder => {
+
+            const children =
+                Array.from(folder.children)
+                    .find(child =>
+                        child.classList.contains(
+                            'folder-children'
+                        )
+                    );
+
+            if (!children) {
+                return;
+            }
+
+            const folderPath =
+                folder.dataset.folderPath;
+
+            if (children.style.display === 'none') {
+                expandedFolders.delete(folderPath);
+            } else {
+                expandedFolders.add(folderPath);
+            }
+        });
+
+    saveState();
 }
 
 async function copyText(text) {
@@ -186,6 +307,7 @@ function enhanceCodeBlocks(container) {
 async function loadDoc(path) {
 
     rememberActiveDoc(path);
+    updateActiveDocLinks();
 
     const response = await fetch(
         path + '?nocache=' + Date.now()
@@ -202,6 +324,7 @@ async function loadDoc(path) {
     const md = window.markdownit({
         html: true,
         linkify: true,
+        breaks: true,
         typographer: true
     });
 
@@ -275,15 +398,22 @@ function renderTree(
                     document.createElement('div');
 
                 folderDiv.className = 'folder-item';
+                folderDiv.dataset.folderPath = folderPath;
 
                 const button =
                     document.createElement('button');
 
                 button.className =
                     'collapse-list-btn';
+                button.type = 'button';
 
                 const isExpanded =
                     expandedFolders.has(folderPath);
+
+                button.setAttribute(
+                    'aria-expanded',
+                    String(isExpanded)
+                );
 
                 button.innerText =
                     (isExpanded ? '▼ ' : '▶ ') + key;
@@ -314,8 +444,15 @@ function renderTree(
                             folderPath
                         );
 
+                        saveState();
+
                         button.innerText =
                             '▶ ' + key;
+
+                        button.setAttribute(
+                            'aria-expanded',
+                            'false'
+                        );
 
                     } else {
 
@@ -326,8 +463,15 @@ function renderTree(
                             folderPath
                         );
 
+                        saveState();
+
                         button.innerText =
                             '▼ ' + key;
+
+                        button.setAttribute(
+                            'aria-expanded',
+                            'true'
+                        );
                     }
                 };
 
@@ -373,6 +517,12 @@ function renderTree(
 }
 
 async function loadIndex() {
+
+    if (indexLoadInProgress) {
+        return;
+    }
+
+    indexLoadInProgress = true;
 
     try {
 
@@ -440,6 +590,12 @@ async function loadIndex() {
             return;
         }
 
+        syncExpandedFoldersFromDom();
+
+        if (activeDocPath) {
+            rememberActiveDoc(activeDocPath);
+        }
+
         sidebar.innerHTML = '';
 
         if (!files.length) {
@@ -470,8 +626,10 @@ async function loadIndex() {
             ]
         );
     }
+    finally {
+
+        indexLoadInProgress = false;
+    }
 }
 
 loadIndex();
-
-setInterval(loadIndex, 5000);
