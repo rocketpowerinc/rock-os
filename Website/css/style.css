@@ -714,6 +714,7 @@ opacity:.8;
 	--code-variable:#66d9ff;
 	--code-comment:rgba(255,255,255,.42);
 	--code-number:#ffcc66;
+	--code-line-number:rgba(255,255,255,.46);
 	--grid-alpha:.04;
 	--scan-alpha:.15;
 }
@@ -736,6 +737,7 @@ opacity:.8;
 	--code-variable:#5ee7ff;
 	--code-comment:rgba(234,246,255,.5);
 	--code-number:#ffd166;
+	--code-line-number:rgba(234,246,255,.5);
 	--grid-alpha:.055;
 	--scan-alpha:.08;
 }
@@ -758,7 +760,31 @@ opacity:.8;
 	--code-variable:#9fd7ff;
 	--code-comment:rgba(255,243,223,.55);
 	--code-number:#ffb86b;
+	--code-line-number:rgba(255,243,223,.62);
 	--grid-alpha:.06;
+	--scan-alpha:0;
+}
+
+:root[data-theme="steel"] {
+	--page-bg:#eef1f4;
+	--panel-bg:#ffffff;
+	--panel-strong:#dfe4e8;
+	--text-main:#182027;
+	--text-muted:rgba(24,32,39,.66);
+	--accent:#4f6475;
+	--accent-rgb:79,100,117;
+	--accent-2:#8a949d;
+	--accent-2-rgb:138,148,157;
+	--success:#3f7f68;
+	--code-bg:#172029;
+	--code-text:#eef4f8;
+	--code-keyword:#b7c7d5;
+	--code-string:#c9d8e3;
+	--code-variable:#92bad2;
+	--code-comment:rgba(238,244,248,.5);
+	--code-number:#d7c99d;
+	--code-line-number:rgba(238,244,248,.62);
+	--grid-alpha:.05;
 	--scan-alpha:0;
 }
 
@@ -892,6 +918,46 @@ opacity:.8;
 :root[data-theme="papers"] .callout-question {
 	--callout-accent:#7a4f9f;
 	--callout-rgb:122,79,159;
+}
+
+:root[data-theme="steel"] .callout-note {
+	--callout-accent:#607586;
+	--callout-rgb:96,117,134;
+}
+
+:root[data-theme="steel"] .callout-info {
+	--callout-accent:#4f82a3;
+	--callout-rgb:79,130,163;
+}
+
+:root[data-theme="steel"] .callout-tip {
+	--callout-accent:#4f7368;
+	--callout-rgb:79,115,104;
+}
+
+:root[data-theme="steel"] .callout-success {
+	--callout-accent:#3f7f68;
+	--callout-rgb:63,127,104;
+}
+
+:root[data-theme="steel"] .callout-warning {
+	--callout-accent:#9a7a38;
+	--callout-rgb:154,122,56;
+}
+
+:root[data-theme="steel"] .callout-danger {
+	--callout-accent:#9a4f5e;
+	--callout-rgb:154,79,94;
+}
+
+:root[data-theme="steel"] .callout-error {
+	--callout-accent:#8a3f3f;
+	--callout-rgb:138,63,63;
+}
+
+:root[data-theme="steel"] .callout-question {
+	--callout-accent:#6b6585;
+	--callout-rgb:107,101,133;
 }
 
 body {
@@ -1032,6 +1098,11 @@ h3,
 .code-line-numbers {
 	background:var(--panel-strong);
 	border-color:rgba(var(--accent-rgb), .16);
+}
+
+.code-line-numbers {
+	background:var(--code-bg);
+	color:var(--code-line-number);
 }
 
 .content pre code {

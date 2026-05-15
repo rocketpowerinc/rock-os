@@ -1,8 +1,9 @@
 const themeStorageKey = 'rock-os-theme';
-const defaultTheme = 'rock';
+const defaultTheme = 'steel';
 const allowedThemes = [
-    'rock',
+    'steel',
     'papers',
+    'rock',
     'scissors'
 ];
 
@@ -15,6 +16,7 @@ const legacyThemes = {
 const themeImages = {
     rock: 'assets/Rock-OS-Hero-Rock.png',
     papers: 'assets/Rock-OS-Hero-Papers.png',
+    steel: 'assets/Rock-OS-Hero-Steel.png',
     scissors: 'assets/Rock-OS-Hero-Scissors.png'
 };
 

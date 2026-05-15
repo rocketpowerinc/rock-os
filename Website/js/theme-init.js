@@ -1,8 +1,9 @@
 (function () {
 
     const allowedThemes = [
-        'rock',
+        'steel',
         'papers',
+        'rock',
         'scissors'
     ];
 
@@ -13,7 +14,7 @@
     };
 
     const defaultTheme =
-        'rock';
+        'steel';
 
     try {
 
