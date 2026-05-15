@@ -70,57 +70,53 @@ $indexJob = Start-Job `
     $scriptRoot `
     "markdown-index.json"
 
-  # Ensure file exists immediately
-  if (-not (Test-Path $jsonFile)) {
+  function Write-MarkdownIndex {
+
+    if (Test-Path $root) {
+
+      # Force a real array so one markdown file is still JSON like ["file.md"].
+      $files = @(Get-ChildItem `
+          -Path $root `
+          -Recurse `
+          -Filter *.md `
+          -File |
+        ForEach-Object {
+
+          $_.FullName.Replace(
+            $scriptRoot + "\",
+            ""
+          ) -replace "\\", "/"
+        })
+    }
+    else {
+
+      $files = @()
+    }
+
+    $json = ConvertTo-Json `
+      -InputObject $files `
+      -Compress
+
+    if ([string]::IsNullOrWhiteSpace($json)) {
+
+      $json = "[]"
+    }
 
     [System.IO.File]::WriteAllText(
       $jsonFile,
-      "[]",
+      $json,
       [System.Text.UTF8Encoding]::new($false)
     )
   }
+
+  Write-MarkdownIndex
 
   while ($true) {
 
     try {
 
-      if (Test-Path $root) {
-
-        # FORCE ARRAY
-        $files = @(Get-ChildItem `
-            -Path $root `
-            -Recurse `
-            -Filter *.md `
-            -File |
-          ForEach-Object {
-
-            $_.FullName.Replace(
-              $scriptRoot + "\",
-              ""
-            ) -replace "\\", "/"
-          })
-
-        # STABLE JSON
-        $json =
-        [System.Text.Json.JsonSerializer]::Serialize($files)
-
-        # DIRECT OVERWRITE
-        [System.IO.File]::WriteAllText(
-          $jsonFile,
-          $json,
-          [System.Text.UTF8Encoding]::new($false)
-        )
-
-        Write-Host "Updated markdown-index.json"
-      }
-      else {
-
-        [System.IO.File]::WriteAllText(
-          $jsonFile,
-          "[]",
-          [System.Text.UTF8Encoding]::new($false)
-        )
-      }
+      Write-MarkdownIndex
+      Write-Host "Updated markdown-index.json"
     }
     catch {
 

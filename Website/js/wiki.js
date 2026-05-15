@@ -2,6 +2,39 @@ const expandedFolders = new Set();
 
 let lastIndexText = '';
 
+function getSidebar() {
+
+    return document.getElementById(
+        'sidebarListContainer'
+    );
+}
+
+function normalizeFiles(parsed) {
+
+    const files =
+        Array.isArray(parsed)
+        ? parsed
+        : [parsed];
+
+    return files.filter(file =>
+        typeof file === 'string' &&
+        file.trim().toLowerCase().endsWith('.md')
+    );
+}
+
+function renderEmptyState(container) {
+
+    const empty =
+        document.createElement('div');
+
+    empty.className = 'wiki-empty-state';
+
+    empty.innerText =
+        'No markdown files found.';
+
+    container.appendChild(empty);
+}
+
 async function loadDoc(path) {
 
     const response = await fetch(
@@ -200,37 +233,40 @@ async function loadIndex() {
         const rawText =
             await response.text();
 
-        if (!rawText.trim()) {
-            return;
-        }
-
-        if (rawText === lastIndexText) {
-            return;
-        }
-
-        lastIndexText = rawText;
-
         const parsed =
-            JSON.parse(rawText);
+            rawText.trim()
+            ? JSON.parse(rawText)
+            : [];
 
         const files =
-            Array.isArray(parsed)
-            ? parsed
-            : [parsed];
+            normalizeFiles(parsed);
+
+        const nextIndexText =
+            JSON.stringify(files);
+
+        if (nextIndexText === lastIndexText) {
+            return;
+        }
+
+        lastIndexText = nextIndexText;
 
         const tree =
             buildTree(files);
 
         const sidebar =
-            document.getElementById(
-                'sidebarListContainer'
-            );
+            getSidebar();
 
         if (!sidebar) {
             return;
         }
 
         sidebar.innerHTML = '';
+
+        if (!files.length) {
+
+            renderEmptyState(sidebar);
+            return;
+        }
 
         renderTree(
             tree,
