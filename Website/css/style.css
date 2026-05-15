@@ -107,7 +107,13 @@ position:absolute;
 	display: none;
 }
 
-.collapse-sidebar-btn {
+.sidebar-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.icon-sidebar-btn {
 	background: transparent;
 	border: none;
 	color: #d0ff00;
@@ -117,7 +123,17 @@ position:absolute;
 	border-radius: 4px;
 	transition: background 0.2s;
 }
-.collapse-sidebar-btn:hover {
+
+.icon-sidebar-btn:hover {
+	background: rgba(208,255,0,0.08);
+}
+
+.icon-sidebar-btn:disabled {
+	cursor: wait;
+	opacity: .65;
+}
+
+.icon-sidebar-btn.is-refreshing {
 	background: rgba(208,255,0,0.08);
 }
 

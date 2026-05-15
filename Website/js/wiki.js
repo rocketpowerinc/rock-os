@@ -632,4 +632,37 @@ async function loadIndex() {
     }
 }
 
+async function refreshWiki() {
+
+    lastIndexText = '';
+
+    await loadIndex();
+
+    if (activeDocPath) {
+        await loadDoc(activeDocPath);
+    }
+}
+
+const refreshWikiBtn =
+    document.getElementById('refreshWikiBtn');
+
+if (refreshWikiBtn) {
+
+    refreshWikiBtn.addEventListener('click', async () => {
+
+        refreshWikiBtn.disabled = true;
+        refreshWikiBtn.classList.add('is-refreshing');
+
+        try {
+
+            await refreshWiki();
+        }
+        finally {
+
+            refreshWikiBtn.disabled = false;
+            refreshWikiBtn.classList.remove('is-refreshing');
+        }
+    });
+}
+
 loadIndex();
