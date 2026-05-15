@@ -32,17 +32,32 @@ sh start-rock-os.sh
 
 The server opens:
 
-http://127.0.0.1:8000
+http://YOUR_LOCAL_IP:8000
+
+By default, the server binds to all network interfaces and opens your best
+detected local network IP so other devices on the same network can open the
+wiki. If your computer has multiple network adapters, the server prints the
+other detected local URLs too.
 
 LAN MODE
 ========
-To expose the site to other devices on your network:
+This is the default mode:
+
+go run . --host local
+
+You can also bind all network interfaces manually:
 
 go run . --host 0.0.0.0
 
-Then open:
+The server will still print the preferred local IP URL to open, such as:
 
-http://YOUR_LOCAL_IP:8000
+http://192.168.1.2:8000
+
+LOCALHOST ONLY
+==============
+To serve only on the current computer:
+
+go run . --host 127.0.0.1
 
 CUSTOM PORT
 ===========

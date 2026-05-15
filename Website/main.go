@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -22,7 +23,7 @@ const (
 )
 
 func main() {
-	host := flag.String("host", "127.0.0.1", "host address to bind")
+	host := flag.String("host", "local", "host to bind: local, 127.0.0.1, 0.0.0.0, or a specific IP")
 	port := flag.Int("port", 8000, "port to listen on")
 	open := flag.Bool("open", true, "open the site in your default browser")
 	buildIndex := flag.Bool("build-index", false, "build markdown-index.json and exit")
@@ -44,14 +45,26 @@ func main() {
 
 	go watchMarkdownIndex(siteRoot, 2*time.Second)
 
+	bindHost, displayHosts, err := resolveHost(*host)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
-	address := fmt.Sprintf("%s:%d", *host, *port)
-	url := fmt.Sprintf("http://%s:%d/", *host, *port)
+	address := fmt.Sprintf("%s:%d", bindHost, *port)
+	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
 
 	fmt.Println()
 	fmt.Println("[Rock-OS Wiki]")
 	fmt.Printf("Serving %s\n", siteRoot)
+	fmt.Printf("Listening on %s\n", address)
 	fmt.Printf("Open %s\n", url)
+	if len(displayHosts) > 1 {
+		fmt.Println("Other local URLs:")
+		for _, displayHost := range displayHosts[1:] {
+			fmt.Printf("  http://%s:%d/\n", displayHost, *port)
+		}
+	}
 	fmt.Println()
 
 	if *open {
@@ -61,6 +74,134 @@ func main() {
 	}
 
 	log.Fatal(http.ListenAndServe(address, fileServer))
+}
+
+func resolveHost(host string) (string, []string, error) {
+	switch strings.ToLower(strings.TrimSpace(host)) {
+	case "", "local", "lan", "all", "0.0.0.0":
+		localIPs, err := localIPv4s()
+		if err != nil {
+			return "", nil, err
+		}
+
+		return "0.0.0.0", localIPs, nil
+	default:
+		return host, []string{host}, nil
+	}
+}
+
+type ipCandidate struct {
+	ip    string
+	score int
+}
+
+func localIPv4s() ([]string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	candidates := []ipCandidate{}
+	for _, networkInterface := range interfaces {
+		if networkInterface.Flags&net.FlagUp == 0 ||
+			networkInterface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		addresses, err := networkInterface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, address := range addresses {
+			ip, _, err := net.ParseCIDR(address.String())
+			if err != nil {
+				continue
+			}
+
+			ip = ip.To4()
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+
+			if ip.IsUnspecified() ||
+				ip.IsMulticast() ||
+				ip.IsLinkLocalUnicast() ||
+				!ip.IsPrivate() {
+				continue
+			}
+
+			candidates = append(candidates, ipCandidate{
+				ip:    ip.String(),
+				score: localIPScore(ip, networkInterface),
+			})
+		}
+	}
+
+	if len(candidates) == 0 {
+		return nil, fmt.Errorf("could not find a private local IPv4 address")
+	}
+
+	sort.SliceStable(candidates, func(i, j int) bool {
+		return candidates[i].score > candidates[j].score
+	})
+
+	seen := map[string]bool{}
+	ips := []string{}
+	for _, candidate := range candidates {
+		if seen[candidate.ip] {
+			continue
+		}
+
+		seen[candidate.ip] = true
+		ips = append(ips, candidate.ip)
+	}
+
+	return ips, nil
+}
+
+func localIPScore(ip net.IP, networkInterface net.Interface) int {
+	score := 0
+	ip4 := ip.To4()
+
+	switch {
+	case ip4[0] == 192 && ip4[1] == 168:
+		score += 300
+	case ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31:
+		score += 200
+	case ip4[0] == 10:
+		score += 100
+	}
+
+	interfaceName := strings.ToLower(networkInterface.Name)
+	virtualHints := []string{
+		"bluetooth",
+		"br-",
+		"bridge",
+		"docker",
+		"hyper-v",
+		"tailscale",
+		"tap",
+		"tun",
+		"vbox",
+		"vether",
+		"virtual",
+		"vmware",
+		"vpn",
+		"wsl",
+		"zerotier",
+	}
+	for _, hint := range virtualHints {
+		if strings.Contains(interfaceName, hint) {
+			score -= 1000
+		}
+	}
+
+	if networkInterface.Flags&net.FlagPointToPoint != 0 {
+		score -= 500
+	}
+
+	return score
 }
 
 func noCache(next http.Handler) http.Handler {
