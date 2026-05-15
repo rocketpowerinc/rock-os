@@ -142,11 +142,6 @@ function loadSavedState() {
                 localStorage.getItem(stateStorageKey) || '{}'
             );
 
-        activeDocPath =
-            typeof saved.activeDocPath === 'string'
-            ? saved.activeDocPath
-            : '';
-
         if (Array.isArray(saved.expandedFolders)) {
 
             saved.expandedFolders
@@ -171,7 +166,6 @@ function saveState() {
         localStorage.setItem(
             stateStorageKey,
             JSON.stringify({
-                activeDocPath,
                 expandedFolders: Array.from(
                     expandedFolders
                 )
@@ -182,6 +176,12 @@ function saveState() {
 
         console.warn('Could not save wiki state:', err);
     }
+}
+
+function clearExpandedFolders() {
+
+    expandedFolders.clear();
+    saveState();
 }
 
 function renderEmptyState(container) {
@@ -195,6 +195,25 @@ function renderEmptyState(container) {
         'No markdown files found.';
 
     container.appendChild(empty);
+}
+
+function renderWelcomeState() {
+
+    activeDocPath = '';
+    clearExpandedFolders();
+    updateActiveDocLinks();
+
+    const content =
+        document.getElementById('content');
+
+    if (!content) {
+        return;
+    }
+
+    content.innerHTML = `
+        <h1>Rock-OS Wiki</h1>
+        <p>Select a markdown document.</p>
+    `;
 }
 
 async function loadMarkdownText(path) {
@@ -809,6 +828,8 @@ async function openDocFromUrlIfNeeded() {
 
     if (!doc) {
         initialUrlDocLoaded = true;
+        clearExpandedFolders();
+        renderSearchResults();
         return;
     }
 
@@ -1029,7 +1050,11 @@ window.addEventListener('popstate', () => {
         loadDoc(doc, {
             updateUrl: false
         });
+
+        return;
     }
+
+    renderWelcomeState();
 });
 
 loadIndex();
