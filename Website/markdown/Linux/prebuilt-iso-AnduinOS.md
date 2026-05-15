@@ -2,8 +2,13 @@
 
 ### Update
 
-- `sudo apt update && sudo apt upgrade`
-- `sudo do_anduinos_upgrade`
+```bash
+sudo apt update && sudo apt upgrade
+```
+
+```bash
+sudo do_anduinos_upgrade
+```
 
 ### Timeshift - Create First System Backup
 

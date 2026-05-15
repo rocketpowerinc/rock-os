@@ -420,6 +420,98 @@ async function copyText(text) {
     textarea.remove();
 }
 
+function codeLanguage(code) {
+
+    const languageClass =
+        Array.from(code.classList)
+            .find(className =>
+                className.startsWith('language-')
+            );
+
+    if (!languageClass) {
+        return 'text';
+    }
+
+    const language =
+        languageClass.replace('language-', '').toLowerCase();
+
+    const aliases = {
+        ps1: 'powershell',
+        pwsh: 'powershell',
+        shell: 'bash',
+        sh: 'bash',
+        zsh: 'bash'
+    };
+
+    return aliases[language] || language;
+}
+
+function languageLabel(language) {
+
+    const labels = {
+        bash: 'Bash',
+        powershell: 'PowerShell',
+        text: 'Text'
+    };
+
+    return labels[language] || language;
+}
+
+function highlightCode(code, rawText, language) {
+
+    if (!window.hljs) {
+        return;
+    }
+
+    try {
+
+        if (language !== 'text' && window.hljs.getLanguage(language)) {
+
+            code.innerHTML =
+                window.hljs.highlight(rawText, {
+                    language
+                }).value;
+        } else {
+
+            code.innerHTML =
+                window.hljs.highlightAuto(rawText).value;
+        }
+
+        code.classList.add('hljs');
+    }
+    catch (err) {
+
+        console.warn('Code highlighting failed:', err);
+        code.innerText = rawText;
+    }
+}
+
+function createLineNumbers(rawText) {
+
+    const lineCount =
+        Math.max(
+            1,
+            rawText.replace(/\n$/, '').split('\n').length
+        );
+
+    const gutter =
+        document.createElement('div');
+
+    gutter.className = 'code-line-numbers';
+    gutter.setAttribute('aria-hidden', 'true');
+
+    for (let index = 1; index <= lineCount; index += 1) {
+
+        const line =
+            document.createElement('span');
+
+        line.innerText = String(index);
+        gutter.appendChild(line);
+    }
+
+    return gutter;
+}
+
 function enhanceCodeBlocks(container) {
 
     container.querySelectorAll('pre > code')
@@ -438,6 +530,25 @@ function enhanceCodeBlocks(container) {
 
             wrapper.className = 'code-block';
 
+            const rawText =
+                code.textContent;
+
+            const language =
+                codeLanguage(code);
+
+            highlightCode(code, rawText, language);
+
+            const header =
+                document.createElement('div');
+
+            header.className = 'code-block-header';
+
+            const label =
+                document.createElement('span');
+
+            label.className = 'code-language-label';
+            label.innerText = languageLabel(language);
+
             const button =
                 document.createElement('button');
 
@@ -449,7 +560,7 @@ function enhanceCodeBlocks(container) {
 
                 try {
 
-                    await copyText(code.innerText);
+                    await copyText(rawText);
 
                     button.innerText = 'Copied';
 
@@ -468,9 +579,18 @@ function enhanceCodeBlocks(container) {
                 }
             };
 
+            const body =
+                document.createElement('div');
+
+            body.className = 'code-block-body';
+
             pre.parentNode.insertBefore(wrapper, pre);
-            wrapper.appendChild(button);
-            wrapper.appendChild(pre);
+            header.appendChild(label);
+            header.appendChild(button);
+            body.appendChild(createLineNumbers(rawText));
+            body.appendChild(pre);
+            wrapper.appendChild(header);
+            wrapper.appendChild(body);
         });
 }
 
