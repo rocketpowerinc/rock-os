@@ -185,6 +185,12 @@ position:absolute;
 	text-shadow: 0 0 10px #d0ff00;
 }
 
+.doc-link.active {
+	background: rgba(208,255,0,.16);
+	border-color: rgba(208,255,0,.45);
+	color: #d0ff00;
+}
+
 .folder-item {
 	margin-bottom: 5px;
 }

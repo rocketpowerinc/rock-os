@@ -1,6 +1,7 @@
 const expandedFolders = new Set();
 
 let lastIndexText = '';
+let activeDocPath = '';
 
 function getSidebar() {
 
@@ -82,6 +83,30 @@ function isDirectFileOpen() {
     return window.location.protocol === 'file:';
 }
 
+function folderPathsForDoc(path) {
+
+    const parts =
+        path
+            .replace(/^markdown\//, '')
+            .split('/');
+
+    parts.pop();
+
+    return parts.map((_, index) =>
+        parts.slice(0, index + 1).join('/')
+    );
+}
+
+function rememberActiveDoc(path) {
+
+    activeDocPath = path;
+
+    folderPathsForDoc(path)
+        .forEach(folderPath =>
+            expandedFolders.add(folderPath)
+        );
+}
+
 async function copyText(text) {
 
     if (navigator.clipboard && window.isSecureContext) {
@@ -159,6 +184,8 @@ function enhanceCodeBlocks(container) {
 }
 
 async function loadDoc(path) {
+
+    rememberActiveDoc(path);
 
     const response = await fetch(
         path + '?nocache=' + Date.now()
@@ -324,6 +351,11 @@ function renderTree(
                 link.className = 'doc-link';
 
                 link.href = '#';
+                link.dataset.path = item.path;
+
+                if (item.path === activeDocPath) {
+                    link.classList.add('active');
+                }
 
                 link.innerText =
                     key.replace('.md', '');
