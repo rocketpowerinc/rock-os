@@ -637,6 +637,64 @@ padding-left:20px;
 opacity:.8;
 }
 
+.content blockquote.callout {
+	--callout-accent: var(--accent);
+	--callout-rgb: var(--accent-rgb);
+	background:linear-gradient(
+		90deg,
+		rgba(var(--callout-rgb), .16),
+		rgba(var(--callout-rgb), .045)
+	);
+	border:1px solid rgba(var(--callout-rgb), .32);
+	border-left:4px solid var(--callout-accent);
+	box-sizing:border-box;
+	max-width:980px;
+	opacity:1;
+	padding:16px 18px;
+	box-shadow:0 0 24px rgba(var(--callout-rgb), .08);
+}
+
+.callout-title {
+	color:var(--callout-accent);
+	font-size:.8rem;
+	font-weight:bold;
+	letter-spacing:1px;
+	margin-bottom:8px;
+	text-transform:uppercase;
+}
+
+.content blockquote.callout p {
+	margin:8px 0 0;
+}
+
+.callout-note,
+.callout-info {
+	--callout-accent:#66d9ff;
+	--callout-rgb:102,217,255;
+}
+
+.callout-tip,
+.callout-success {
+	--callout-accent:#7cff6b;
+	--callout-rgb:124,255,107;
+}
+
+.callout-warning {
+	--callout-accent:#ffcc66;
+	--callout-rgb:255,204,102;
+}
+
+.callout-danger,
+.callout-error {
+	--callout-accent:#ff6b8a;
+	--callout-rgb:255,107,138;
+}
+
+.callout-question {
+	--callout-accent:#d8a2ff;
+	--callout-rgb:216,162,255;
+}
+
 :root,
 :root[data-theme="rock"] {
 	--page-bg:#050505;
@@ -702,6 +760,138 @@ opacity:.8;
 	--code-number:#ffb86b;
 	--grid-alpha:.06;
 	--scan-alpha:0;
+}
+
+:root[data-theme="rock"] .callout-note {
+	--callout-accent:#00e5ff;
+	--callout-rgb:0,229,255;
+}
+
+:root[data-theme="rock"] .callout-info {
+	--callout-accent:#00a2ff;
+	--callout-rgb:0,162,255;
+}
+
+:root[data-theme="rock"] .callout-tip {
+	--callout-accent:#d0ff00;
+	--callout-rgb:208,255,0;
+}
+
+:root[data-theme="rock"] .callout-success {
+	--callout-accent:#00ff66;
+	--callout-rgb:0,255,102;
+}
+
+:root[data-theme="rock"] .callout-warning {
+	--callout-accent:#ffcc00;
+	--callout-rgb:255,204,0;
+}
+
+:root[data-theme="rock"] .callout-danger {
+	--callout-accent:#ff005d;
+	--callout-rgb:255,0,93;
+}
+
+:root[data-theme="rock"] .callout-error {
+	--callout-accent:#ff2a00;
+	--callout-rgb:255,42,0;
+}
+
+:root[data-theme="rock"] .callout-question {
+	--callout-accent:#ff00cc;
+	--callout-rgb:255,0,204;
+}
+
+:root[data-theme="rock"] .content blockquote.callout {
+	background:
+	linear-gradient(
+		90deg,
+		rgba(var(--callout-rgb), .24),
+		rgba(var(--callout-rgb), .055)
+	);
+	box-shadow:
+	0 0 22px rgba(var(--callout-rgb), .16),
+	inset 0 0 18px rgba(var(--callout-rgb), .04);
+}
+
+:root[data-theme="scissors"] .callout-note {
+	--callout-accent:#7bdcff;
+	--callout-rgb:123,220,255;
+}
+
+:root[data-theme="scissors"] .callout-info {
+	--callout-accent:#5ee7ff;
+	--callout-rgb:94,231,255;
+}
+
+:root[data-theme="scissors"] .callout-tip {
+	--callout-accent:#7cffc4;
+	--callout-rgb:124,255,196;
+}
+
+:root[data-theme="scissors"] .callout-success {
+	--callout-accent:#4dffa8;
+	--callout-rgb:77,255,168;
+}
+
+:root[data-theme="scissors"] .callout-warning {
+	--callout-accent:#ffd166;
+	--callout-rgb:255,209,102;
+}
+
+:root[data-theme="scissors"] .callout-danger {
+	--callout-accent:#ff6b9d;
+	--callout-rgb:255,107,157;
+}
+
+:root[data-theme="scissors"] .callout-error {
+	--callout-accent:#ff7a66;
+	--callout-rgb:255,122,102;
+}
+
+:root[data-theme="scissors"] .callout-question {
+	--callout-accent:#9b8cff;
+	--callout-rgb:155,140,255;
+}
+
+:root[data-theme="papers"] .callout-note {
+	--callout-accent:#4f81a8;
+	--callout-rgb:79,129,168;
+}
+
+:root[data-theme="papers"] .callout-info {
+	--callout-accent:#2f6f8f;
+	--callout-rgb:47,111,143;
+}
+
+:root[data-theme="papers"] .callout-tip {
+	--callout-accent:#667a1f;
+	--callout-rgb:102,122,31;
+}
+
+:root[data-theme="papers"] .callout-success {
+	--callout-accent:#2f7d42;
+	--callout-rgb:47,125,66;
+}
+
+:root[data-theme="papers"] .callout-warning {
+	--callout-accent:#b36b16;
+	--callout-rgb:179,107,22;
+}
+
+:root[data-theme="papers"] .callout-danger {
+	--callout-accent:#a83244;
+	--callout-rgb:168,50,68;
+}
+
+:root[data-theme="papers"] .callout-error {
+	--callout-accent:#8f2f1f;
+	--callout-rgb:143,47,31;
+}
+
+:root[data-theme="papers"] .callout-question {
+	--callout-accent:#7a4f9f;
+	--callout-rgb:122,79,159;
 }
 
 body {
