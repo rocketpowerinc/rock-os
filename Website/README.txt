@@ -1,54 +1,80 @@
-ROCKOS LIVE RELOAD EDITION
+ROCKOS WIKI
+===========
 
 FEATURES
 ========
-- Live markdown detection
-- Auto sidebar refresh
+- Simple markdown files rendered as a website wiki
+- Automatic sidebar tree from markdown folders
 - Recursive subdirectories
-- Markdown-it rendering
-- No server restart required
-- Cyberpunk UI
+- Markdown-it rendering in the browser
+- Copy buttons on code blocks
+- Cross-platform Go server for Windows, Linux, and macOS
 
 REQUIREMENTS
 ============
-Download static-web-server.exe from:
+Install Go:
 
-https://github.com/static-web-server/static-web-server/releases
-
-Place beside:
-- start.bat
+https://go.dev/dl/
 
 RUNNING
+=======
+From the Website folder:
+
+go run .
+
+Windows helper:
+
+start-rock-os.cmd
+
+Linux/macOS helper:
+
+sh start-rock-os.sh
+
+The server opens:
+
+http://127.0.0.1:8000
+
+LAN MODE
 ========
-Double click:
+To expose the site to other devices on your network:
 
-start.bat
+go run . --host 0.0.0.0
 
-HOW LIVE RELOAD WORKS
-=====================
-A PowerShell watcher continuously scans:
+Then open:
+
+http://YOUR_LOCAL_IP:8000
+
+CUSTOM PORT
+===========
+Example:
+
+go run . --port 9000
+
+BUILD INDEX ONLY
+================
+To rebuild markdown-index.json without running the server:
+
+go run . --build-index
+
+HOW THE WIKI INDEX WORKS
+========================
+The Go server scans:
 
 markdown/
 
-Every 2 seconds.
+Every 2 seconds and writes:
 
-Any new:
-- folders
-- markdown files
+markdown-index.json
 
-automatically appear in the sidebar.
+The browser reads that JSON file, builds the sidebar tree, fetches the selected
+markdown file, and renders it into the page.
 
 EXAMPLE
 =======
-
 markdown/
-├── ai/
-│   └── agents.md
-│
-├── guides/
-│   └── setup.md
-
-No edits required.
+  Linux/
+    AnduinOS/
+      Bootstrap.md
 
 SUPPORTED MARKDOWN
 ==================
