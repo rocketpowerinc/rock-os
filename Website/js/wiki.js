@@ -35,6 +35,82 @@ function renderEmptyState(container) {
     container.appendChild(empty);
 }
 
+async function copyText(text) {
+
+    if (navigator.clipboard && window.isSecureContext) {
+
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const textarea =
+        document.createElement('textarea');
+
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+}
+
+function enhanceCodeBlocks(container) {
+
+    container.querySelectorAll('pre > code')
+        .forEach(code => {
+
+            const pre = code.parentElement;
+
+            if (!pre || pre.parentElement.classList.contains(
+                'code-block'
+            )) {
+                return;
+            }
+
+            const wrapper =
+                document.createElement('div');
+
+            wrapper.className = 'code-block';
+
+            const button =
+                document.createElement('button');
+
+            button.className = 'copy-code-btn';
+            button.type = 'button';
+            button.innerText = 'Copy';
+
+            button.onclick = async () => {
+
+                try {
+
+                    await copyText(code.innerText);
+
+                    button.innerText = 'Copied';
+
+                    setTimeout(() => {
+                        button.innerText = 'Copy';
+                    }, 1600);
+                }
+                catch (err) {
+
+                    console.error('Copy failed:', err);
+                    button.innerText = 'Error';
+
+                    setTimeout(() => {
+                        button.innerText = 'Copy';
+                    }, 1600);
+                }
+            };
+
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(button);
+            wrapper.appendChild(pre);
+        });
+}
+
 async function loadDoc(path) {
 
     const response = await fetch(
@@ -55,8 +131,13 @@ async function loadDoc(path) {
         typographer: true
     });
 
-    document.getElementById('content').innerHTML =
+    const content =
+        document.getElementById('content');
+
+    content.innerHTML =
         md.render(text);
+
+    enhanceCodeBlocks(content);
 }
 
 function buildTree(files) {
