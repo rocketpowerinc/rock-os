@@ -1,120 +1,179 @@
-# ROCKOS LIVE SERVER (Unified PowerShell Script)
+# ROCKOS LIVE SERVER
 
-# Change to script directory
 Set-Location -Path $PSScriptRoot
 
-# Check for static-web-server.exe in the static-web-server subfolder
-$serverExe = Join-Path $PSScriptRoot 'static-web-server/static-web-server.exe'
+$serverExe = Join-Path `
+  $PSScriptRoot `
+  'static-web-server/static-web-server.exe'
+
 if (-not (Test-Path $serverExe)) {
-  Write-Host "static-web-server.exe missing in static-web-server/ folder."
+
+  Write-Host ""
+  Write-Host "static-web-server.exe missing."
+  Write-Host ""
+
   Pause
   exit
 }
 
-# Prompt the user to enter their local IP address
-Write-Host "[DEBUG] Awaiting user input for local IP..."
+Write-Host ""
+Write-Host "[ROCKOS LIVE SERVER]"
+Write-Host ""
 
-$localIP = Read-Host "Enter your local IP address (e.g., 192.168.1.2) or leave blank for 127.0.0.1"
-
-Write-Host "[DEBUG] User entered: '$localIP'"
+$localIP = Read-Host `
+  "Enter local IP (leave blank for 127.0.0.1)"
 
 if ([string]::IsNullOrWhiteSpace($localIP)) {
+
   $localIP = "127.0.0.1"
-  Write-Host "[DEBUG] Defaulted to: '$localIP'"
 }
 
-# Build URL safely
 $url = "http://${localIP}:8000"
 
-Write-Host "Opening browser at $url"
+Write-Host ""
+Write-Host "Opening browser at:"
+Write-Host $url
+Write-Host ""
 
-# Open browser
 try {
+
   Start-Process $url
 }
 catch {
+
   Write-Host "Could not open browser automatically."
-  Write-Host "Please open $url manually."
 }
 
-# Start static-web-server.exe in the background
+# Start web server
 $server = Start-Process `
-  -PassThru `
-  -NoNewWindow `
   -FilePath $serverExe `
-  -ArgumentList "--host 0.0.0.0 --port 8000 --root ."
+  -ArgumentList "--host 0.0.0.0 --port 8000 --root ." `
+  -PassThru `
+  -NoNewWindow
 
-Write-Host "Started static-web-server.exe with PID $($server.Id) from $serverExe"
+Write-Host "Started static-web-server.exe"
+Write-Host "PID: $($server.Id)"
+Write-Host ""
 
-# Start the markdown index generator as a background job
-$indexJob = Start-Job -ScriptBlock {
+# Markdown watcher
+$indexJob = Start-Job `
+  -ArgumentList $PSScriptRoot `
+  -ScriptBlock {
 
   param($scriptRoot)
 
   Set-Location $scriptRoot
 
+  $root = Join-Path $scriptRoot "markdown"
+
+  $jsonFile = Join-Path `
+    $scriptRoot `
+    "markdown-index.json"
+
+  # Ensure file exists immediately
+  if (-not (Test-Path $jsonFile)) {
+
+    [System.IO.File]::WriteAllText(
+      $jsonFile,
+      "[]",
+      [System.Text.UTF8Encoding]::new($false)
+    )
+  }
+
   while ($true) {
 
-    $root = "markdown"
+    try {
 
-    if (Test-Path $root) {
+      if (Test-Path $root) {
 
-      $files = Get-ChildItem $root -Recurse -Filter *.md | ForEach-Object {
+        # FORCE ARRAY
+        $files = @(Get-ChildItem `
+            -Path $root `
+            -Recurse `
+            -Filter *.md `
+            -File |
+          ForEach-Object {
 
-        $_.FullName.Replace((Get-Location).Path + "\", "") -replace "\\", "/"
+            $_.FullName.Replace(
+              $scriptRoot + "\",
+              ""
+            ) -replace "\\", "/"
+          })
 
+        # STABLE JSON
+        $json =
+        [System.Text.Json.JsonSerializer]::Serialize($files)
+
+        # DIRECT OVERWRITE
+        [System.IO.File]::WriteAllText(
+          $jsonFile,
+          $json,
+          [System.Text.UTF8Encoding]::new($false)
+        )
+
+        Write-Host "Updated markdown-index.json"
       }
+      else {
 
-      @($files) | ConvertTo-Json | Set-Content "markdown-index.json"
-
-      Write-Host "Updated markdown-index.json"
+        [System.IO.File]::WriteAllText(
+          $jsonFile,
+          "[]",
+          [System.Text.UTF8Encoding]::new($false)
+        )
+      }
     }
-    else {
-      Write-Host "markdown folder not found."
+    catch {
+
+      Write-Host ""
+      Write-Host "[INDEX ERROR]"
+      Write-Host $_
+      Write-Host ""
     }
 
     Start-Sleep -Seconds 2
   }
-} -ArgumentList $PSScriptRoot
+}
 
-Write-Host "Started index generator as Job Id $($indexJob.Id)"
+Write-Host "Started markdown watcher"
+Write-Host "Job ID: $($indexJob.Id)"
+Write-Host ""
 
-# Cleanup function
-function Cleanup {
+try {
+
+  Wait-Process -Id $server.Id
+}
+finally {
 
   Write-Host ""
-  Write-Host "Stopping server and index generator..."
+  Write-Host "Stopping services..."
+  Write-Host ""
 
   # Stop web server
   if ($server -and -not $server.HasExited) {
 
-    Stop-Process -Id $server.Id -Force
+    Stop-Process `
+      -Id $server.Id `
+      -Force `
+      -ErrorAction SilentlyContinue
 
-    Write-Host "Stopped static-web-server.exe (PID $($server.Id))"
+    Write-Host "Stopped static-web-server.exe"
   }
 
-  # Stop background job
-  if ($indexJob -and $indexJob.State -eq "Running") {
+  # Stop watcher job
+  if ($indexJob) {
 
-    Stop-Job $indexJob | Out-Null
-    Remove-Job $indexJob | Out-Null
+    Stop-Job `
+      $indexJob `
+      -ErrorAction SilentlyContinue | Out-Null
 
-    Write-Host "Stopped index generator job (Id $($indexJob.Id))"
+    Remove-Job `
+      $indexJob `
+      -Force `
+      -ErrorAction SilentlyContinue | Out-Null
+
+    Write-Host "Stopped markdown watcher"
   }
 
+  Write-Host ""
   Pause
-  exit
-}
-
-# Register cleanup on PowerShell exit
-Register-EngineEvent PowerShell.Exiting -Action {
-  Cleanup
-} | Out-Null
-
-# Wait until the server exits
-try {
-  Wait-Process -Id $server.Id
-}
-finally {
-  Cleanup
 }
