@@ -24,7 +24,9 @@ go run .
 
 Windows helper:
 
-start-rock-os.cmd
+start-rock-os.cmd (from command prompt)
+.\start-rock-os.cmd (from powershell)
+
 
 Linux/macOS helper:
 
