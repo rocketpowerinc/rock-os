@@ -993,6 +993,7 @@ h3,
 	color:var(--accent);
 	font-size:.75rem;
 	letter-spacing:1px;
+	min-width:142px;
 	padding:7px 9px;
 	text-transform:uppercase;
 }

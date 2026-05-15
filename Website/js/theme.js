@@ -12,6 +12,12 @@ const legacyThemes = {
     'blue-glass': 'scissors'
 };
 
+const themeImages = {
+    rock: 'assets/Rock-OS-Hero-Rock.png',
+    papers: 'assets/Rock-OS-Hero-Papers.png',
+    scissors: 'assets/Rock-OS-Hero-Scissors.png'
+};
+
 function normalizeTheme(theme) {
 
     if (allowedThemes.includes(theme)) {
@@ -27,6 +33,11 @@ function applyTheme(theme) {
         normalizeTheme(theme);
 
     document.documentElement.dataset.theme = nextTheme;
+
+    document.querySelectorAll('.theme-logo')
+        .forEach(image => {
+            image.src = themeImages[nextTheme];
+        });
 
     try {
         localStorage.setItem(themeStorageKey, nextTheme);
