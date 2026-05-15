@@ -6,6 +6,7 @@ let activeDocPath = '';
 let indexLoadInProgress = false;
 let allMarkdownFiles = [];
 let searchQuery = '';
+let initialUrlDocLoaded = false;
 
 const markdownContentCache = new Map();
 const markdownContentLoads = new Map();
@@ -101,6 +102,35 @@ function getSnippet(text, query) {
         start,
         start + 120
     )}...`;
+}
+
+function getDocFromUrl() {
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const doc =
+        params.get('doc');
+
+    if (!doc || !doc.toLowerCase().endsWith('.md')) {
+        return '';
+    }
+
+    return doc;
+}
+
+function updateDocUrl(path, replace = false) {
+
+    const url =
+        new URL(window.location.href);
+
+    url.searchParams.set('doc', path);
+
+    if (replace) {
+        window.history.replaceState({}, '', url);
+    } else {
+        window.history.pushState({}, '', url);
+    }
 }
 
 function loadSavedState() {
@@ -425,10 +455,17 @@ function enhanceCodeBlocks(container) {
         });
 }
 
-async function loadDoc(path) {
+async function loadDoc(path, options = {}) {
+
+    const shouldUpdateUrl =
+        options.updateUrl !== false;
 
     rememberActiveDoc(path);
     updateActiveDocLinks();
+
+    if (shouldUpdateUrl) {
+        updateDocUrl(path, options.replaceUrl === true);
+    }
 
     const response = await fetch(
         path + '?nocache=' + Date.now()
@@ -761,6 +798,41 @@ function renderSearchResults() {
     });
 }
 
+async function openDocFromUrlIfNeeded() {
+
+    if (initialUrlDocLoaded) {
+        return;
+    }
+
+    const doc =
+        getDocFromUrl();
+
+    if (!doc) {
+        initialUrlDocLoaded = true;
+        return;
+    }
+
+    initialUrlDocLoaded = true;
+
+    if (!allMarkdownFiles.includes(doc)) {
+
+        renderWikiError(
+            'Markdown document not found',
+            `The URL points to ${doc}, but that file is not in markdown-index.json.`,
+            [
+                'Check that the file exists under the markdown folder.',
+                'Click the refresh button after adding new markdown files.'
+            ]
+        );
+
+        return;
+    }
+
+    await loadDoc(doc, {
+        updateUrl: false
+    });
+}
+
 async function loadIndex() {
 
     if (indexLoadInProgress) {
@@ -817,6 +889,14 @@ async function loadIndex() {
             normalizeFiles(parsed);
 
         allMarkdownFiles = files;
+
+        const urlDoc =
+            getDocFromUrl();
+
+        if (urlDoc && files.includes(urlDoc)) {
+            rememberActiveDoc(urlDoc);
+        }
+
         warmSearchIndex(files);
 
         const nextIndexText =
@@ -861,6 +941,8 @@ async function loadIndex() {
                 ''
             );
         }
+
+        await openDocFromUrlIfNeeded();
     }
     catch (err) {
 
@@ -936,5 +1018,18 @@ if (wikiSearchInput) {
         renderSearchResults();
     });
 }
+
+window.addEventListener('popstate', () => {
+
+    const doc =
+        getDocFromUrl();
+
+    if (doc && allMarkdownFiles.includes(doc)) {
+
+        loadDoc(doc, {
+            updateUrl: false
+        });
+    }
+});
 
 loadIndex();
