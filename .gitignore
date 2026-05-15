@@ -63,3 +63,6 @@ coverage/
 Website/.gocache/
 Website/.codex-tmp/
 Website/static-web-server/
+Website/media/*
+!Website/media/.gitkeep
+!Website/media/README.txt

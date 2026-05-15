@@ -4,6 +4,11 @@ const stateStorageKey = 'rock-os-wiki-state';
 let lastIndexText = '';
 let activeDocPath = '';
 let indexLoadInProgress = false;
+let allMarkdownFiles = [];
+let searchQuery = '';
+
+const markdownContentCache = new Map();
+const markdownContentLoads = new Map();
 
 loadSavedState();
 
@@ -11,6 +16,13 @@ function getSidebar() {
 
     return document.getElementById(
         'sidebarListContainer'
+    );
+}
+
+function getSearchStatus() {
+
+    return document.getElementById(
+        'wikiSearchStatus'
     );
 }
 
@@ -33,6 +45,62 @@ function normalizeFiles(parsed) {
             a.toLowerCase()
                 .localeCompare(b.toLowerCase())
         );
+}
+
+function fileTitle(path) {
+
+    const parts =
+        path.split('/');
+
+    return parts[parts.length - 1]
+        .replace(/\.md$/i, '');
+}
+
+function escapeHtml(value) {
+
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getSnippet(text, query) {
+
+    const normalizedQuery =
+        query.toLowerCase();
+
+    const line =
+        text
+            .split(/\r?\n/)
+            .find(item =>
+                item.toLowerCase()
+                    .includes(normalizedQuery)
+            );
+
+    if (!line) {
+        return '';
+    }
+
+    const trimmed =
+        line.trim();
+
+    if (trimmed.length <= 120) {
+        return trimmed;
+    }
+
+    const matchIndex =
+        trimmed.toLowerCase()
+            .indexOf(normalizedQuery);
+
+    const start =
+        Math.max(0, matchIndex - 45);
+
+    return `${start > 0 ? '...' : ''}${trimmed.slice(
+        start,
+        start + 120
+    )}...`;
 }
 
 function loadSavedState() {
@@ -97,6 +165,59 @@ function renderEmptyState(container) {
         'No markdown files found.';
 
     container.appendChild(empty);
+}
+
+async function loadMarkdownText(path) {
+
+    if (markdownContentCache.has(path)) {
+        return markdownContentCache.get(path);
+    }
+
+    if (markdownContentLoads.has(path)) {
+        return markdownContentLoads.get(path);
+    }
+
+    const pending =
+        fetch(path + '?nocache=' + Date.now())
+            .then(response => {
+
+                if (!response.ok) {
+                    return '';
+                }
+
+                return response.text();
+            })
+            .then(text => {
+
+                markdownContentCache.set(path, text);
+                markdownContentLoads.delete(path);
+                return text;
+            })
+            .catch(err => {
+
+                console.warn('Search index failed:', path, err);
+                markdownContentLoads.delete(path);
+                markdownContentCache.set(path, '');
+                return '';
+            });
+
+    markdownContentLoads.set(path, pending);
+
+    return pending;
+}
+
+function warmSearchIndex(files) {
+
+    Promise.all(
+        files.map(file =>
+            loadMarkdownText(file)
+        )
+    ).then(() => {
+
+        if (searchQuery) {
+            renderSearchResults();
+        }
+    });
 }
 
 function renderWikiError(title, message, details = []) {
@@ -516,6 +637,130 @@ function renderTree(
         });
 }
 
+function renderSearchResults() {
+
+    const sidebar =
+        getSidebar();
+
+    if (!sidebar) {
+        return;
+    }
+
+    const status =
+        getSearchStatus();
+
+    const query =
+        searchQuery.trim().toLowerCase();
+
+    sidebar.innerHTML = '';
+
+    if (!query) {
+
+        if (status) {
+            status.innerText = '';
+        }
+
+        renderTree(
+            buildTree(allMarkdownFiles),
+            sidebar,
+            ''
+        );
+
+        return;
+    }
+
+    const results =
+        allMarkdownFiles
+            .map(file => {
+
+                const title =
+                    fileTitle(file);
+
+                const searchablePath =
+                    file.toLowerCase();
+
+                const markdownText =
+                    markdownContentCache.get(file) || '';
+
+                const searchableText =
+                    markdownText.toLowerCase();
+
+                const nameMatch =
+                    searchablePath.includes(query) ||
+                    title.toLowerCase().includes(query);
+
+                const contentMatch =
+                    searchableText.includes(query);
+
+                if (!nameMatch && !contentMatch) {
+                    return null;
+                }
+
+                return {
+                    file,
+                    title,
+                    snippet: contentMatch
+                        ? getSnippet(markdownText, query)
+                        : ''
+                };
+            })
+            .filter(Boolean);
+
+    if (status) {
+
+        const loadingCount =
+            allMarkdownFiles.filter(file =>
+                !markdownContentCache.has(file)
+            ).length;
+
+        status.innerText =
+            `${results.length} result${results.length === 1 ? '' : 's'}` +
+            (loadingCount ? `, indexing ${loadingCount}` : '');
+    }
+
+    if (!results.length) {
+
+        renderEmptyState(sidebar);
+        return;
+    }
+
+    results.forEach(result => {
+
+        const link =
+            document.createElement('a');
+
+        link.className = 'doc-link';
+        link.href = '#';
+        link.dataset.path = result.file;
+
+        if (result.file === activeDocPath) {
+            link.classList.add('active');
+        }
+
+        link.innerHTML =
+            `${escapeHtml(result.title)}<span class="search-result-meta">${escapeHtml(result.file)}</span>`;
+
+        link.onclick = () => {
+
+            loadDoc(result.file);
+            return false;
+        };
+
+        sidebar.appendChild(link);
+
+        if (result.snippet) {
+
+            const snippet =
+                document.createElement('div');
+
+            snippet.className = 'search-result-snippet';
+            snippet.innerText = result.snippet;
+
+            sidebar.appendChild(snippet);
+        }
+    });
+}
+
 async function loadIndex() {
 
     if (indexLoadInProgress) {
@@ -571,6 +816,9 @@ async function loadIndex() {
         const files =
             normalizeFiles(parsed);
 
+        allMarkdownFiles = files;
+        warmSearchIndex(files);
+
         const nextIndexText =
             JSON.stringify(files);
 
@@ -604,11 +852,15 @@ async function loadIndex() {
             return;
         }
 
-        renderTree(
-            tree,
-            sidebar,
-            ''
-        );
+        if (searchQuery) {
+            renderSearchResults();
+        } else {
+            renderTree(
+                tree,
+                sidebar,
+                ''
+            );
+        }
     }
     catch (err) {
 
@@ -635,6 +887,8 @@ async function loadIndex() {
 async function refreshWiki() {
 
     lastIndexText = '';
+    markdownContentCache.clear();
+    markdownContentLoads.clear();
 
     await loadIndex();
 
@@ -645,6 +899,9 @@ async function refreshWiki() {
 
 const refreshWikiBtn =
     document.getElementById('refreshWikiBtn');
+
+const wikiSearchInput =
+    document.getElementById('wikiSearchInput');
 
 if (refreshWikiBtn) {
 
@@ -662,6 +919,21 @@ if (refreshWikiBtn) {
             refreshWikiBtn.disabled = false;
             refreshWikiBtn.classList.remove('is-refreshing');
         }
+    });
+}
+
+if (wikiSearchInput) {
+
+    wikiSearchInput.addEventListener('input', () => {
+
+        searchQuery =
+            wikiSearchInput.value;
+
+        if (searchQuery) {
+            warmSearchIndex(allMarkdownFiles);
+        }
+
+        renderSearchResults();
     });
 }
 

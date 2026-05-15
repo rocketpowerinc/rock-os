@@ -172,6 +172,34 @@ position:absolute;
 	gap: 10px;
 }
 
+.wiki-search {
+	margin: 10px 0 18px;
+}
+
+.wiki-search input {
+	width: 100%;
+	box-sizing: border-box;
+	background: #050505;
+	border: 1px solid rgba(208,255,0,.32);
+	color: #f0f0f0;
+	font-size: .95rem;
+	padding: 10px 12px;
+	outline: none;
+}
+
+.wiki-search input:focus {
+	border-color: rgba(208,255,0,.75);
+	box-shadow: 0 0 14px rgba(208,255,0,.12);
+}
+
+.wiki-search-status {
+	min-height: 18px;
+	color: rgba(255,255,255,.55);
+	font-size: .78rem;
+	line-height: 1.4;
+	margin-top: 6px;
+}
+
 .collapse-list-btn {
 	background: transparent;
 	border: none;
@@ -213,6 +241,24 @@ position:absolute;
 
 .folder-children {
 	margin-top: 5px;
+}
+
+.search-result-meta {
+	color: rgba(255,255,255,.45);
+	display: block;
+	font-size: .72rem;
+	line-height: 1.35;
+	margin-top: 4px;
+	overflow-wrap: anywhere;
+}
+
+.search-result-snippet {
+	color: rgba(255,255,255,.68);
+	font-size: .78rem;
+	line-height: 1.45;
+	margin: -6px 0 10px 10px;
+	padding-left: 10px;
+	border-left: 1px solid rgba(208,255,0,.25);
 }
 
 .wiki-empty-state {

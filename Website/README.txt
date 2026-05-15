@@ -102,3 +102,24 @@ SUPPORTED MARKDOWN
 - code blocks
 - html embeds
 - lists
+
+LOCAL MEDIA PACK
+================
+Large images and videos should live in:
+
+media/
+
+That folder is ignored by Git so the repository stays small. After cloning the
+project on another computer, download your media ZIP from Google Drive and
+extract it back into:
+
+Website/media/
+
+Use local media in markdown like this:
+
+![Screenshot](/media/screenshots/setup.png)
+
+<video controls src="/media/videos/demo.mp4"></video>
+
+When you update media, zip Website/media/ again and upload the ZIP to Google
+Drive.
