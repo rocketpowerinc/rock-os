@@ -1,7 +1,7 @@
 [
   "markdown/Help/Callouts.md",
-  "markdown/Linux/post-install-bootstrap.md",
-  "markdown/Linux/prebuilt-iso-AnduinOS.md",
+  "markdown/Linux/AnduinOS/1 - Pre iso Creation.md",
+  "markdown/Linux/AnduinOS/2 - Post iso install.md",
   "markdown/Mac/Bootstrap.md",
   "markdown/Windows/Bootstrap.md"
 ]
