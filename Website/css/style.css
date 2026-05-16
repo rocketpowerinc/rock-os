@@ -64,6 +64,7 @@ letter-spacing:5px;
 
 .nav-links{
 display:flex;
+align-items:center;
 gap:20px;
 }
 
@@ -76,6 +77,18 @@ transition:.3s;
 
 .nav-links a:hover{
 text-shadow:0 0 10px #d0ff00;
+}
+
+.github-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.github-icon {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 18px;
 }
 
 .hero{
@@ -201,6 +214,10 @@ position:absolute;
 }
 
 .collapse-list-btn {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 100%;
 	background: transparent;
 	border: none;
 	color: #d0ff00;
@@ -209,9 +226,34 @@ position:absolute;
 	padding: 4px 8px;
 	border-radius: 4px;
 	transition: background 0.2s;
+	text-align: left;
 }
 .collapse-list-btn:hover {
 	background: rgba(208,255,0,0.08);
+}
+
+.tree-folder-icon {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 18px;
+	opacity: .92;
+	transition: opacity .2s, transform .2s;
+}
+
+.collapse-list-btn.is-expanded .tree-folder-icon {
+	opacity: 1;
+	transform: scale(1.06);
+}
+
+.folder-label {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: .95rem;
+	font-weight: 700;
+	letter-spacing: 1px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .doc-link {

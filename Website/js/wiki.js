@@ -747,6 +747,114 @@ function buildTree(files) {
     return tree;
 }
 
+function folderIconName(folderPath) {
+
+    if (folderPath.includes('/')) {
+        return 'folder';
+    }
+
+    const rootFolder =
+        folderPath.split('/')[0].toLowerCase();
+
+    if (rootFolder === 'windows') {
+        return 'windows';
+    }
+
+    if (rootFolder === 'mac') {
+        return 'mac';
+    }
+
+    if (rootFolder === 'linux') {
+        return 'linux';
+    }
+
+    if (rootFolder === 'help') {
+        return 'help';
+    }
+
+    return 'folder';
+}
+
+function iconElement(name) {
+
+    const svg =
+        document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'svg'
+        );
+
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.classList.add('tree-folder-icon');
+
+    const addPath = (d) => {
+
+        const path =
+            document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'path'
+            );
+
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'currentColor');
+        svg.appendChild(path);
+    };
+
+    const addCircle = (cx, cy, r) => {
+
+        const circle =
+            document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'circle'
+            );
+
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', r);
+        circle.setAttribute('fill', 'currentColor');
+        svg.appendChild(circle);
+    };
+
+    switch (name) {
+    case 'windows':
+        addPath('M3 4.5l7.8-1.1v8.1H3V4.5zM12.1 3.2L21 2v9.5h-8.9V3.2zM3 12.7h7.8v8.1L3 19.7v-7zM12.1 12.7H21V22l-8.9-1.2v-8.1z');
+        break;
+    case 'mac':
+        addPath('M16.4 2.4c.1 1.4-.5 2.7-1.3 3.7-.9 1-2.2 1.7-3.5 1.6-.2-1.3.5-2.7 1.3-3.6.9-1 2.4-1.8 3.5-1.7z');
+        addPath('M19.6 17.1c-.5 1.1-.8 1.6-1.5 2.6-1 1.5-2.4 3.3-4.1 3.3-1.5 0-1.9-1-3.9-1s-2.5 1-3.9 1c-1.7 0-3-1.6-4-3.1-2.8-4.2-3.1-9.1-1.4-11.7 1.2-1.8 3.1-2.9 4.9-2.9 1.9 0 3 1 4.5 1s2.4-1 4.6-1c1.6 0 3.4.9 4.6 2.4-4 2.2-3.4 7.9.2 9.4z');
+        break;
+    case 'linux':
+        addPath('M12 2.3c-2.3 0-4 2.2-4 5.2 0 1.4.3 2.4.8 3.3-1.8 1.1-3.1 3.5-3.1 6.2 0 3 2.7 4.7 6.3 4.7s6.3-1.7 6.3-4.7c0-2.7-1.3-5.1-3.1-6.2.5-.9.8-1.9.8-3.3 0-3-1.7-5.2-4-5.2zm-2.2 14.4c.8.8 3.6.8 4.4 0 .3 1.2-.5 2.2-2.2 2.2s-2.5-1-2.2-2.2z');
+        addCircle('10.2', '7.2', '.8');
+        addCircle('13.8', '7.2', '.8');
+        break;
+    case 'help':
+        addPath('M12 2a10 10 0 100 20 10 10 0 000-20zm0 17.2a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm1.1-5.1v1h-2.2v-1.3c0-1.1.6-1.8 1.5-2.4.8-.5 1.4-.9 1.4-1.8 0-.9-.7-1.5-1.8-1.5-1 0-1.8.5-2.5 1.3L8 8c1-1.2 2.3-1.9 4.1-1.9 2.4 0 4 1.3 4 3.3 0 2-1.3 2.8-2.3 3.5-.5.4-.7.7-.7 1.2z');
+        break;
+    default:
+        addPath('M3 6.5C3 5.7 3.7 5 4.5 5h5l2 2h8c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-15C3.7 18 3 17.3 3 16.5v-10z');
+        break;
+    }
+
+    return svg;
+}
+
+function setFolderButtonState(
+    button,
+    isExpanded
+) {
+
+    button.classList.toggle(
+        'is-expanded',
+        isExpanded
+    );
+
+    button.setAttribute(
+        'aria-expanded',
+        String(isExpanded)
+    );
+}
+
 function renderTree(
     tree,
     container,
@@ -783,12 +891,31 @@ function renderTree(
                     expandedFolders.has(folderPath);
 
                 button.setAttribute(
-                    'aria-expanded',
-                    String(isExpanded)
+                    'aria-label',
+                    `${isExpanded ? 'Collapse' : 'Expand'} ${key}`
                 );
 
-                button.innerText =
-                    (isExpanded ? '▼ ' : '▶ ') + key;
+                button.appendChild(
+                    iconElement(
+                        folderIconName(folderPath)
+                    )
+                );
+
+                const label =
+                    document.createElement('span');
+
+                label.className =
+                    'folder-label';
+
+                label.innerText =
+                    key;
+
+                button.appendChild(label);
+
+                setFolderButtonState(
+                    button,
+                    isExpanded
+                );
 
                 const childrenDiv =
                     document.createElement('div');
@@ -818,12 +945,14 @@ function renderTree(
 
                         saveState();
 
-                        button.innerText =
-                            '▶ ' + key;
+                        setFolderButtonState(
+                            button,
+                            false
+                        );
 
                         button.setAttribute(
-                            'aria-expanded',
-                            'false'
+                            'aria-label',
+                            `Expand ${key}`
                         );
 
                     } else {
@@ -837,12 +966,14 @@ function renderTree(
 
                         saveState();
 
-                        button.innerText =
-                            '▼ ' + key;
+                        setFolderButtonState(
+                            button,
+                            true
+                        );
 
                         button.setAttribute(
-                            'aria-expanded',
-                            'true'
+                            'aria-label',
+                            `Collapse ${key}`
                         );
                     }
                 };
