@@ -10,6 +10,7 @@ small cross-platform Go binary and rendered in the browser.
 
 - Markdown files rendered as a website wiki
 - Automatic sidebar tree from nested markdown folders
+- Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
 - Last edited note shown above rendered markdown files

@@ -333,6 +333,76 @@ function folderPathsForDoc(path) {
     );
 }
 
+function allFolderPaths(files) {
+
+    const paths =
+        new Set();
+
+    files.forEach(file => {
+
+        const parts =
+            file
+                .replace(/^markdown\//, '')
+                .split('/');
+
+        parts.pop();
+
+        parts.forEach((_, index) => {
+            paths.add(
+                parts.slice(0, index + 1).join('/')
+            );
+        });
+    });
+
+    return Array.from(paths);
+}
+
+function rerenderSidebar() {
+
+    const sidebar =
+        getSidebar();
+
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.innerHTML = '';
+
+    if (!allMarkdownFiles.length) {
+        renderEmptyState(sidebar);
+        return;
+    }
+
+    if (searchQuery) {
+        renderSearchResults();
+        return;
+    }
+
+    renderTree(
+        buildTree(allMarkdownFiles),
+        sidebar,
+        ''
+    );
+
+    updateActiveDocLinks();
+}
+
+function setAllFoldersExpanded(expanded) {
+
+    expandedFolders.clear();
+
+    if (expanded) {
+
+        allFolderPaths(allMarkdownFiles)
+            .forEach(folderPath =>
+                expandedFolders.add(folderPath)
+            );
+    }
+
+    saveState();
+    rerenderSidebar();
+}
+
 function rememberActiveDoc(path) {
 
     activeDocPath = path;
@@ -1675,6 +1745,12 @@ async function refreshWiki() {
 const refreshWikiBtn =
     document.getElementById('refreshWikiBtn');
 
+const expandAllFoldersBtn =
+    document.getElementById('expandAllFoldersBtn');
+
+const collapseAllFoldersBtn =
+    document.getElementById('collapseAllFoldersBtn');
+
 const wikiSearchInput =
     document.getElementById('wikiSearchInput');
 
@@ -1694,6 +1770,20 @@ if (refreshWikiBtn) {
             refreshWikiBtn.disabled = false;
             refreshWikiBtn.classList.remove('is-refreshing');
         }
+    });
+}
+
+if (expandAllFoldersBtn) {
+
+    expandAllFoldersBtn.addEventListener('click', () => {
+        setAllFoldersExpanded(true);
+    });
+}
+
+if (collapseAllFoldersBtn) {
+
+    collapseAllFoldersBtn.addEventListener('click', () => {
+        setAllFoldersExpanded(false);
     });
 }
 
