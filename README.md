@@ -110,6 +110,94 @@ go run . --build-index
 Use `--host 127.0.0.1` to serve only on the current computer. Use
 `--build-index` to rebuild `markdown-index.json` without starting the server.
 
+## Unlocking Private Markdown
+
+This repo can use `git-crypt` for private markdown notes stored under:
+
+```text
+Website/markdown/Private/
+```
+
+Those files can be committed to the public repo, but their contents are stored
+encrypted on GitHub. File and folder names are still visible, so avoid sensitive
+names.
+
+The exported `git-crypt` key is ignored by Git through `*.key` in `.gitignore`.
+Do not commit the key.
+
+### Fresh Clone Unlock Steps
+
+1. Install `git-crypt`.
+
+Windows with Scoop:
+
+```powershell
+scoop install git-crypt
+```
+
+Linux:
+
+```bash
+sudo apt install git-crypt
+```
+
+macOS:
+
+```bash
+brew install git-crypt
+```
+
+2. Clone the repo and enter it.
+
+```bash
+git clone https://github.com/rocketpowerinc/rock-os.git
+cd rock-os
+```
+
+3. Copy your exported `.key` file into the repo root.
+
+Example:
+
+```text
+rock-os/
+  your-git-crypt-key.key
+  unlock-git-crypt.cmd
+  unlock-git-crypt.sh
+  Website/
+```
+
+4. Unlock the repo.
+
+Windows:
+
+```powershell
+.\unlock-git-crypt.cmd
+```
+
+macOS or Linux:
+
+```bash
+chmod +x ./unlock-git-crypt.sh
+./unlock-git-crypt.sh
+```
+
+The unlock scripts expect exactly one `.key` file in the repo root. After
+unlocking, files in `Website/markdown/Private/` should become readable.
+
+Check status:
+
+```bash
+git-crypt status
+```
+
+To export a key from an already-unlocked trusted clone:
+
+```bash
+git-crypt export-key rock-os-git-crypt.key
+```
+
+Store exported keys somewhere private and backed up, outside this repository.
+
 ## How The Wiki Works
 
 The Go server scans:

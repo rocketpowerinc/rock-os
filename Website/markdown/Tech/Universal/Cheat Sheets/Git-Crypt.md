@@ -1,46 +1,32 @@
-# Git-Crypt Private Markdown Notes
+# Git-Crypt Cheat Sheet
 
-`git-crypt` lets you keep sensitive files inside a public Git repository while storing them encrypted in GitHub. On your own computer, after the repo is unlocked, the files look and edit like normal files.
+`git-crypt` encrypts selected files in a Git repository. People with the key see normal readable files after unlocking the repo. People without the key see encrypted blobs.
 
-For this project, the private markdown folder is:
+It is useful when you want to keep some private files in a repo without making the whole repo private.
 
-```powershell
-Website\markdown\Private
-```
+## What Git-Crypt Protects
 
-Anything in that folder is intended to be encrypted before it leaves your machine.
+`git-crypt` protects file contents.
 
-## The Big Rule
+It does not hide:
 
-Do not commit your exported `git-crypt` key.
+- File names
+- Folder names
+- Commit messages
+- Branch names
+- The fact that encrypted files exist
 
-That key is what unlocks the encrypted files. Keep it somewhere private, backed up, and outside the repository. If the key is lost and you do not have another unlocked clone, the encrypted files may be impossible to recover.
+Use boring names for sensitive files. A file named `Personal.md` leaks less than a file named `Bank-Passwords-And-Server-Keys.md`.
 
-## One-Time Setup
+## Install Git-Crypt
 
-Run these commands from the root of the repository:
-
-```powershell
-cd C:\Users\rocket\Github-pwr\rock-os
-```
-
-### 1. Install git-crypt
-
-On Windows with Scoop:
+Windows with Scoop:
 
 ```powershell
 scoop install git-crypt
 ```
 
-Check that it works:
-
-```powershell
-git-crypt --version
-```
-
-On Linux or macOS, install it with your system package manager.
-
-Linux examples:
+Linux:
 
 ```bash
 sudo apt install git-crypt
@@ -54,250 +40,193 @@ macOS with Homebrew:
 brew install git-crypt
 ```
 
-### 2. Initialize git-crypt
+Check the install:
 
-This only needs to be done once per repo:
+```bash
+git-crypt --version
+```
 
-```powershell
+## Initialize A Repo
+
+Run this once from the root of a Git repository:
+
+```bash
 git-crypt init
 ```
 
-That creates the internal git-crypt key data inside `.git`. This unlocks the repo on your current machine, but it is not enough for a future fresh clone. You still need to export a portable key.
+This creates the encryption setup inside `.git`. Your current clone can now encrypt and decrypt files, but a fresh clone will still need an exported key.
 
-### 3. Create the Private Folder
+## Choose Files To Encrypt
 
-```powershell
-New-Item -ItemType Directory -Force -Path Website\markdown\Private
-```
+`git-crypt` uses `.gitattributes` to decide what gets encrypted.
 
-Add private markdown files inside that folder, for example:
-
-```powershell
-Website\markdown\Private\Passwords.md
-Website\markdown\Private\Personal-Notes.md
-Website\markdown\Private\Offline-Plans.md
-```
-
-Use better filenames than `Passwords.md` if you can. That one is basically wearing a bright reflective vest.
-
-### 4. Tell Git Which Files to Encrypt
-
-Open or create this file:
-
-```powershell
-.gitattributes
-```
-
-Add this line:
+Example: encrypt everything in a `private` folder:
 
 ```gitattributes
-Website/markdown/Private/** filter=git-crypt diff=git-crypt
+private/** filter=git-crypt diff=git-crypt
 ```
 
+Example: encrypt all `.secret` files:
 
-### 5. Check Encryption Status
-
-Run:
-
-```powershell
-git-crypt status
+```gitattributes
+*.secret filter=git-crypt diff=git-crypt
 ```
 
-Files under `Website\markdown\Private` should be listed as encrypted.
+Example: encrypt one specific file:
 
-If you already added files before creating the `.gitattributes` rule, re-add them so Git stores the encrypted version:
-
-```powershell
-git add .gitattributes Website\markdown\Private
+```gitattributes
+notes/private.md filter=git-crypt diff=git-crypt
 ```
 
-Then check again:
+Important: these lines go inside `.gitattributes`. Do not run them as terminal commands.
 
-```powershell
-git-crypt status
-```
+## Add And Commit Encrypted Files
 
-### 6. Commit the Encrypted Files
-
-```powershell
-git add .gitattributes Website\markdown\Private
-git commit -m "Add encrypted private markdown notes"
-```
-
-When pushed to GitHub, those files should be encrypted blobs, not readable markdown.
-
-## Export the Unlock Key
-
-Export the key to somewhere outside the repo:
-
-```powershell
-git-crypt export-key C:\Users\rocket\Documents\rock-os-git-crypt.key
-```
-
-That exported key is what you use to unlock the encrypted files on another computer.
-
-Good places to store it:
-
-- An encrypted USB drive
-- A password manager that supports file attachments
-- An encrypted backup drive
-- Another secure offline backup location
-
-Bad places to store it:
-
-- Inside this repository
-- Inside the public GitHub project
-- In the same folder as the encrypted markdown files
-- Anywhere named something like `totally-not-the-secret-key.key`
-
-## Decrypt on Another Computer
-
-On a fresh computer, do this:
-
-### 1. Install git-crypt
-
-Windows with Scoop:
-
-```powershell
-scoop install git-crypt
-```
-
-Linux:
+After updating `.gitattributes`, add the rule and the protected files:
 
 ```bash
-sudo apt install git-crypt
+git add .gitattributes private/
+git commit -m "Add encrypted private files"
 ```
 
-macOS:
+Check what `git-crypt` thinks is encrypted:
 
 ```bash
-brew install git-crypt
-```
-
-### 2. Clone the Repo
-
-```powershell
-git clone https://github.com/rocketpowerinc/rock-os.git
-cd rock-os
-```
-
-Before unlocking, files in `Website\markdown\Private` will be encrypted and unreadable.
-
-### 3. Copy the Exported Key to the Computer
-
-Example location:
-
-```powershell
-C:\Users\rocket\Documents\rock-os-git-crypt.key
-```
-
-### 4. Unlock the Repo
-
-From inside the repo:
-
-```powershell
-git-crypt unlock C:\Users\rocket\Documents\rock-os-git-crypt.key
-```
-
-After that, the private markdown files should turn back into normal readable files.
-
-### 5. Confirm Everything Is Unlocked
-
-```powershell
 git-crypt status
 ```
 
-You can also open one of the files:
+If a file was already tracked before you added the encryption rule, re-add it so Git stores the encrypted version:
 
-```powershell
-Get-Content Website\markdown\Private\Your-File.md
+```bash
+git add private/
+git commit -m "Re-add private files through git-crypt"
+```
+
+## Export The Key
+
+Export a key from a trusted unlocked clone:
+
+```bash
+git-crypt export-key my-repo-git-crypt.key
+```
+
+Keep this key outside the repo.
+
+Good places:
+
+- Encrypted USB drive
+- Password manager with file attachments
+- Encrypted backup drive
+- Another secure offline backup
+
+Bad places:
+
+- The Git repository
+- A public cloud folder
+- The same folder as the encrypted files
+- Anywhere you will forget exists until five minutes after disaster strikes
+
+## Unlock A Fresh Clone
+
+Clone the repo:
+
+```bash
+git clone https://github.com/example/example-repo.git
+cd example-repo
+```
+
+Unlock it with the exported key:
+
+```bash
+git-crypt unlock /path/to/my-repo-git-crypt.key
+```
+
+After unlocking, encrypted files become readable in the working tree.
+
+Check status:
+
+```bash
+git-crypt status
 ```
 
 ## Everyday Workflow
 
-Once the repo is unlocked, use it like normal:
+Once unlocked, work normally:
 
-```powershell
+```bash
 git pull
 ```
 
-Edit files in:
+Edit protected files, then commit:
 
-```powershell
-Website\markdown\Private
-```
-
-Then commit:
-
-```powershell
-git add Website\markdown\Private
+```bash
+git add private/
 git commit -m "Update private notes"
 git push
 ```
 
-Git stores those files encrypted when they are committed.
+The files are readable locally but encrypted in Git.
 
-## What GitHub Sees
+## Verify What GitHub Sees
 
-GitHub will see that files exist in `Website/markdown/Private`, but the contents should look encrypted.
+After pushing, check the file on the remote hosting site. It should not render as readable text. It should look like encrypted binary or unreadable data.
 
-GitHub will still show filenames and folder names. Do not use sensitive names if the names themselves reveal too much.
+You can also test from a fresh clone without unlocking:
 
-Better:
-
-```text
-Website/markdown/Private/Recovery.md
-Website/markdown/Private/Network.md
-Website/markdown/Private/Personal.md
+```bash
+git clone https://github.com/example/example-repo.git test-locked-clone
+cd test-locked-clone
+cat private/example.md
 ```
 
-Less ideal:
+Without the key, the file should not be readable.
 
-```text
-Website/markdown/Private/My-Bank-Passwords.md
-Website/markdown/Private/Secret-Server-SSH-Key.md
-```
+## Important Git History Warning
 
-## Important Warning About Git History
+`git-crypt` only protects files after encryption is configured.
 
-`git-crypt` protects files from the point where encryption is configured.
+If a secret was committed before the `.gitattributes` rule existed, the plaintext may still exist in Git history. Removing the file from the latest commit is not enough.
 
-If a sensitive file was committed before the `.gitattributes` encryption rule existed, the plaintext may still exist in Git history. In that case, removing it from the latest commit is not enough. The history would need to be cleaned, and any exposed secret should be treated as compromised.
+If that happens:
 
-## Quick Command Reference
+- Treat the exposed secret as compromised
+- Rotate passwords, tokens, or keys
+- Consider cleaning Git history with a tool like `git filter-repo`
+
+## Quick Reference
 
 Initialize:
 
-```powershell
+```bash
 git-crypt init
 ```
 
-Track private markdown files:
+Encrypt a folder:
 
 ```gitattributes
-Website/markdown/Private/** filter=git-crypt diff=git-crypt
+private/** filter=git-crypt diff=git-crypt
 ```
 
 Check status:
 
-```powershell
+```bash
 git-crypt status
 ```
 
 Export key:
 
-```powershell
-git-crypt export-key C:\Users\rocket\Documents\rock-os-git-crypt.key
+```bash
+git-crypt export-key my-repo-git-crypt.key
 ```
 
-Unlock fresh clone:
+Unlock:
 
-```powershell
-git-crypt unlock C:\Users\rocket\Documents\rock-os-git-crypt.key
+```bash
+git-crypt unlock /path/to/my-repo-git-crypt.key
 ```
 
 ## Recovery Rule
 
 Keep at least two secure copies of the exported key.
 
-One unlocked computer is convenient. One exported key is survival. Two exported keys, stored safely, is how you avoid future-you staring at encrypted files and inventing new swear words.
+One unlocked laptop is convenient. One exported key is survival. Two exported keys, stored safely, is how you avoid future-you staring at encrypted files and learning new vocabulary.
