@@ -1109,6 +1109,14 @@ h3,
 	box-shadow:0 0 20px rgba(var(--accent-2-rgb), .35);
 }
 
+:root[data-theme="steel"] .content a {
+	color:#1f6feb;
+}
+
+:root[data-theme="steel"] .content :not(pre) > code {
+	color:#b42318;
+}
+
 .theme-select {
 	background:var(--panel-strong);
 	border:1px solid rgba(var(--accent-rgb), .42);
