@@ -668,6 +668,150 @@ function enhanceCodeBlocks(container) {
         });
 }
 
+function normalizeDocPath(path) {
+
+    const segments = [];
+
+    decodeURIComponent(path)
+        .replace(/\\/g, '/')
+        .replace(/^\/+/, '')
+        .split('/')
+        .forEach(segment => {
+
+            if (!segment || segment === '.') {
+                return;
+            }
+
+            if (segment === '..') {
+                segments.pop();
+                return;
+            }
+
+            segments.push(segment);
+        });
+
+    return segments.join('/');
+}
+
+function resolveMarkdownLink(
+    href,
+    currentDocPath
+) {
+
+    if (!href || href.startsWith('#')) {
+        return '';
+    }
+
+    if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
+        return '';
+    }
+
+    const pathOnly =
+        href.split('#')[0]
+            .split('?')[0];
+
+    if (!pathOnly.toLowerCase().endsWith('.md')) {
+        return '';
+    }
+
+    if (pathOnly.startsWith('/')) {
+        return normalizeDocPath(pathOnly);
+    }
+
+    if (pathOnly.startsWith('markdown/')) {
+        return normalizeDocPath(pathOnly);
+    }
+
+    const currentFolder =
+        currentDocPath
+            .split('/')
+            .slice(0, -1)
+            .join('/');
+
+    return normalizeDocPath(
+        `${currentFolder}/${pathOnly}`
+    );
+}
+
+function wikiDocHref(path) {
+
+    const url =
+        new URL('wiki.html', window.location.href);
+
+    url.searchParams.set('doc', path);
+
+    return `${url.pathname}${url.search}`;
+}
+
+function enhanceWikiLinks(
+    container,
+    currentDocPath
+) {
+
+    container.querySelectorAll('a[href]')
+        .forEach(link => {
+
+            const docPath =
+                resolveMarkdownLink(
+                    link.getAttribute('href'),
+                    currentDocPath
+                );
+
+            if (!docPath) {
+                return;
+            }
+
+            const docExists =
+                allMarkdownFiles.includes(docPath);
+
+            link.href = wikiDocHref(docPath);
+            link.dataset.path = docPath;
+
+            if (!docExists) {
+
+                link.classList.add('broken-wiki-link');
+                link.title = `Missing wiki page: ${docPath}`;
+                link.setAttribute(
+                    'aria-label',
+                    `${link.textContent.trim()} missing wiki page`
+                );
+            }
+
+            link.onclick = event => {
+
+                event.preventDefault();
+
+                if (!docExists) {
+                    return;
+                }
+
+                loadDoc(docPath);
+            };
+        });
+}
+
+function formatEditedDate(value) {
+
+    if (!value) {
+        return '';
+    }
+
+    const date =
+        new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
 async function loadDoc(path, options = {}) {
 
     const shouldUpdateUrl =
@@ -692,6 +836,11 @@ async function loadDoc(path, options = {}) {
 
     const text = await response.text();
 
+    const lastEdited =
+        formatEditedDate(
+            response.headers.get('Last-Modified')
+        );
+
     const md = window.markdownit({
         html: true,
         linkify: true,
@@ -703,10 +852,13 @@ async function loadDoc(path, options = {}) {
         document.getElementById('content');
 
     content.innerHTML =
-        md.render(text);
+        `${lastEdited
+            ? `<div class="doc-meta">Last edited ${escapeHtml(lastEdited)}</div>`
+            : ''}${md.render(text)}`;
 
     enhanceCodeBlocks(content);
     enhanceCallouts(content);
+    enhanceWikiLinks(content, path);
 }
 
 function buildTree(files) {
@@ -768,8 +920,12 @@ function folderIconName(folderPath) {
         return 'linux';
     }
 
-    if (rootFolder === 'help') {
-        return 'help';
+    if (rootFolder === 'android') {
+        return 'android';
+    }
+
+    if (rootFolder === 'ios') {
+        return 'ios';
     }
 
     return 'folder';
@@ -828,8 +984,16 @@ function iconElement(name) {
         addCircle('10.2', '7.2', '.8');
         addCircle('13.8', '7.2', '.8');
         break;
-    case 'help':
-        addPath('M12 2a10 10 0 100 20 10 10 0 000-20zm0 17.2a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm1.1-5.1v1h-2.2v-1.3c0-1.1.6-1.8 1.5-2.4.8-.5 1.4-.9 1.4-1.8 0-.9-.7-1.5-1.8-1.5-1 0-1.8.5-2.5 1.3L8 8c1-1.2 2.3-1.9 4.1-1.9 2.4 0 4 1.3 4 3.3 0 2-1.3 2.8-2.3 3.5-.5.4-.7.7-.7 1.2z');
+    case 'android':
+        addPath('M7.2 8.3h9.6c1.2 0 2.2 1 2.2 2.2v6.6c0 1.2-1 2.2-2.2 2.2h-.5v2.2c0 .7-.5 1.2-1.2 1.2s-1.2-.5-1.2-1.2v-2.2h-3.8v2.2c0 .7-.5 1.2-1.2 1.2s-1.2-.5-1.2-1.2v-2.2h-.5C6 19.3 5 18.3 5 17.1v-6.6c0-1.2 1-2.2 2.2-2.2z');
+        addPath('M8.1 4.2L6.7 2.1 5.6 2.8l1.5 2.3C6.3 5.8 5.8 6.7 5.6 7.6h12.8c-.2-.9-.7-1.8-1.5-2.5l1.5-2.3-1.1-.7-1.4 2.1C14.8 3.6 13.5 3.3 12 3.3s-2.8.3-3.9.9z');
+        addPath('M3.1 10.3c.7 0 1.2.5 1.2 1.2v4.5c0 .7-.5 1.2-1.2 1.2s-1.2-.5-1.2-1.2v-4.5c0-.7.5-1.2 1.2-1.2zM20.9 10.3c.7 0 1.2.5 1.2 1.2v4.5c0 .7-.5 1.2-1.2 1.2s-1.2-.5-1.2-1.2v-4.5c0-.7.5-1.2 1.2-1.2z');
+        addCircle('9.5', '6.1', '.55');
+        addCircle('14.5', '6.1', '.55');
+        break;
+    case 'ios':
+        addPath('M17.2 2.2c.1 1.3-.5 2.6-1.3 3.5-.9 1-2.1 1.6-3.4 1.5-.1-1.2.5-2.5 1.3-3.4.9-1 2.3-1.7 3.4-1.6z');
+        addPath('M20.1 16.6c-.5 1.1-.8 1.6-1.4 2.5-1 1.4-2.3 3.1-3.9 3.1-1.4 0-1.8-.9-3.7-.9s-2.3.9-3.7.9c-1.6 0-2.9-1.5-3.8-2.9-2.7-4-2.9-8.6-1.3-11.1 1.1-1.7 2.9-2.7 4.6-2.7 1.8 0 2.9 1 4.3 1s2.3-1 4.3-1c1.6 0 3.2.8 4.4 2.3-3.8 2-3.2 7.5.2 8.8z');
         break;
     default:
         addPath('M3 6.5C3 5.7 3.7 5 4.5 5h5l2 2h8c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-15C3.7 18 3 17.3 3 16.5v-10z');

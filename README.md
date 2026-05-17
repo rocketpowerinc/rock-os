@@ -12,9 +12,13 @@ small cross-platform Go binary and rendered in the browser.
 - Automatic sidebar tree from nested markdown folders
 - Instant search across file names and markdown contents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
+- Last edited note shown above rendered markdown files
+- Internal markdown links open through the wiki page route
+- Missing internal markdown links are visibly marked as broken
 - Code block copy buttons, language labels, line numbers, and highlighting
 - Markdown callouts for notes, warnings, tips, errors, and related blocks
 - Theme presets: Steel, Rugged, Cyberpunk, and Blue-Grass
+- Local offline icons, favicons, and bookmark assets
 - Local media support for images and videos kept out of Git
 - Cross-platform Go server for Windows, Linux, and macOS
 
@@ -129,6 +133,35 @@ Website/markdown/
     AnduinOS/
       Bootstrap.md
 ```
+
+## Wiki Links
+
+Internal links between markdown files should use normal relative markdown links:
+
+```markdown
+[GNOME Cheat Sheet](../Cheat%20Sheets/Gnome-CheatSheet.md)
+```
+
+When rendered in the wiki, internal `.md` links are opened through `wiki.html`
+with a `doc` parameter instead of navigating to the raw file directly.
+
+If an internal `.md` link points to a file that is not in
+`Website/markdown-index.json`, the wiki marks it as missing so broken links are
+visible while editing.
+
+Direct wiki URLs look like this:
+
+```text
+wiki.html?doc=markdown/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+```
+
+## Offline Assets
+
+The website is designed to work locally on an intranet. Theme images, folder
+icons, favicons, Apple touch icons, and manifest icons are stored inside the
+repo under `Website/assets` or embedded directly in the local HTML/JS/CSS.
+
+The site does not need external icon CDNs or remote assets for the wiki UI.
 
 ## Markdown And Media
 
