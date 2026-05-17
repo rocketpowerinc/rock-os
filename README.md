@@ -17,6 +17,7 @@ small cross-platform Go binary and rendered in the browser.
 - Auto-generated table of contents for longer markdown documents
 - Internal markdown links open through the wiki page route
 - Missing internal markdown links are visibly marked as broken
+- Backlinks show which markdown files reference the current page
 - Code block copy buttons, inline code click-to-copy, language labels, line numbers, and highlighting
 - Markdown callouts for notes, warnings, tips, errors, and related blocks
 - Theme presets: Steel, Rugged, Cyberpunk, and Blue-Grass

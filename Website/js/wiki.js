@@ -963,6 +963,144 @@ function enhanceWikiLinks(
         });
 }
 
+function markdownLinksInText(
+    text,
+    sourceDocPath
+) {
+
+    const links = new Set();
+    const inlineLinkPattern =
+        /(!)?\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+
+    let match;
+
+    while ((match = inlineLinkPattern.exec(text)) !== null) {
+
+        if (match[1]) {
+            continue;
+        }
+
+        const docPath =
+            resolveMarkdownLink(
+                match[2],
+                sourceDocPath
+            );
+
+        if (docPath) {
+            links.add(docPath);
+        }
+    }
+
+    return links;
+}
+
+async function findBacklinks(targetDocPath) {
+
+    const backlinks = [];
+
+    await Promise.all(
+        allMarkdownFiles
+            .filter(file =>
+                file !== targetDocPath
+            )
+            .map(async file => {
+
+                const text =
+                    await loadMarkdownText(file);
+
+                if (!text) {
+                    return;
+                }
+
+                const links =
+                    markdownLinksInText(
+                        text,
+                        file
+                    );
+
+                if (links.has(targetDocPath)) {
+                    backlinks.push(file);
+                }
+            })
+    );
+
+    return backlinks.sort((a, b) =>
+        a.toLowerCase()
+            .localeCompare(b.toLowerCase())
+    );
+}
+
+function renderBacklinks(
+    container,
+    backlinks
+) {
+
+    const existing =
+        container.querySelector('.wiki-backlinks');
+
+    if (existing) {
+        existing.remove();
+    }
+
+    if (!backlinks.length) {
+        return;
+    }
+
+    const section =
+        document.createElement('section');
+
+    section.className = 'wiki-backlinks';
+    section.innerHTML = `
+        <h2>Referenced by</h2>
+        <div class="wiki-backlink-list"></div>
+    `;
+
+    const list =
+        section.querySelector('.wiki-backlink-list');
+
+    backlinks.forEach(path => {
+
+        const link =
+            document.createElement('a');
+
+        link.className = 'wiki-backlink';
+        link.href = wikiDocHref(path);
+        link.dataset.path = path;
+        link.innerHTML = `
+            <span>${escapeHtml(fileTitle(path))}</span>
+            <small>${escapeHtml(path)}</small>
+        `;
+
+        link.onclick = event => {
+
+            event.preventDefault();
+            loadDoc(path);
+        };
+
+        list.appendChild(link);
+    });
+
+    container.appendChild(section);
+}
+
+async function enhanceBacklinks(
+    container,
+    targetDocPath
+) {
+
+    const backlinks =
+        await findBacklinks(targetDocPath);
+
+    if (activeDocPath !== targetDocPath) {
+        return;
+    }
+
+    renderBacklinks(
+        container,
+        backlinks
+    );
+}
+
 function getToc() {
 
     return document.getElementById('wikiToc');
@@ -1210,6 +1348,7 @@ async function loadDoc(path, options = {}) {
     enhanceCallouts(content);
     enhanceWikiLinks(content, path);
     buildTableOfContents(content);
+    enhanceBacklinks(content, path);
     content.scrollTop = 0;
     scrollToCurrentHash();
 }

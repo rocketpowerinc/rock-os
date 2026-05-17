@@ -850,6 +850,59 @@ word-break:normal;
 	vertical-align:super;
 }
 
+.wiki-backlinks {
+	border-top:1px solid rgba(208,255,0,.16);
+	margin-top:48px;
+	max-width:980px;
+	padding-top:22px;
+}
+
+.wiki-backlinks h2 {
+	font-size:1rem;
+	letter-spacing:2px;
+	margin:0 0 14px;
+	text-transform:uppercase;
+}
+
+.wiki-backlink-list {
+	display:grid;
+	gap:10px;
+}
+
+.wiki-backlink {
+	background:rgba(208,255,0,.045);
+	border:1px solid rgba(208,255,0,.16);
+	border-radius:6px;
+	color:var(--accent);
+	display:block;
+	padding:12px 14px;
+	text-decoration:none;
+	transition:background .2s, border-color .2s, box-shadow .2s, color .2s;
+}
+
+.wiki-backlink:hover {
+	background:rgba(208,255,0,.09);
+	border-color:rgba(208,255,0,.38);
+	box-shadow:0 0 18px rgba(208,255,0,.1);
+}
+
+.wiki-backlink span,
+.wiki-backlink small {
+	display:block;
+}
+
+.wiki-backlink span {
+	font-weight:700;
+	letter-spacing:.5px;
+}
+
+.wiki-backlink small {
+	color:var(--text-muted);
+	font-size:.76rem;
+	margin-top:5px;
+	overflow-wrap:break-word;
+}
+
 .content ul{
 padding-left:25px;
 }
@@ -1305,6 +1358,22 @@ h3,
 
 :root[data-theme="steel"] .content a.broken-wiki-link {
 	color:#b42318;
+}
+
+:root[data-theme="steel"] .wiki-backlinks {
+	border-top-color:rgba(79,100,117,.18);
+}
+
+:root[data-theme="steel"] .wiki-backlink {
+	background:rgba(79,100,117,.055);
+	border-color:rgba(79,100,117,.18);
+	color:#354655;
+}
+
+:root[data-theme="steel"] .wiki-backlink:hover {
+	background:rgba(79,100,117,.1);
+	border-color:rgba(79,100,117,.34);
+	box-shadow:none;
 }
 
 :root[data-theme="steel"] .wiki-search input:focus {
