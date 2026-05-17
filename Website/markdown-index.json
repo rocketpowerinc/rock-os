@@ -1,5 +1,9 @@
 [
+  "markdown/Android/Bootstrap.md",
+  "markdown/Android/Handbook/1.md",
   "markdown/Help/Callouts.md",
+  "markdown/iOS/Bootstrap.md",
+  "markdown/iOS/Handbook/1.md",
   "markdown/Linux/Bootstraps/AnduinOS/1 - Pre iso Creation.md",
   "markdown/Linux/Bootstraps/AnduinOS/2 - Post iso install.md",
   "markdown/Linux/Build-ISO/Penguin-Eggs.md",
@@ -14,5 +18,7 @@
   "markdown/Linux/Handbook/6 - Browsers.md",
   "markdown/Linux/Handbook/7 - Docker.md",
   "markdown/Mac/Bootstrap.md",
-  "markdown/Windows/Bootstrap.md"
+  "markdown/Mac/Handbook/1.md",
+  "markdown/Windows/Bootstrap.md",
+  "markdown/Windows/Handbook/1.md"
 ]
