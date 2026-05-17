@@ -13,6 +13,7 @@ small cross-platform Go binary and rendered in the browser.
 - Instant search across file names and markdown contents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
+- Auto-generated table of contents for longer markdown documents
 - Internal markdown links open through the wiki page route
 - Missing internal markdown links are visibly marked as broken
 - Code block copy buttons, language labels, line numbers, and highlighting
