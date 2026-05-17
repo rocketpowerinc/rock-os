@@ -33,10 +33,28 @@ if not defined KEY_FILE (
 )
 
 echo Unlocking repository with "%KEY_FILE%"...
-"%GIT_CRYPT%" unlock "%KEY_FILE%"
+set "TEMP_KEY=%TEMP%\rock-os-git-crypt-%RANDOM%-%RANDOM%.key"
+copy /Y "%KEY_FILE%" "%TEMP_KEY%" >nul
 if errorlevel 1 (
-    echo Failed to unlock the repository.
+    echo Failed to copy the key to a temporary location.
     exit /b 1
+)
+
+del "%KEY_FILE%"
+if errorlevel 1 (
+    echo Failed to remove the temporary root key file.
+    echo Remove "%KEY_FILE%" manually, then run this script again.
+    del "%TEMP_KEY%" >nul 2>nul
+    exit /b 1
+)
+
+"%GIT_CRYPT%" unlock "%TEMP_KEY%"
+set "UNLOCK_RESULT=%ERRORLEVEL%"
+del "%TEMP_KEY%" >nul 2>nul
+
+if not "%UNLOCK_RESULT%"=="0" (
+    echo Failed to unlock the repository.
+    exit /b %UNLOCK_RESULT%
 )
 
 echo Repository unlocked.

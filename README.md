@@ -164,6 +164,10 @@ rock-os/
   Website/
 ```
 
+This root copy is only a temporary drop-off. The unlock script copies it to a
+temporary system folder, removes the root copy, then unlocks the repo. That
+keeps Git clean enough for `git-crypt unlock` to run.
+
 4. Unlock the repo.
 
 Windows:
@@ -180,7 +184,8 @@ chmod +x ./unlock-git-crypt.sh
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/markdown/Private/` should become readable.
+unlocking, files in `Website/markdown/Private/` should become readable, and the
+temporary root key copy should be gone.
 
 Check status:
 

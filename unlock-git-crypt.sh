@@ -24,5 +24,17 @@ if [ "$#" -gt 1 ]; then
 fi
 
 echo "Unlocking repository with $1..."
-git-crypt unlock "$1"
+temp_key="${TMPDIR:-/tmp}/rock-os-git-crypt-$$.key"
+cp "$1" "$temp_key"
+rm "$1"
+set +e
+git-crypt unlock "$temp_key"
+unlock_result=$?
+set -e
+rm -f "$temp_key"
+if [ "$unlock_result" -ne 0 ]; then
+    echo "Failed to unlock the repository."
+    exit "$unlock_result"
+fi
+
 echo "Repository unlocked."
