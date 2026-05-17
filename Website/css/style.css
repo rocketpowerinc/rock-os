@@ -555,6 +555,15 @@ min-width:0;
 scroll-behavior:smooth;
 }
 
+.content p,
+.content li,
+.content blockquote,
+.content td,
+.content th {
+	overflow-wrap:break-word;
+	word-break:normal;
+}
+
 .doc-meta {
 	color: rgba(255,255,255,.55);
 	font-size: .78rem;
@@ -785,6 +794,8 @@ color:#d0ff00;
 
 .content a{
 color:#ff00cc;
+overflow-wrap:break-word;
+word-break:normal;
 }
 
 .content a.broken-wiki-link {
