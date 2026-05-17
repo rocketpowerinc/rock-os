@@ -1288,6 +1288,12 @@ h3,
 	background:rgba(79,100,117,.12);
 }
 
+:root[data-theme="steel"] .expand-sidebar-btn {
+	background:#ffffff;
+	border-color:rgba(79,100,117,.42);
+	color:#4f6475;
+}
+
 :root[data-theme="steel"] .doc-link:hover {
 	background:rgba(79,100,117,.1);
 	color:#182027;
