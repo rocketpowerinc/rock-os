@@ -1,9 +1,11 @@
 [
   "markdown/Private/Example.md",
+  "markdown/Private/Example2.md",
   "markdown/Tech/Android/Bootstrap.md",
+  "markdown/Tech/Android/Cheat Sheets/1.md",
   "markdown/Tech/Android/Handbook/1.md",
-  "markdown/Tech/Git-Crypt.md",
   "markdown/Tech/iOS/Bootstrap.md",
+  "markdown/Tech/iOS/Cheat Sheets/1.md",
   "markdown/Tech/iOS/Handbook/1.md",
   "markdown/Tech/Linux/Bootstraps/AnduinOS/1 - Pre iso Creation.md",
   "markdown/Tech/Linux/Bootstraps/AnduinOS/2 - Post iso install.md",
@@ -23,7 +25,10 @@
   "markdown/Tech/Linux/Handbook/7 - Docker.md",
   "markdown/Tech/Linux/Links.md",
   "markdown/Tech/Mac/Bootstrap.md",
+  "markdown/Tech/Mac/Cheat Sheets/1.md",
   "markdown/Tech/Mac/Handbook/1.md",
+  "markdown/Tech/Universal/Cheat Sheets/Git-Crypt.md",
   "markdown/Tech/Windows/Bootstrap.md",
+  "markdown/Tech/Windows/Cheat Sheets/1.md",
   "markdown/Tech/Windows/Handbook/1.md"
 ]

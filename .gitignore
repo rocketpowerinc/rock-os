@@ -21,6 +21,7 @@ $RECYCLE.BIN/
 .env.*
 !.env.example
 *.local
+*.key
 
 # Logs and runtime output
 *.log
