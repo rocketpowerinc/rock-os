@@ -1,4 +1,4 @@
-# **Strengthening Your Linux System: Building a Resilient Foundation**
+# **Building a Resilient Foundation**
 
 ## **Network-Level Hardening**
 
