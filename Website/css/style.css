@@ -555,6 +555,12 @@ min-width:0;
 scroll-behavior:smooth;
 }
 
+.content::after {
+	content:"";
+	display:block;
+	height:96px;
+}
+
 .content p,
 .content li,
 .content blockquote,
