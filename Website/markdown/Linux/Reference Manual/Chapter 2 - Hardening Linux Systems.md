@@ -1,8 +1,6 @@
 # **Strengthening Your Linux System: Building a Resilient Foundation**
 
-## **1. Booting and Updating For the first time**
-
-## **1. Network-Level Hardening**
+## **Network-Level Hardening**
 
 A secure Linux system begins with a secure network. Implement the following best practices to reduce exposure and limit attack surfaces:
 
@@ -13,7 +11,7 @@ A secure Linux system begins with a secure network. Implement the following best
 
 ---
 
-## **2. Operating System-Level Hardening**
+## **Operating System-Level Hardening**
 
 Once the network is secured, reinforce the Linux OS itself with these essential measures:
 
