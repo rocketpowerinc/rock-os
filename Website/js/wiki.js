@@ -1153,30 +1153,30 @@ function buildTree(files) {
 
 function folderIconName(folderPath) {
 
-    if (folderPath.includes('/')) {
-        return 'folder';
-    }
+    const folderParts =
+        folderPath
+            .split('/')
+            .map(part =>
+                part.toLowerCase()
+            );
 
-    const rootFolder =
-        folderPath.split('/')[0].toLowerCase();
-
-    if (rootFolder === 'windows') {
+    if (folderParts.includes('windows')) {
         return 'windows';
     }
 
-    if (rootFolder === 'mac') {
+    if (folderParts.includes('mac')) {
         return 'mac';
     }
 
-    if (rootFolder === 'linux') {
+    if (folderParts.includes('linux')) {
         return 'linux';
     }
 
-    if (rootFolder === 'android') {
+    if (folderParts.includes('android')) {
         return 'android';
     }
 
-    if (rootFolder === 'ios') {
+    if (folderParts.includes('ios')) {
         return 'ios';
     }
 
