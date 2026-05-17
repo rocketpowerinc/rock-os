@@ -1,3 +1,5 @@
 @echo off
-cd /d "%~dp0"
+setlocal
+
+cd /d "%~dp0Website"
 go run . --host local

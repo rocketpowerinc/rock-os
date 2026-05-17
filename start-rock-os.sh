@@ -1,3 +1,5 @@
 #!/usr/bin/env sh
-cd "$(dirname "$0")" || exit 1
+set -eu
+
+cd "$(dirname "$0")/Website"
 go run . --host local

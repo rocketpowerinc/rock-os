@@ -83,13 +83,11 @@ go run .
 Helper scripts are also included:
 
 ```powershell
-cd Website
 .\start-rock-os.cmd
 ```
 
 ```bash
-cd Website
-sh start-rock-os.sh
+sh ./start-rock-os.sh
 ```
 
 By default, the server listens on port `8000`, opens the site in your browser,
