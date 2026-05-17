@@ -15,6 +15,7 @@ small cross-platform Go binary and rendered in the browser.
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
+- Pinned docs from markdown frontmatter appear at the top of the sidebar
 - Auto-generated table of contents for longer markdown documents
 - Internal markdown links open through the wiki page route
 - Missing internal markdown links are visibly marked as broken
@@ -253,6 +254,20 @@ Direct wiki URLs look like this:
 ```text
 wiki.html?doc=markdown/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
+
+## Pinned Docs
+
+Add frontmatter to the top of any markdown file to pin it above the normal
+sidebar tree:
+
+```markdown
+---
+pinned: true
+---
+```
+
+Pinned docs still appear in their normal folder location. The pin travels with
+the markdown file because it is stored in the file itself, not in browser state.
 
 ## Offline Assets
 

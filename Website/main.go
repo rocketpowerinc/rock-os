@@ -22,6 +22,11 @@ const (
 	markdownDir = "markdown"
 )
 
+type markdownIndexEntry struct {
+	Path   string `json:"path"`
+	Pinned bool   `json:"pinned,omitempty"`
+}
+
 func main() {
 	host := flag.String("host", "local", "host to bind: local, 127.0.0.1, 0.0.0.0, or a specific IP")
 	port := flag.Int("port", 8000, "port to listen on")
@@ -254,9 +259,9 @@ func writeMarkdownIndex(siteRoot string) (bool, error) {
 	return true, os.WriteFile(indexPath, nextJSON, 0o644)
 }
 
-func collectMarkdownFiles(siteRoot string) ([]string, error) {
+func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
 	root := filepath.Join(siteRoot, markdownDir)
-	files := []string{}
+	files := []markdownIndexEntry{}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		return files, nil
@@ -280,7 +285,10 @@ func collectMarkdownFiles(siteRoot string) ([]string, error) {
 			return err
 		}
 
-		files = append(files, filepath.ToSlash(relativePath))
+		files = append(files, markdownIndexEntry{
+			Path:   filepath.ToSlash(relativePath),
+			Pinned: markdownFilePinned(path),
+		})
 		return nil
 	})
 	if err != nil {
@@ -288,10 +296,45 @@ func collectMarkdownFiles(siteRoot string) ([]string, error) {
 	}
 
 	sort.Slice(files, func(i, j int) bool {
-		return strings.ToLower(files[i]) < strings.ToLower(files[j])
+		return strings.ToLower(files[i].Path) < strings.ToLower(files[j].Path)
 	})
 
 	return files, nil
+}
+
+func markdownFilePinned(path string) bool {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+
+	text := strings.ReplaceAll(string(content), "\r\n", "\n")
+	lines := strings.Split(text, "\n")
+	if len(lines) == 0 || strings.TrimSpace(lines[0]) != "---" {
+		return false
+	}
+
+	for _, line := range lines[1:] {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "---" {
+			return false
+		}
+
+		key, value, found := strings.Cut(trimmed, ":")
+		if !found || !strings.EqualFold(strings.TrimSpace(key), "pinned") {
+			continue
+		}
+
+		normalizedValue := strings.ToLower(
+			strings.Trim(strings.TrimSpace(value), `"'`),
+		)
+
+		return normalizedValue == "true" ||
+			normalizedValue == "yes" ||
+			normalizedValue == "1"
+	}
+
+	return false
 }
 
 func openBrowser(url string) error {

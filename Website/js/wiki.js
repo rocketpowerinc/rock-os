@@ -5,6 +5,7 @@ let lastIndexText = '';
 let activeDocPath = '';
 let indexLoadInProgress = false;
 let allMarkdownFiles = [];
+let markdownFileMeta = new Map();
 let searchQuery = '';
 let initialUrlDocLoaded = false;
 
@@ -34,18 +35,51 @@ function normalizeFiles(parsed) {
         ? parsed
         : [parsed];
 
-    return files
-        .filter(file =>
-            typeof file === 'string' &&
-            file.trim().toLowerCase().endsWith('.md')
-        )
-        .map(file =>
-            file.trim()
-        )
-        .sort((a, b) =>
-            a.toLowerCase()
-                .localeCompare(b.toLowerCase())
-        );
+    const entries =
+        files
+            .map(file => {
+
+                if (typeof file === 'string') {
+                    return {
+                        path: file.trim(),
+                        pinned: false
+                    };
+                }
+
+                if (
+                    file &&
+                    typeof file === 'object' &&
+                    typeof file.path === 'string'
+                ) {
+                    return {
+                        path: file.path.trim(),
+                        pinned: file.pinned === true
+                    };
+                }
+
+                return null;
+            })
+            .filter(file =>
+                file &&
+                file.path.toLowerCase().endsWith('.md')
+            )
+            .sort((a, b) =>
+                a.path.toLowerCase()
+                    .localeCompare(b.path.toLowerCase())
+            );
+
+    markdownFileMeta = new Map(
+        entries.map(file => [
+            file.path,
+            {
+                pinned: file.pinned
+            }
+        ])
+    );
+
+    return entries.map(file =>
+        file.path
+    );
 }
 
 function fileTitle(path) {
@@ -195,6 +229,86 @@ function renderEmptyState(container) {
         'No markdown files found.';
 
     container.appendChild(empty);
+}
+
+function pinnedMarkdownFiles() {
+
+    return allMarkdownFiles.filter(file =>
+        markdownFileMeta.get(file)?.pinned
+    );
+}
+
+function createSidebarDocLink(path, label, className = 'doc-link') {
+
+    const link =
+        document.createElement('a');
+
+    link.className = className;
+    link.href = '#';
+    link.dataset.path = path;
+
+    if (path === activeDocPath) {
+        link.classList.add('active');
+    }
+
+    link.innerText = label;
+
+    link.onclick = () => {
+
+        loadDoc(path);
+
+        return false;
+    };
+
+    return link;
+}
+
+function renderPinnedDocs(container) {
+
+    const pinnedFiles =
+        pinnedMarkdownFiles();
+
+    if (!pinnedFiles.length) {
+        return;
+    }
+
+    const section =
+        document.createElement('section');
+
+    section.className = 'pinned-docs';
+    section.setAttribute('aria-label', 'Pinned docs');
+
+    const title =
+        document.createElement('div');
+
+    title.className = 'pinned-docs-title';
+    title.innerText = 'Pinned';
+
+    section.appendChild(title);
+
+    pinnedFiles.forEach(file => {
+
+        section.appendChild(
+            createSidebarDocLink(
+                file,
+                fileTitle(file),
+                'doc-link pinned-doc-link'
+            )
+        );
+    });
+
+    container.appendChild(section);
+}
+
+function renderNormalSidebar(container) {
+
+    renderPinnedDocs(container);
+
+    renderTree(
+        buildTree(allMarkdownFiles),
+        container,
+        ''
+    );
 }
 
 function renderWelcomeState() {
@@ -378,11 +492,7 @@ function rerenderSidebar() {
         return;
     }
 
-    renderTree(
-        buildTree(allMarkdownFiles),
-        sidebar,
-        ''
-    );
+    renderNormalSidebar(sidebar);
 
     updateActiveDocLinks();
     updateToggleAllFoldersButton();
@@ -1710,29 +1820,12 @@ function renderTree(
 
             } else {
 
-                const link =
-                    document.createElement('a');
-
-                link.className = 'doc-link';
-
-                link.href = '#';
-                link.dataset.path = item.path;
-
-                if (item.path === activeDocPath) {
-                    link.classList.add('active');
-                }
-
-                link.innerText =
-                    key.replace('.md', '');
-
-                link.onclick = () => {
-
-                    loadDoc(item.path);
-
-                    return false;
-                };
-
-                container.appendChild(link);
+                container.appendChild(
+                    createSidebarDocLink(
+                        item.path,
+                        key.replace('.md', '')
+                    )
+                );
             }
         });
 }
@@ -1760,11 +1853,7 @@ function renderSearchResults() {
             status.innerText = '';
         }
 
-        renderTree(
-            buildTree(allMarkdownFiles),
-            sidebar,
-            ''
-        );
+        renderNormalSidebar(sidebar);
 
         return;
     }
@@ -1965,16 +2054,13 @@ async function loadIndex() {
         warmSearchIndex(files);
 
         const nextIndexText =
-            JSON.stringify(files);
+            rawText.trim();
 
         if (nextIndexText === lastIndexText) {
             return;
         }
 
         lastIndexText = nextIndexText;
-
-        const tree =
-            buildTree(files);
 
         const sidebar =
             getSidebar();
@@ -2000,11 +2086,7 @@ async function loadIndex() {
         if (searchQuery) {
             renderSearchResults();
         } else {
-            renderTree(
-                tree,
-                sidebar,
-                ''
-            );
+            renderNormalSidebar(sidebar);
         }
 
         await openDocFromUrlIfNeeded();
