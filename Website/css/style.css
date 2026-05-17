@@ -578,6 +578,41 @@ scroll-behavior:smooth;
 	text-transform: uppercase;
 }
 
+.wiki-breadcrumbs {
+	align-items:center;
+	display:flex;
+	flex-wrap:wrap;
+	gap:7px;
+	margin:0 0 14px;
+	max-width:980px;
+}
+
+.wiki-breadcrumbs span {
+	font-size:.76rem;
+	font-weight:700;
+	letter-spacing:.8px;
+	text-decoration:none;
+	text-transform:uppercase;
+}
+
+.wiki-breadcrumbs span:not(.wiki-breadcrumb-separator):not(.wiki-breadcrumb-current) {
+	background:rgba(208,255,0,.055);
+	border:1px solid rgba(208,255,0,.16);
+	border-radius:999px;
+	color:var(--accent);
+	padding:5px 9px;
+}
+
+.wiki-breadcrumb-current {
+	color:var(--text-muted);
+	padding:5px 0;
+}
+
+.wiki-breadcrumb-separator {
+	color:var(--text-muted);
+	opacity:.6;
+}
+
 .wiki-toc {
 	align-self:flex-start;
 	background:rgba(10,10,10,.78);
@@ -1374,6 +1409,12 @@ h3,
 	background:rgba(79,100,117,.1);
 	border-color:rgba(79,100,117,.34);
 	box-shadow:none;
+}
+
+:root[data-theme="steel"] .wiki-breadcrumbs span:not(.wiki-breadcrumb-separator):not(.wiki-breadcrumb-current) {
+	background:rgba(79,100,117,.055);
+	border-color:rgba(79,100,117,.18);
+	color:#354655;
 }
 
 :root[data-theme="steel"] .wiki-search input:focus {
