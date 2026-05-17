@@ -326,75 +326,6 @@ remind you that privacy often arrives with a backpack full of tradeoffs.
 Whonix is especially interesting when paired with virtualization, and it can be
 used alongside Qubes OS for very strong compartmentalized privacy workflows.
 
-## Desktop Environments And Window Managers
-
-The distro is only part of the story. The desktop layer matters too.
-
-Traditional desktop environments like GNOME, KDE Plasma, Cinnamon, and XFCE are
-good choices when you want familiar workflows and less manual setup. They are
-especially useful for beginners or for machines that need to be easy for other
-people to use.
-
-Modern Wayland window managers are where things get interesting if you want a
-more advanced, keyboard-driven workstation.
-
-## Hyprland
-
-Hyprland is one of the most exciting modern window managers.
-
-It is a dynamic tiling Wayland compositor with a very polished feel. It can look
-beautiful, move fast, and give you a keyboard-driven workflow that feels much
-more efficient than a traditional desktop once you learn it.
-
-Hyprland is great for:
-
-- Fast keyboard-driven work
-- Clean tiling layouts
-- Modern Wayland features
-- Highly customized desktops
-- A slick futuristic interface
-
-The tradeoff is that you own more of the setup. Panels, launchers,
-notifications, screenshots, screen locking, and power menus are usually pieced
-together from separate tools. That is powerful, but it also means you may spend
-a Saturday configuring things that normal people assume should already exist.
-
-This is either a warning or a selling point, depending on your personality.
-
-## Niri
-
-Niri is another excellent Wayland window manager, especially if you like the
-scrolling window-manager concept.
-
-Instead of traditional tiled workspaces, Niri gives you a scrollable layout
-that can feel very natural for deep work. It is clean, modern, and different in
-a good way. It is especially interesting for laptops and focused workstation
-setups.
-
-Niri is great for:
-
-- Smooth scrollable workflows
-- Focused writing and research
-- Modern Wayland setups
-- A clean alternative to traditional tiling
-
-It is still more niche than Hyprland, but it is absolutely worth watching and
-testing.
-
-## Dank Shell
-
-Dank Shell fits well with these modern Wayland setups because it gives the
-desktop a more complete and polished shell experience.
-
-When you use a window manager instead of a full desktop environment, you often
-need to assemble the missing pieces yourself. A shell layer can help provide
-the panels, controls, launchers, and visual structure that make the system feel
-finished instead of taped together at 2 AM.
-
-Hyprland or Niri with Dank Shell can be a great direction: modern, fast,
-keyboard-friendly, and visually distinctive without needing a heavy traditional
-desktop environment.
-
 ## My Practical Recommendation
 
 If you want the most stable foundation, start with Debian.
@@ -405,7 +336,3 @@ If you want to learn deeply and build a sharper, more custom system, study Arch
 Linux next.
 
 If you want modern desktop technology with polished defaults, test Fedora too.
-
-For the desktop layer, start simple if you need reliability. Then experiment
-with Hyprland, Niri, and Dank Shell when you are ready to build a more advanced
-Linux workstation.

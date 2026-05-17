@@ -91,6 +91,29 @@ text-shadow:0 0 10px #d0ff00;
 	flex: 0 0 18px;
 }
 
+.site-footer {
+	display: flex;
+	justify-content: center;
+	padding: 34px 20px 46px;
+	position: relative;
+	z-index: 1;
+}
+
+.site-footer .github-link {
+	color: var(--accent);
+	font-size: .82rem;
+	font-weight: 700;
+	letter-spacing: 2px;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: opacity .2s, text-shadow .2s;
+}
+
+.site-footer .github-link:hover {
+	opacity: .9;
+	text-shadow: 0 0 10px rgba(var(--accent-rgb), .9);
+}
+
 .hero{
 text-align:center;
 padding:120px 20px;
@@ -1057,7 +1080,8 @@ h3,
 }
 
 .nav-links a:hover,
-.doc-link:hover {
+.doc-link:hover,
+.site-footer .github-link:hover {
 	text-shadow:0 0 10px rgba(var(--accent-rgb), .9);
 }
 
