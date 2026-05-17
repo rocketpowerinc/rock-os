@@ -385,6 +385,7 @@ function rerenderSidebar() {
     );
 
     updateActiveDocLinks();
+    updateToggleAllFoldersButton();
 }
 
 function setAllFoldersExpanded(expanded) {
@@ -401,6 +402,40 @@ function setAllFoldersExpanded(expanded) {
 
     saveState();
     rerenderSidebar();
+    updateToggleAllFoldersButton();
+}
+
+function areAllFoldersExpanded() {
+
+    const folderPaths =
+        allFolderPaths(allMarkdownFiles);
+
+    return folderPaths.length > 0 &&
+        folderPaths.every(folderPath =>
+            expandedFolders.has(folderPath)
+        );
+}
+
+function updateToggleAllFoldersButton() {
+
+    const toggleAllFoldersBtn =
+        document.getElementById('toggleAllFoldersBtn');
+
+    if (!toggleAllFoldersBtn) {
+        return;
+    }
+
+    const allExpanded =
+        areAllFoldersExpanded();
+
+    toggleAllFoldersBtn.innerHTML =
+        allExpanded ? '&#x229F;' : '&#x229E;';
+    toggleAllFoldersBtn.setAttribute(
+        'aria-label',
+        allExpanded ? 'Fold all folders' : 'Expand all folders'
+    );
+    toggleAllFoldersBtn.title =
+        allExpanded ? 'Fold all folders' : 'Expand all folders';
 }
 
 function rememberActiveDoc(path) {
@@ -1370,6 +1405,7 @@ function renderTree(
                             'aria-label',
                             `Expand ${key}`
                         );
+                        updateToggleAllFoldersButton();
 
                     } else {
 
@@ -1391,6 +1427,7 @@ function renderTree(
                             'aria-label',
                             `Collapse ${key}`
                         );
+                        updateToggleAllFoldersButton();
                     }
                 };
 
@@ -1745,11 +1782,8 @@ async function refreshWiki() {
 const refreshWikiBtn =
     document.getElementById('refreshWikiBtn');
 
-const expandAllFoldersBtn =
-    document.getElementById('expandAllFoldersBtn');
-
-const collapseAllFoldersBtn =
-    document.getElementById('collapseAllFoldersBtn');
+const toggleAllFoldersBtn =
+    document.getElementById('toggleAllFoldersBtn');
 
 const wikiSearchInput =
     document.getElementById('wikiSearchInput');
@@ -1773,17 +1807,10 @@ if (refreshWikiBtn) {
     });
 }
 
-if (expandAllFoldersBtn) {
+if (toggleAllFoldersBtn) {
 
-    expandAllFoldersBtn.addEventListener('click', () => {
-        setAllFoldersExpanded(true);
-    });
-}
-
-if (collapseAllFoldersBtn) {
-
-    collapseAllFoldersBtn.addEventListener('click', () => {
-        setAllFoldersExpanded(false);
+    toggleAllFoldersBtn.addEventListener('click', () => {
+        setAllFoldersExpanded(!areAllFoldersExpanded());
     });
 }
 
