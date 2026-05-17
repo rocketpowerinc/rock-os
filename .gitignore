@@ -61,6 +61,7 @@ coverage/
 .vite/
 
 # Project-specific local artifacts
+Website/markdown-index.json
 Website/.gocache/
 Website/.codex-tmp/
 Website/static-web-server/

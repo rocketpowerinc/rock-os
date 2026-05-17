@@ -218,6 +218,10 @@ Website/markdown-index.json
 The browser reads that JSON file, builds the sidebar tree, fetches the selected
 markdown file, and renders it into the page.
 
+`markdown-index.json` is generated local state and is intentionally ignored by
+Git. That keeps local private or experimental markdown files from constantly
+dirtying the repo or leaking filenames into commits.
+
 Example:
 
 ```text
