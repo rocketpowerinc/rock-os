@@ -910,9 +910,12 @@ function buildTableOfContents(container) {
 
                 event.preventDefault();
 
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+                container.scrollTo({
+                    top:
+                        target.offsetTop -
+                        container.offsetTop -
+                        24,
+                    behavior: 'smooth'
                 });
 
                 const url =
@@ -948,9 +951,19 @@ function scrollToCurrentHash() {
     }
 
     requestAnimationFrame(() => {
-        target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        const content =
+            document.getElementById('content');
+
+        if (!content) {
+            return;
+        }
+
+        content.scrollTo({
+            top:
+                target.offsetTop -
+                content.offsetTop -
+                24,
+            behavior: 'smooth'
         });
     });
 }
@@ -1026,6 +1039,7 @@ async function loadDoc(path, options = {}) {
     enhanceCallouts(content);
     enhanceWikiLinks(content, path);
     buildTableOfContents(content);
+    content.scrollTop = 0;
     scrollToCurrentHash();
 }
 
