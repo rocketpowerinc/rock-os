@@ -14,10 +14,10 @@ const legacyThemes = {
 };
 
 const themeImages = {
-    rock: 'assets/Rock-OS-Hero-Rock.png',
-    papers: 'assets/Rock-OS-Hero-Papers.png',
+    rock: 'assets/Rock-OS-Hero-Cyberpunk.png',
+    papers: 'assets/Rock-OS-Hero-Rugged.png',
     steel: 'assets/Rock-OS-Hero-Steel.png',
-    scissors: 'assets/Rock-OS-Hero-Scissors.png'
+    scissors: 'assets/Rock-OS-Hero-Blue-Grass.png'
 };
 
 function normalizeTheme(theme) {
