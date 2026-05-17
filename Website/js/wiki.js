@@ -776,6 +776,71 @@ function enhanceCodeBlocks(container) {
         });
 }
 
+function enhanceInlineCode(container) {
+
+    container.querySelectorAll(':not(pre) > code')
+        .forEach(code => {
+
+            if (code.dataset.copyReady === 'true') {
+                return;
+            }
+
+            const rawText =
+                code.textContent;
+
+            if (!rawText.trim()) {
+                return;
+            }
+
+            code.dataset.copyReady = 'true';
+            code.setAttribute('role', 'button');
+            code.setAttribute('tabindex', '0');
+            code.setAttribute('title', 'Copy inline code');
+            code.setAttribute('aria-label', `Copy ${rawText}`);
+            code.classList.add('inline-copy-code');
+
+            const copyInlineCode = async () => {
+
+                try {
+
+                    await copyText(rawText);
+
+                    code.classList.add('is-copied');
+                    code.setAttribute('title', 'Copied');
+
+                    setTimeout(() => {
+                        code.classList.remove('is-copied');
+                        code.setAttribute('title', 'Copy inline code');
+                    }, 1200);
+                }
+                catch (err) {
+
+                    console.error('Inline copy failed:', err);
+
+                    code.classList.add('is-copy-error');
+                    code.setAttribute('title', 'Copy failed');
+
+                    setTimeout(() => {
+                        code.classList.remove('is-copy-error');
+                        code.setAttribute('title', 'Copy inline code');
+                    }, 1200);
+                }
+            };
+
+            code.addEventListener('click', copyInlineCode);
+
+            code.addEventListener('keydown', event => {
+
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                event.preventDefault();
+                copyInlineCode();
+            });
+        });
+}
+
 function normalizeDocPath(path) {
 
     const segments = [];
@@ -1141,6 +1206,7 @@ async function loadDoc(path, options = {}) {
             : ''}${md.render(text)}`;
 
     enhanceCodeBlocks(content);
+    enhanceInlineCode(content);
     enhanceCallouts(content);
     enhanceWikiLinks(content, path);
     buildTableOfContents(content);

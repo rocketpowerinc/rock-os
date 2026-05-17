@@ -751,6 +751,34 @@ border:1px solid rgba(208,255,0,.2);
 color:#d0ff00;
 }
 
+.content :not(pre) > code.inline-copy-code {
+	border:1px solid rgba(208,255,0,.22);
+	border-radius:4px;
+	cursor:pointer;
+	padding:1px 5px;
+	transition:background .18s, border-color .18s, color .18s, box-shadow .18s;
+}
+
+.content :not(pre) > code.inline-copy-code:hover,
+.content :not(pre) > code.inline-copy-code:focus-visible {
+	background:rgba(208,255,0,.1);
+	border-color:rgba(208,255,0,.55);
+	box-shadow:0 0 12px rgba(208,255,0,.12);
+	outline:none;
+}
+
+.content :not(pre) > code.inline-copy-code.is-copied {
+	background:rgba(63,127,104,.16);
+	border-color:var(--success);
+	color:var(--success);
+}
+
+.content :not(pre) > code.inline-copy-code.is-copy-error {
+	background:rgba(180,35,24,.12);
+	border-color:#b42318;
+	color:#b42318;
+}
+
 .content pre code {
 	color:#f0f0f0;
 	font-family:Consolas, "Courier New", monospace;
@@ -1256,6 +1284,17 @@ h3,
 
 :root[data-theme="steel"] .content :not(pre) > code {
 	color:#b42318;
+}
+
+:root[data-theme="steel"] .content :not(pre) > code.inline-copy-code {
+	border-color:rgba(180,35,24,.22);
+}
+
+:root[data-theme="steel"] .content :not(pre) > code.inline-copy-code:hover,
+:root[data-theme="steel"] .content :not(pre) > code.inline-copy-code:focus-visible {
+	background:rgba(180,35,24,.08);
+	border-color:rgba(180,35,24,.38);
+	box-shadow:0 0 0 3px rgba(180,35,24,.08);
 }
 
 :root[data-theme="steel"] .content a.broken-wiki-link {
