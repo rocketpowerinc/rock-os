@@ -3,7 +3,9 @@
   "markdown/Linux/Bootstraps/AnduinOS/1 - Pre iso Creation.md",
   "markdown/Linux/Bootstraps/AnduinOS/2 - Post iso install.md",
   "markdown/Linux/Build-ISO/Penguin-Eggs.md",
-  "markdown/Linux/Misc/Reference.md",
+  "markdown/Linux/Reference Manual/Chapter 1 - Booting a Linux iso.md",
+  "markdown/Linux/Reference Manual/Chapter 2 - Hardening Linux Systems.md",
+  "markdown/Linux/Reference Manual/Chapter 3 - Backups Made Simple.md",
   "markdown/Mac/Bootstrap.md",
   "markdown/Windows/Bootstrap.md"
 ]
