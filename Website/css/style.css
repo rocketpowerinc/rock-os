@@ -1262,6 +1262,52 @@ h3,
 	color:#b42318;
 }
 
+:root[data-theme="steel"] .wiki-search input:focus {
+	border-color:rgba(79,100,117,.75);
+	box-shadow:0 0 0 3px rgba(79,100,117,.12);
+}
+
+:root[data-theme="steel"] .icon-sidebar-btn:hover,
+:root[data-theme="steel"] .icon-sidebar-btn:focus-visible,
+:root[data-theme="steel"] .icon-sidebar-btn:active,
+:root[data-theme="steel"] .expand-sidebar-btn:hover,
+:root[data-theme="steel"] .expand-sidebar-btn:focus-visible,
+:root[data-theme="steel"] .expand-sidebar-btn:active,
+:root[data-theme="steel"] .collapse-list-btn:hover {
+	background:rgba(79,100,117,.1);
+	color:#354655;
+	outline:none;
+}
+
+:root[data-theme="steel"] .icon-sidebar-btn:focus-visible,
+:root[data-theme="steel"] .expand-sidebar-btn:focus-visible {
+	box-shadow:0 0 0 3px rgba(79,100,117,.16);
+}
+
+:root[data-theme="steel"] .icon-sidebar-btn.is-refreshing {
+	background:rgba(79,100,117,.12);
+}
+
+:root[data-theme="steel"] .doc-link:hover {
+	background:rgba(79,100,117,.1);
+	color:#182027;
+	text-shadow:none;
+	box-shadow:none;
+}
+
+:root[data-theme="steel"] .doc-link.active {
+	background:rgba(79,100,117,.14);
+	border-color:rgba(79,100,117,.34);
+	color:#182027;
+}
+
+:root[data-theme="steel"] .wiki-toc-link:hover {
+	background:rgba(79,100,117,.09);
+	border-color:#6c7d89;
+	color:#354655;
+	text-shadow:none;
+}
+
 .theme-select {
 	background:var(--panel-strong);
 	border:1px solid rgba(var(--accent-rgb), .42);
