@@ -17,8 +17,6 @@ Once the network is secured, reinforce the Linux OS itself with these essential 
 
 - Enable and configure the system firewall (e.g., **UFW**)
 - Use a privacy‑focused DNS resolver such as **NextDNS**
-- Install a network monitoring tool like **Little Snitch for Linux** to observe outbound and inbound traffic
-  - https://obdev.at/products/littlesnitch-linux/index.html
 
 ---
 
