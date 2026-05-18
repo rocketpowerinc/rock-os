@@ -14,9 +14,9 @@ red() {
 }
 
 check_private() {
-    private_files="$(git -C .. ls-files 'Website/markdown/Private/*' 2>/dev/null || true)"
+    private_files="$(git -C .. ls-files 'Website/markdown/Private/**' 2>/dev/null || true)"
     if [ -z "$private_files" ]; then
-        yellow "No tracked private markdown files found."
+        green "Private Markdown Folder unlocked."
         return
     fi
 

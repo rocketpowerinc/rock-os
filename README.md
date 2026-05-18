@@ -109,6 +109,13 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
+On Linux or macOS, if shell scripts are not executable after cloning or
+extracting the repo, run:
+
+```bash
+sh ./chmod-all.sh
+```
+
 The helper scripts detect the current operating system and CPU architecture,
 then check the latest GitHub release when internet is available. If the matching
 stable latest-style binary is missing or older than the latest release, they

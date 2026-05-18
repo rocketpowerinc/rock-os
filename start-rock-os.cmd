@@ -75,11 +75,7 @@ if errorlevel 1 echo %~1
 exit /b 0
 
 :check_private
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git -C .. ls-files 'Website/markdown/Private/*' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { $path=Join-Path '..' $file; if (Test-Path $path) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $path)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
-if errorlevel 3 (
-    call :yellow "No tracked private markdown files found."
-    exit /b 0
-)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git -C .. ls-files 'Website/markdown/Private/**' 2>$null; if (-not $files) { exit 0 }; foreach ($file in $files) { $path=Join-Path '..' $file; if (Test-Path $path) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $path)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
 if errorlevel 2 (
     call :red "Private Markdown Folder locked."
     exit /b 0
