@@ -102,6 +102,11 @@ Windows, macOS, Android, and iOS.
 <span><strong>Platforms</strong> Linux / Windows / macOS / Mobile</span>
 </section>
 
+<section class="quote-panel" aria-label="Field note">
+<p class="quote-label">Field Note</p>
+<blockquote id="dailyQuote">Loading field note...</blockquote>
+</section>
+
 <section class="quick-start">
 
 <div class="section-heading">
@@ -174,18 +179,21 @@ Windows, macOS, Android, and iOS.
 
 <div class="terminal-window command-terminal">
 
-<div class="terminal-header">
-<div class="terminal-dot red"></div>
-<div class="terminal-dot yellow"></div>
-<div class="terminal-dot green"></div>
+<div class="terminal-header" aria-label="Linux terminal session">
+<div class="terminal-title">
+<span class="terminal-prompt-glyph">$</span>
+<span>admin@rock-os:~/wiki</span>
+</div>
+<span class="terminal-shell">shell</span>
 </div>
 
 <div class="terminal-content command-terminal-content">
-<p><span>rock-os</span> initializing local wiki core</p>
-<p><span>index</span> markdown tree online</p>
-<p><span>assets</span> icons, theme art, and favicons local</p>
-<p><span>privacy</span> encrypted notes supported</p>
-<p><span>status</span> command center ready</p>
+<p><span class="terminal-prompt">admin@rock-os:~$</span> ./start-rock-os.sh</p>
+<p><span>OK</span> initializing local wiki core</p>
+<p><span>OK</span> markdown tree online</p>
+<p><span>OK</span> local assets mounted</p>
+<p><span>OK</span> encrypted notes supported</p>
+<p><span>OK</span> command center ready<span class="terminal-cursor"></span></p>
 </div>
 
 </div>
@@ -204,5 +212,6 @@ Windows, macOS, Android, and iOS.
 </footer>
 
 <script src="js/theme.js"></script>
+<script src="js/index.js"></script>
 </body>
 </html>

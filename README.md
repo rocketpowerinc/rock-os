@@ -10,6 +10,7 @@ small cross-platform Go binary and rendered in the browser.
 
 - Markdown files rendered as a website wiki
 - Theme-aware command center landing page with launch links and status panels
+- Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents
