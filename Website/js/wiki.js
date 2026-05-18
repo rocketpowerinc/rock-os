@@ -1276,6 +1276,21 @@ function slugifyHeading(value) {
     return slug || 'section';
 }
 
+function highlightHeading(heading) {
+
+    heading.classList.remove('heading-jump-highlight');
+
+    window.setTimeout(() => {
+
+        heading.classList.add('heading-jump-highlight');
+    }, 40);
+
+    window.setTimeout(() => {
+
+        heading.classList.remove('heading-jump-highlight');
+    }, 1800);
+}
+
 function buildTableOfContents(container) {
 
     const toc =
@@ -1370,6 +1385,8 @@ function buildTableOfContents(container) {
                         24,
                     behavior: 'smooth'
                 });
+
+                highlightHeading(target);
 
                 const url =
                     new URL(window.location.href);

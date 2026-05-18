@@ -737,6 +737,39 @@ color:#d0ff00;
 	scroll-margin-top: 105px;
 }
 
+.content h2.heading-jump-highlight,
+.content h3.heading-jump-highlight,
+.content h4.heading-jump-highlight {
+	animation:headingJumpHighlight 1.8s ease-out;
+	color:var(--accent);
+	text-shadow:0 0 10px rgba(var(--accent-rgb), .65),
+		0 0 22px rgba(var(--accent-rgb), .28);
+}
+
+@keyframes headingJumpHighlight {
+	0% {
+		background:rgba(var(--accent-rgb), .2);
+		box-shadow:0 0 0 6px rgba(var(--accent-rgb), .12);
+	}
+	55% {
+		background:rgba(var(--accent-rgb), .09);
+		box-shadow:0 0 0 3px rgba(var(--accent-rgb), .08);
+	}
+	100% {
+		background:transparent;
+		box-shadow:none;
+	}
+}
+
+:root[data-theme="steel"] .content h2.heading-jump-highlight,
+:root[data-theme="steel"] .content h3.heading-jump-highlight,
+:root[data-theme="steel"] .content h4.heading-jump-highlight,
+:root[data-theme="papers"] .content h2.heading-jump-highlight,
+:root[data-theme="papers"] .content h3.heading-jump-highlight,
+:root[data-theme="papers"] .content h4.heading-jump-highlight {
+	text-shadow:none;
+}
+
 .content img{
 max-width:100%;
 margin:20px 0;
@@ -1451,6 +1484,12 @@ h3,
 	color:#354655;
 }
 
+:root[data-theme="papers"] .wiki-breadcrumbs span:not(.wiki-breadcrumb-separator):not(.wiki-breadcrumb-current) {
+	background:rgba(138,79,18,.07);
+	border-color:rgba(138,79,18,.22);
+	color:#70400f;
+}
+
 :root[data-theme="steel"] .wiki-search input:focus {
 	border-color:rgba(79,100,117,.75);
 	box-shadow:0 0 0 3px rgba(79,100,117,.12);
@@ -1527,6 +1566,48 @@ h3,
 
 .wiki-search input {
 	color:var(--text-main);
+}
+
+.wiki-search input:focus {
+	border-color:rgba(var(--accent-rgb), .75);
+	box-shadow:0 0 0 3px rgba(var(--accent-rgb), .12);
+}
+
+.icon-sidebar-btn:hover,
+.icon-sidebar-btn:focus-visible,
+.icon-sidebar-btn:active,
+.expand-sidebar-btn:hover,
+.expand-sidebar-btn:focus-visible,
+.expand-sidebar-btn:active,
+.collapse-list-btn:hover {
+	background:rgba(var(--accent-rgb), .1);
+	color:var(--accent);
+	outline:none;
+}
+
+.icon-sidebar-btn:focus-visible,
+.expand-sidebar-btn:focus-visible {
+	box-shadow:0 0 0 3px rgba(var(--accent-rgb), .16);
+}
+
+.icon-sidebar-btn.is-refreshing {
+	background:rgba(var(--accent-rgb), .12);
+}
+
+.expand-sidebar-btn {
+	background:var(--panel-bg);
+	border-color:rgba(var(--accent-rgb), .42);
+	color:var(--accent);
+}
+
+.wiki-toc-link {
+	border-left-color:rgba(var(--accent-rgb), .18);
+}
+
+.wiki-toc-link:hover {
+	background:rgba(var(--accent-rgb), .08);
+	border-color:var(--accent);
+	color:var(--accent);
 }
 
 .wiki-search-status,
