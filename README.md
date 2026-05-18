@@ -231,12 +231,17 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
-On Linux or macOS, if shell scripts are not executable after cloning or
-extracting the repo, run:
+Linux and macOS shell scripts are committed with executable permissions. If the
+permissions are missing because of a ZIP extraction, file copy, or unusual
+filesystem, run:
 
 ```bash
 sh ./chmod-all.sh
 ```
+
+This keeps fresh clones ready to run without needing manual `chmod` commands.
+It also prevents Git from reporting chmod-only file changes, which can leave the
+working tree dirty and block `git-crypt unlock`.
 
 The helper scripts detect the current operating system and CPU architecture,
 then check the latest GitHub release when internet is available. If the matching
