@@ -123,8 +123,11 @@ download it into the `Website` folder. If the release check or download is not
 available, they continue with local files.
 
 The scripts print green status lines for healthy checks, yellow lines when they
-fall back to local files or Go source, and a red warning when private markdown
-appears locked by `git-crypt`.
+fall back to local files or Go source, and red warnings for blocking or security
+related checks. They also report whether `git-crypt` is installed before
+checking the Private markdown folder, and whether Go is installed. Go is only
+required when the script has to fall back to running from source instead of a
+release binary.
 
 After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-windows-amd64.exe`, `rock-os-wiki-windows-arm64.exe`,

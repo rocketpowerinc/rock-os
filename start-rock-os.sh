@@ -13,6 +13,24 @@ red() {
     printf '\033[31m%s\033[0m\n' "$1"
 }
 
+check_git_crypt() {
+    if command -v git-crypt >/dev/null 2>&1; then
+        green "git-crypt is installed."
+    else
+        red "git-crypt is not installed. Install git-crypt before unlocking Private markdown."
+    fi
+}
+
+check_go() {
+    if command -v go >/dev/null 2>&1; then
+        green "Go is installed."
+    elif [ -n "$BINARY" ]; then
+        yellow "Go is not installed. Not needed while using a release binary."
+    else
+        red "Go is not installed. Install Go from https://go.dev/dl/ before using source fallback."
+    fi
+}
+
 check_private() {
     locked_marker="${TMPDIR:-/tmp}/rock-os-private-locked-$$"
     found_marker="${TMPDIR:-/tmp}/rock-os-private-found-$$"
@@ -144,6 +162,8 @@ else
     done
 fi
 
+check_git_crypt
+check_go
 check_private
 
 if [ -n "$BINARY" ] && [ -x "$BINARY" ]; then
@@ -162,5 +182,9 @@ elif [ -n "$BINARY" ] && [ -f "$BINARY" ]; then
     "$BINARY" --host local
 else
     yellow "Release binary not found. Starting Rock-OS from Go source..."
+    if ! command -v go >/dev/null 2>&1; then
+        red "Cannot start from source because Go is not installed."
+        exit 1
+    fi
     GOCACHE="$PWD/.gocache" go run . --host local
 fi

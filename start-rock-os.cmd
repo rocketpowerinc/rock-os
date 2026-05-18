@@ -38,6 +38,8 @@ if exist ".\%ROCK_OS_STABLE_ASSET%" (
     )
 )
 
+call :check_git_crypt
+call :check_go
 call :check_private
 
 if defined ROCK_OS_BINARY (
@@ -50,6 +52,11 @@ if defined ROCK_OS_BINARY (
     "%ROCK_OS_BINARY%" --host local
 ) else (
     call :yellow "Release binary not found. Starting Rock-OS from Go source..."
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+    if errorlevel 1 (
+        call :red "Cannot start from source because Go is not installed."
+        exit /b 1
+    )
     set "GOCACHE=%CD%\.gocache"
     go run . --host local
 )
@@ -72,6 +79,28 @@ exit /b 0
 set "ROCK_OS_MSG=%~1"
 powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Red" 2>nul
 if errorlevel 1 echo %~1
+exit /b 0
+
+:check_git_crypt
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git-crypt -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    call :red "git-crypt is not installed. Install git-crypt before unlocking Private markdown."
+    exit /b 0
+)
+call :green "git-crypt is installed."
+exit /b 0
+
+:check_go
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    if defined ROCK_OS_BINARY (
+        call :yellow "Go is not installed. Not needed while using a release binary."
+    ) else (
+        call :red "Go is not installed. Install Go from https://go.dev/dl/ before using source fallback."
+    )
+    exit /b 0
+)
+call :green "Go is installed."
 exit /b 0
 
 :check_private
