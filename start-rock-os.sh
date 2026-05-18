@@ -14,17 +14,26 @@ red() {
 }
 
 check_private() {
-    private_files="$(git -C .. ls-files 'Website/markdown/Private/**' 2>/dev/null || true)"
-    if [ -z "$private_files" ]; then
-        green "Private Markdown Folder unlocked."
-        return
+    locked_marker="${TMPDIR:-/tmp}/rock-os-private-locked-$$"
+    found_marker="${TMPDIR:-/tmp}/rock-os-private-found-$$"
+    rm -f "$locked_marker"
+    rm -f "$found_marker"
+
+    if [ -d "markdown/Private" ]; then
+        find "markdown/Private" -type f | while IFS= read -r file; do
+            printf 'found' > "$found_marker"
+
+            if dd if="$file" bs=16 count=1 2>/dev/null | grep -a -q 'GITCRYPT'; then
+                printf 'locked' > "$locked_marker"
+            fi
+        done
     fi
 
-    locked_marker="${TMPDIR:-/tmp}/rock-os-private-locked-$$"
-    rm -f "$locked_marker"
-
+    private_files="$(git -C .. ls-files -- 'Website/markdown/Private' 2>/dev/null || true)"
     printf '%s\n' "$private_files" | while IFS= read -r file; do
+        [ -n "$file" ] || continue
         [ -f "../$file" ] || continue
+        printf 'found' > "$found_marker"
 
         if dd if="../$file" bs=16 count=1 2>/dev/null | grep -a -q 'GITCRYPT'; then
             printf 'locked' > "$locked_marker"
@@ -33,9 +42,11 @@ check_private() {
 
     if [ -f "$locked_marker" ]; then
         rm -f "$locked_marker"
-        red "Private Markdown Folder locked."
+        rm -f "$found_marker"
+        red "Private Markdown Folder Locked."
     else
-        green "Private Markdown Folder unlocked."
+        rm -f "$found_marker"
+        green "Private Markdown Folder Unlocked."
     fi
 }
 
