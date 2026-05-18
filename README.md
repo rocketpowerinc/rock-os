@@ -94,10 +94,22 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
-The helper scripts first try to start a stable latest-style binary from the
-`Website` folder, such as `rock-os-wiki-windows-amd64.exe` or
-`rock-os-wiki-linux-amd64`. If that is not present, they try a versioned binary
-such as `rock-os-wiki-v2.0-windows-amd64.exe`. If no binary is present, they
+The helper scripts detect the current operating system and CPU architecture,
+then check the latest GitHub release when internet is available. If the matching
+stable latest-style binary is missing or older than the latest release, they
+download it into the `Website` folder. If the release check or download is not
+available, they continue with local files.
+
+The scripts print green status lines for healthy checks, yellow lines when they
+fall back to local files or Go source, and a red warning when private markdown
+appears locked by `git-crypt`.
+
+After the update check, the scripts start a stable latest-style binary such as
+`rock-os-wiki-windows-amd64.exe`, `rock-os-wiki-windows-arm64.exe`,
+`rock-os-wiki-linux-amd64`, `rock-os-wiki-linux-arm64`,
+`rock-os-wiki-macos-amd64`, or `rock-os-wiki-macos-arm64`. If that is not
+present, they try a versioned binary such as
+`rock-os-wiki-v2.0-windows-amd64.exe`. If no matching binary is present, they
 fall back to `go run .`.
 
 When `Website/main.go` changes, rebuild and publish a new release binary. The

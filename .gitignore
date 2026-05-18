@@ -62,6 +62,9 @@ coverage/
 
 # Project-specific local artifacts
 Website/markdown-index.json
+Website/.rock-os-wiki-version
+Website/*.download
+Website/rock-os-wiki-*
 Website/.gocache/
 Website/.codex-tmp/
 Website/static-web-server/
