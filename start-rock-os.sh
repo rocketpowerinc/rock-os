@@ -3,13 +3,24 @@ set -eu
 
 cd "$(dirname "$0")/Website"
 
-if [ -x "./rock-os-wiki-v1.0-linux-amd64" ]; then
+BINARY=""
+
+if [ -f "./rock-os-wiki-linux-amd64" ]; then
+    BINARY="./rock-os-wiki-linux-amd64"
+else
+    for FILE in $(find . -maxdepth 1 -type f -name 'rock-os-wiki-v*-linux-amd64' | sort -r); do
+        BINARY="$FILE"
+        break
+    done
+fi
+
+if [ -n "$BINARY" ] && [ -x "$BINARY" ]; then
     echo "Starting Rock-OS from release binary..."
-    ./rock-os-wiki-v1.0-linux-amd64 --host local
-elif [ -f "./rock-os-wiki-v1.0-linux-amd64" ]; then
+    "$BINARY" --host local
+elif [ -n "$BINARY" ] && [ -f "$BINARY" ]; then
     echo "Release binary found but is not executable. Making it executable..."
-    chmod +x ./rock-os-wiki-v1.0-linux-amd64
-    ./rock-os-wiki-v1.0-linux-amd64 --host local
+    chmod +x "$BINARY"
+    "$BINARY" --host local
 else
     echo "Release binary not found. Starting Rock-OS from Go source..."
     go run . --host local

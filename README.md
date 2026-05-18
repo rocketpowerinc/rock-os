@@ -28,23 +28,23 @@ small cross-platform Go binary and rendered in the browser.
 - Local media support for images and videos kept out of Git
 - Cross-platform Go server for Windows, Linux, and macOS
 
-## 1.0 Release Binaries
+## 2.0 Release Binaries
 
 Prebuilt binaries are available on the
-[Rock OS 1.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v1.0).
+[Rock OS 2.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v2.0).
 
 Choose the binary for your system:
 
 | System | Binary |
 | --- | --- |
-| Windows 64-bit Intel/AMD | `rock-os-wiki-v1.0-windows-amd64.exe` |
-| Windows ARM64 | `rock-os-wiki-v1.0-windows-arm64.exe` |
-| Linux 64-bit Intel/AMD | `rock-os-wiki-v1.0-linux-amd64` |
-| Linux ARM64 | `rock-os-wiki-v1.0-linux-arm64` |
-| macOS Intel | `rock-os-wiki-v1.0-macos-amd64` |
-| macOS Apple Silicon | `rock-os-wiki-v1.0-macos-arm64` |
+| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v2.0-windows-amd64.exe` |
+| Windows ARM64 | `rock-os-wiki-v2.0-windows-arm64.exe` |
+| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v2.0-linux-amd64` |
+| Linux ARM64 | `rock-os-wiki-v2.0-linux-arm64` |
+| macOS Intel | `rock-os-wiki-v2.0-macos-amd64` |
+| macOS Apple Silicon | `rock-os-wiki-v2.0-macos-arm64` |
 
-The release also includes `rock-os-wiki-v1.0-checksums.txt` for verifying
+The release also includes `rock-os-wiki-v2.0-checksums.txt` for verifying
 downloads.
 
 ## Running From A Release Binary
@@ -56,23 +56,23 @@ inside the `Website` folder after cloning or extracting the project.
 
 ```powershell
 cd Website
-.\rock-os-wiki-v1.0-windows-amd64.exe
+.\rock-os-wiki-windows-amd64.exe
 ```
 
 ### Linux
 
 ```bash
 cd Website
-chmod +x ./rock-os-wiki-v1.0-linux-amd64
-./rock-os-wiki-v1.0-linux-amd64
+chmod +x ./rock-os-wiki-linux-amd64
+./rock-os-wiki-linux-amd64
 ```
 
 ### macOS
 
 ```bash
 cd Website
-chmod +x ./rock-os-wiki-v1.0-macos-arm64
-./rock-os-wiki-v1.0-macos-arm64
+chmod +x ./rock-os-wiki-v2.0-macos-arm64
+./rock-os-wiki-v2.0-macos-arm64
 ```
 
 ## Running From Source
@@ -94,8 +94,16 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
-The helper scripts first try to start the matching release binary from the
-`Website` folder. If the binary is not present, they fall back to `go run .`.
+The helper scripts first try to start a stable latest-style binary from the
+`Website` folder, such as `rock-os-wiki-windows-amd64.exe` or
+`rock-os-wiki-linux-amd64`. If that is not present, they try a versioned binary
+such as `rock-os-wiki-v2.0-windows-amd64.exe`. If no binary is present, they
+fall back to `go run .`.
+
+When `Website/main.go` changes, rebuild and publish a new release binary. The
+server binary is what carries LAN binding, port handling, markdown indexing,
+and other server-side behavior. Markdown, CSS, HTML, JavaScript, and asset-only
+changes do not require a new Go binary.
 
 To stop a running server on the default port:
 
