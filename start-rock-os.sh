@@ -163,8 +163,8 @@ else
 fi
 
 check_git_crypt
-check_go
 check_private
+check_go
 
 if [ -n "$BINARY" ] && [ -x "$BINARY" ]; then
     if [ "$BINARY_SOURCE" = "stable" ]; then

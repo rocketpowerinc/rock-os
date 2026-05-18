@@ -39,8 +39,8 @@ if exist ".\%ROCK_OS_STABLE_ASSET%" (
 )
 
 call :check_git_crypt
-call :check_go
 call :check_private
+call :check_go
 
 if defined ROCK_OS_BINARY (
     if "%ROCK_OS_BINARY_SOURCE%"=="stable" (
