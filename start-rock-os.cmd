@@ -75,24 +75,18 @@ if errorlevel 1 echo %~1
 exit /b 0
 
 :check_private
-set "ROCK_OS_MSG=Checking private markdown..."
-call :green "%ROCK_OS_MSG%"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git -C .. ls-files 'Website/markdown/Private/*' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { $path=Join-Path '..' $file; if (Test-Path $path) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $path)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
 if errorlevel 3 (
-    set "ROCK_OS_MSG=No tracked private markdown files found."
-    call :yellow "%ROCK_OS_MSG%"
+    call :yellow "No tracked private markdown files found."
     exit /b 0
 )
 if errorlevel 2 (
-    set "ROCK_OS_MSG=Private folder is locked. Copy your .key to the repo root and run unlock-git-crypt.cmd."
-    call :red "%ROCK_OS_MSG%"
+    call :red "Private Markdown Folder locked."
     exit /b 0
 )
 if errorlevel 1 (
-    set "ROCK_OS_MSG=Could not verify private markdown unlock status."
-    call :yellow "%ROCK_OS_MSG%"
+    call :yellow "Could not verify private markdown unlock status."
     exit /b 0
 )
-set "ROCK_OS_MSG=Private folder is unlocked and readable."
-call :green "%ROCK_OS_MSG%"
+call :green "Private Markdown Folder unlocked."
 exit /b 0

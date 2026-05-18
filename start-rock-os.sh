@@ -14,8 +14,6 @@ red() {
 }
 
 check_private() {
-    green "Checking private markdown..."
-
     private_files="$(git -C .. ls-files 'Website/markdown/Private/*' 2>/dev/null || true)"
     if [ -z "$private_files" ]; then
         yellow "No tracked private markdown files found."
@@ -35,9 +33,9 @@ check_private() {
 
     if [ -f "$locked_marker" ]; then
         rm -f "$locked_marker"
-        red "Private folder is locked. Copy your .key to the repo root and run unlock-git-crypt.sh."
+        red "Private Markdown Folder locked."
     else
-        green "Private folder is unlocked and readable."
+        green "Private Markdown Folder unlocked."
     fi
 }
 
