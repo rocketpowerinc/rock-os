@@ -37,59 +37,134 @@
 
 </nav>
 
-<section class="hero">
+<main class="command-center">
 
-<div class="hero-glow"></div>
+<section class="command-hero">
 
-<img src="assets/Rock-OS-Hero-Steel.png" class="hero-logo theme-logo">
-
-<h1 class="hero-title">Rock-OS</h1>
-
+<div class="command-copy">
+<p class="command-kicker">Local-first bootstrap system</p>
+<h1 class="command-title">Rock-OS</h1>
 <p class="hero-slogan">Hardened for Collapse</p>
-
-<div class="status-line">
-<span class="status-dot"></span>
-SYSTEM ONLINE
-</div>
-
-<p class="hero-subtitle">
-Rock-OS is a local-first bootstrap and knowledge base for building secure,
-offline-ready systems across Linux, Windows, and macOS.
+<p class="command-subtitle">
+Rock-OS is a local-first bootstrap and knowledge system for building resilient
+machines, private infrastructure, and offline-ready workflows across Linux,
+Windows, macOS, Android, and iOS.
 </p>
 
-<div class="hero-buttons">
+<div class="command-actions">
+<a href="wiki.html" class="command-button primary">Open Wiki</a>
+<a href="wiki.html?doc=markdown/Tech/Linux/Handbook/1%20-%20Distros.md" class="command-button">Start Linux Handbook</a>
+</div>
+</div>
 
+<aside class="system-panel" aria-label="Rock OS system status">
+<img src="assets/Rock-OS-Hero-Steel.png" class="system-rock theme-logo" alt="Rock-OS theme rock">
 
-<a href="wiki.html" class="cyber-button secondary">
-WIKI
+<div class="system-readout">
+<span class="status-dot"></span>
+<span>System Ready</span>
+</div>
+
+<dl class="system-stats">
+<div>
+<dt>Mode</dt>
+<dd>Offline-first</dd>
+</div>
+<div>
+<dt>Server</dt>
+<dd>Go local</dd>
+</div>
+<div>
+<dt>Docs</dt>
+<dd>Markdown</dd>
+</div>
+<div>
+<dt>Assets</dt>
+<dd>Intranet-safe</dd>
+</div>
+</dl>
+</aside>
+
+</section>
+
+<section class="status-strip" aria-label="System modules">
+<span><strong>Local Wiki</strong> Ready</span>
+<span><strong>Media</strong> Local</span>
+<span><strong>Privacy</strong> Git-Crypt Ready</span>
+<span><strong>Platforms</strong> Linux / Windows / macOS / Mobile</span>
+</section>
+
+<section class="quick-start">
+
+<div class="section-heading">
+<p class="command-kicker">Start here</p>
+<h2>Launch Points</h2>
+</div>
+
+<div class="launch-grid">
+<a class="launch-link" href="wiki.html">
+<span>01</span>
+<strong>Open The Wiki</strong>
+<small>Browse the full local knowledge base.</small>
 </a>
 
+<a class="launch-link" href="wiki.html?doc=markdown/Tech/Linux/Handbook/1.3%20-%20Servers.md">
+<span>02</span>
+<strong>Linux Servers</strong>
+<small>Build capable systems without a desktop layer.</small>
+</a>
+
+<a class="launch-link" href="wiki.html?doc=markdown/Tech/Linux/Cheat%20Sheets/Gnome-CheatSheet.md">
+<span>03</span>
+<strong>GNOME Cheat Sheet</strong>
+<small>Quick reference for daily desktop flow.</small>
+</a>
+
+<a class="launch-link" href="wiki.html?doc=markdown/Tech/Universal/Cheat%20Sheets/dev/Git-Crypt.md">
+<span>04</span>
+<strong>Git-Crypt Guide</strong>
+<small>Keep private markdown encrypted in public Git.</small>
+</a>
 </div>
 
 </section>
 
-<section class="feature-grid">
+<section class="mission-grid">
 
-<div class="feature-card">
-<h3>Linux ISO</h3>
-<p>A full Rock-OS Linux distribution built as a complete ISO, with core tools, recovery workflows, and local-first defaults ready from the start.</p>
+<div class="section-heading">
+<p class="command-kicker">Mission modules</p>
+<h2>Built For Local Resilience</h2>
 </div>
 
-<div class="feature-card">
-<h3>Windows & macOS Guides</h3>
-<p>Step-by-step markdown playbooks for hardening, configuring, and preparing Windows and macOS systems for private offline use.</p>
-</div>
+<div class="feature-grid command-feature-grid">
 
-<div class="feature-card">
-<h3>Offline Knowledge Base</h3>
-<p>A self-hosted wiki for setup notes, recovery steps, tutorials, and system documentation that stays available without the cloud.</p>
+<article class="feature-card command-card">
+<h3>Local First</h3>
+<p>Runs from your own machine and serves your docs across the local network without needing a cloud control plane.</p>
+</article>
+
+<article class="feature-card command-card">
+<h3>Offline Ready</h3>
+<p>Markdown, local assets, media folders, and bootstrap notes stay useful when the internet is unavailable.</p>
+</article>
+
+<article class="feature-card command-card">
+<h3>Cross Platform</h3>
+<p>Linux gets the full ISO path, while Windows, macOS, Android, and iOS get practical hardening and setup playbooks.</p>
+</article>
+
+<article class="feature-card command-card">
+<h3>Private Knowledge</h3>
+<p>Git-friendly documentation with optional encrypted private folders for sensitive notes that should not leak in public.</p>
+</article>
+
 </div>
 
 </section>
 
-<section class="terminal-section">
+<section class="terminal-section command-terminal-section">
 
-<div class="terminal-window">
+<div class="terminal-window command-terminal">
 
 <div class="terminal-header">
 <div class="terminal-dot red"></div>
@@ -97,17 +172,19 @@ WIKI
 <div class="terminal-dot green"></div>
 </div>
 
-<div class="terminal-content">
-<p>> initializing Rock-OS...</p>
-<p>> markdown engine online</p>
-<p>> live reload active</p>
-<p>> cyber systems operational</p>
-<p>> Wiki ready</p>
+<div class="terminal-content command-terminal-content">
+<p><span>rock-os</span> initializing local wiki core</p>
+<p><span>index</span> markdown tree online</p>
+<p><span>assets</span> icons, theme art, and favicons local</p>
+<p><span>privacy</span> encrypted notes supported</p>
+<p><span>status</span> command center ready</p>
 </div>
 
 </div>
 
 </section>
+
+</main>
 
 <footer class="site-footer">
 <a class="github-link" href="https://github.com/rocketpowerinc" target="_blank" rel="noopener noreferrer" aria-label="rocketpowerinc on GitHub">
