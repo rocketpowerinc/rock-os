@@ -85,6 +85,20 @@ cd Website
 go run .
 ```
 
+Source-only helper scripts are also available inside the `Website` folder.
+They skip release binaries and run `go run main.go --host local` directly:
+
+```powershell
+cd Website
+.\run-go-server.cmd
+```
+
+```bash
+cd Website
+chmod +x ./run-go-server.sh
+./run-go-server.sh
+```
+
 Helper scripts are also included:
 
 ```powershell
