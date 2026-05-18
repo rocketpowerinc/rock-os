@@ -33,6 +33,149 @@ opacity:.15;
 z-index:0;
 }
 
+.meteor-field {
+	inset:0;
+	overflow:hidden;
+	pointer-events:none;
+	position:fixed;
+	z-index:0;
+}
+
+.meteor-field span {
+	--meteor-distance-x:-120vw;
+	--meteor-distance-y:54vh;
+	--meteor-opacity:.72;
+	--meteor-trail:86px;
+	animation:meteorFlyby 5.5s linear infinite;
+	background:rgba(var(--accent-rgb), .72);
+	border:1px solid rgba(var(--accent-rgb), .42);
+	border-radius:42% 58% 48% 52%;
+	box-shadow:
+		0 0 14px rgba(var(--accent-rgb), .38),
+		inset -2px -2px 0 rgba(0,0,0,.22);
+	height:8px;
+	left:70%;
+	opacity:0;
+	position:absolute;
+	top:18%;
+	transform:rotate(-26deg);
+	width:12px;
+}
+
+.meteor-field span::before {
+	background:linear-gradient(
+		90deg,
+		rgba(var(--accent-rgb), .46),
+		rgba(var(--accent-rgb), .18),
+		transparent
+	);
+	border-radius:999px;
+	content:"";
+	height:2px;
+	position:absolute;
+	left:6px;
+	top:3px;
+	width:var(--meteor-trail);
+}
+
+.meteor-field span::after {
+	background:rgba(var(--accent-rgb), .55);
+	border-radius:50%;
+	box-shadow:
+		18px -7px 0 -1px rgba(var(--accent-rgb), .42),
+		34px 4px 0 -2px rgba(var(--accent-rgb), .34),
+		50px -2px 0 -2px rgba(var(--accent-rgb), .25);
+	content:"";
+	height:4px;
+	left:26px;
+	position:absolute;
+	top:1px;
+	width:4px;
+}
+
+.meteor-field span:nth-child(2) {
+	--meteor-distance-x:-110vw;
+	--meteor-distance-y:44vh;
+	--meteor-opacity:.58;
+	--meteor-trail:58px;
+	animation-delay:1.4s;
+	animation-duration:7.6s;
+	left:84%;
+	top:36%;
+	height:6px;
+	width:10px;
+}
+
+.meteor-field span:nth-child(3) {
+	--meteor-distance-x:-130vw;
+	--meteor-distance-y:62vh;
+	--meteor-opacity:.82;
+	--meteor-trail:118px;
+	animation-delay:3.1s;
+	animation-duration:5.9s;
+	left:62%;
+	top:58%;
+	height:9px;
+	width:14px;
+}
+
+.meteor-field span:nth-child(4) {
+	--meteor-distance-x:-95vw;
+	--meteor-distance-y:36vh;
+	--meteor-opacity:.45;
+	--meteor-trail:44px;
+	animation-delay:4.6s;
+	animation-duration:10.5s;
+	left:92%;
+	top:10%;
+	height:5px;
+	width:8px;
+}
+
+.meteor-field span:nth-child(5) {
+	--meteor-distance-x:-125vw;
+	--meteor-distance-y:50vh;
+	--meteor-opacity:.66;
+	--meteor-trail:76px;
+	animation-delay:2.5s;
+	animation-duration:8.4s;
+	left:74%;
+	top:72%;
+	height:7px;
+	width:11px;
+}
+
+.meteor-field span:nth-child(6) {
+	--meteor-distance-x:-140vw;
+	--meteor-distance-y:68vh;
+	--meteor-opacity:.9;
+	--meteor-trail:138px;
+	animation-delay:5.8s;
+	animation-duration:5.1s;
+	left:96%;
+	top:48%;
+	height:10px;
+	width:15px;
+}
+
+@keyframes meteorFlyby {
+	0% {
+		opacity:0;
+		transform:translate3d(0, 0, 0) rotate(-26deg);
+	}
+	6% {
+		opacity:var(--meteor-opacity);
+	}
+	17% {
+		opacity:0;
+		transform:translate3d(var(--meteor-distance-x), var(--meteor-distance-y), 0) rotate(-26deg);
+	}
+	100% {
+		opacity:0;
+		transform:translate3d(var(--meteor-distance-x), var(--meteor-distance-y), 0) rotate(-26deg);
+	}
+}
+
 .navbar{
 display:flex;
 justify-content:space-between;
