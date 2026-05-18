@@ -94,6 +94,25 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
+The helper scripts first try to start the matching release binary from the
+`Website` folder. If the binary is not present, they fall back to `go run .`.
+
+To stop a running server on the default port:
+
+```powershell
+.\stop-rock-os.cmd
+```
+
+```bash
+sh ./stop-rock-os.sh
+```
+
+Pass a port number if you started Rock-OS on a different port:
+
+```bash
+sh ./stop-rock-os.sh 8001
+```
+
 By default, the server listens on port `8000`, opens the site in your browser,
 and uses your local network IP when available. Other devices on the same network
 can open the printed LAN URL.

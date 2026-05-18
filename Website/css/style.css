@@ -46,12 +46,13 @@ z-index:0;
 	--meteor-distance-y:54vh;
 	--meteor-opacity:.72;
 	--meteor-trail:86px;
+	--meteor-shadow:0 0 14px rgba(var(--accent-rgb), .38);
 	animation:meteorFlyby 5.5s linear infinite;
 	background:rgba(var(--accent-rgb), .72);
 	border:1px solid rgba(var(--accent-rgb), .42);
 	border-radius:42% 58% 48% 52%;
 	box-shadow:
-		0 0 14px rgba(var(--accent-rgb), .38),
+		var(--meteor-shadow),
 		inset -2px -2px 0 rgba(0,0,0,.22);
 	height:8px;
 	left:70%;
@@ -98,6 +99,7 @@ z-index:0;
 	--meteor-distance-y:44vh;
 	--meteor-opacity:.58;
 	--meteor-trail:58px;
+	--meteor-shadow:0 0 10px rgba(var(--accent-rgb), .28);
 	animation-delay:1.4s;
 	animation-duration:7.6s;
 	left:84%;
@@ -110,13 +112,16 @@ z-index:0;
 	--meteor-distance-x:-130vw;
 	--meteor-distance-y:62vh;
 	--meteor-opacity:.82;
-	--meteor-trail:118px;
+	--meteor-trail:150px;
+	--meteor-shadow:
+		0 0 18px rgba(var(--accent-rgb), .42),
+		0 0 36px rgba(var(--accent-rgb), .16);
 	animation-delay:3.1s;
-	animation-duration:5.9s;
+	animation-duration:6.4s;
 	left:62%;
 	top:58%;
-	height:9px;
-	width:14px;
+	height:15px;
+	width:24px;
 }
 
 .meteor-field span:nth-child(4) {
@@ -124,6 +129,7 @@ z-index:0;
 	--meteor-distance-y:36vh;
 	--meteor-opacity:.45;
 	--meteor-trail:44px;
+	--meteor-shadow:0 0 8px rgba(var(--accent-rgb), .22);
 	animation-delay:4.6s;
 	animation-duration:10.5s;
 	left:92%;
@@ -136,26 +142,30 @@ z-index:0;
 	--meteor-distance-x:-125vw;
 	--meteor-distance-y:50vh;
 	--meteor-opacity:.66;
-	--meteor-trail:76px;
+	--meteor-trail:104px;
+	--meteor-shadow:0 0 16px rgba(var(--accent-rgb), .34);
 	animation-delay:2.5s;
 	animation-duration:8.4s;
 	left:74%;
 	top:72%;
-	height:7px;
-	width:11px;
+	height:11px;
+	width:18px;
 }
 
 .meteor-field span:nth-child(6) {
 	--meteor-distance-x:-140vw;
 	--meteor-distance-y:68vh;
 	--meteor-opacity:.9;
-	--meteor-trail:138px;
+	--meteor-trail:190px;
+	--meteor-shadow:
+		0 0 22px rgba(var(--accent-rgb), .48),
+		0 0 48px rgba(var(--accent-rgb), .18);
 	animation-delay:5.8s;
-	animation-duration:5.1s;
+	animation-duration:5.8s;
 	left:96%;
 	top:48%;
-	height:10px;
-	width:15px;
+	height:22px;
+	width:34px;
 }
 
 @keyframes meteorFlyby {

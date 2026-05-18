@@ -59,6 +59,17 @@ func main() {
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
 
+	listener, err := net.Listen("tcp", address)
+	if err != nil {
+		if isAddressInUse(err) {
+			printPortInUseMessage(address, displayHosts, *port)
+			os.Exit(1)
+		}
+
+		log.Fatal(err)
+	}
+	defer listener.Close()
+
 	fmt.Println()
 	fmt.Println("[Rock-OS Wiki]")
 	fmt.Printf("Serving %s\n", siteRoot)
@@ -78,7 +89,7 @@ func main() {
 		}
 	}
 
-	log.Fatal(http.ListenAndServe(address, fileServer))
+	log.Fatal(http.Serve(listener, fileServer))
 }
 
 func resolveHost(host string) (string, []string, error) {
@@ -214,6 +225,28 @@ func noCache(next http.Handler) http.Handler {
 		w.Header().Set("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func isAddressInUse(err error) bool {
+	message := strings.ToLower(err.Error())
+
+	return strings.Contains(message, "address already in use") ||
+		strings.Contains(message, "only one usage of each socket address")
+}
+
+func printPortInUseMessage(address string, displayHosts []string, port int) {
+	fmt.Println()
+	fmt.Println("[Rock-OS Wiki]")
+	fmt.Printf("Could not listen on %s because port %d is already in use.\n", address, port)
+	fmt.Println()
+	fmt.Println("Rock-OS may already be running. Try opening:")
+	for _, displayHost := range displayHosts {
+		fmt.Printf("  http://%s:%d/\n", displayHost, port)
+	}
+	fmt.Println()
+	fmt.Printf("If another app is using port %d, stop it or start Rock-OS on another port:\n", port)
+	fmt.Printf("  go run . --port %d\n", port+1)
+	fmt.Println()
 }
 
 func watchMarkdownIndex(siteRoot string, interval time.Duration) {
