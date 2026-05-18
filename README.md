@@ -26,6 +26,7 @@ small cross-platform Go binary and rendered in the browser.
 - Theme presets: Steel, Rugged, Cyberpunk, and Blue-Grass
 - Local offline icons, favicons, and bookmark assets
 - Local media support for images and videos kept out of Git
+- Helper scripts for unlocking and re-locking private markdown
 - Cross-platform Go server for Windows, Linux, and macOS
 
 ## 2.0 Release Binaries
@@ -243,6 +244,27 @@ git-crypt export-key rock-os-git-crypt.key
 ```
 
 Store exported keys somewhere private and backed up, outside this repository.
+
+### Locking Private Markdown Again
+
+To re-lock private markdown after you are done editing:
+
+Windows:
+
+```powershell
+.\lock-git-crypt.cmd
+```
+
+macOS or Linux:
+
+```bash
+chmod +x ./lock-git-crypt.sh
+./lock-git-crypt.sh
+```
+
+The lock scripts run `git-crypt lock` from the repo root. If locking fails,
+close open private files or commit/stash pending private changes, then try
+again.
 
 ## How The Wiki Works
 
