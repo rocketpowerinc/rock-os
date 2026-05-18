@@ -48,6 +48,127 @@ Choose the binary for your system:
 The release also includes `rock-os-wiki-v2.0-checksums.txt` for verifying
 downloads.
 
+## Dependencies
+
+You can run Rock OS from a release binary without Go installed. Go is only
+needed if you want to run from source or if the start script cannot find a
+matching release binary and falls back to `go run .`.
+
+`git-crypt` is only needed for unlocking, editing, or re-locking private
+markdown stored under `Website/markdown/Private/`.
+
+### Windows
+
+Install Go with `winget`:
+
+```powershell
+winget install -e --id GoLang.Go
+```
+
+Add the default Go user binary folder to your PowerShell profile if it is not
+already there:
+
+```powershell
+if (-not (Test-Path $PROFILE)) {
+    New-Item -ItemType File -Path $PROFILE -Force | Out-Null
+}
+
+if (-not (Select-String -Path $PROFILE -Pattern '\$HOME\\go\\bin' -Quiet)) {
+    Add-Content -Path $PROFILE -Value '$env:PATH = "$HOME\go\bin;" + $env:PATH'
+    . $PROFILE
+}
+```
+
+Install Scoop if you do not already have it:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+scoop bucket add extras
+```
+
+Install `git-crypt`:
+
+```powershell
+scoop install main/git-crypt
+```
+
+### macOS
+
+Install Homebrew if you do not already have it:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Load Homebrew in your shell. Apple Silicon Macs usually use
+`/opt/homebrew/bin/brew`; Intel Macs usually use `/usr/local/bin/brew`.
+
+Apple Silicon:
+
+```bash
+echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+Intel:
+
+```bash
+echo 'eval "$(/usr/local/bin/brew shellenv)"' >> ~/.zprofile
+eval "$(/usr/local/bin/brew shellenv)"
+```
+
+Install Go and `git-crypt`:
+
+```bash
+brew install go git-crypt
+```
+
+Add the Go user binary folder to your shell path:
+
+```bash
+echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Linux
+
+Install Go and `git-crypt` with your distro package manager.
+
+Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install git-crypt
+sudo snap install go --classic
+```
+
+Debian:
+
+```bash
+sudo apt update
+sudo apt install golang-go git-crypt
+```
+
+Fedora:
+
+```bash
+sudo dnf install golang git-crypt
+```
+
+Arch Linux:
+
+```bash
+sudo pacman -Syu go git-crypt
+```
+
+Add the Go user binary folder to your shell path:
+
+```bash
+echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
 ## Running From A Release Binary
 
 The wiki server serves files from the current directory, so run the binary from
@@ -193,25 +314,7 @@ Do not commit the key.
 
 ### Fresh Clone Unlock Steps
 
-1. Install `git-crypt`.
-
-Windows with Scoop:
-
-```powershell
-scoop install git-crypt
-```
-
-Linux:
-
-```bash
-sudo apt install git-crypt
-```
-
-macOS:
-
-```bash
-brew install git-crypt
-```
+1. Install `git-crypt` using the dependency instructions above.
 
 2. Clone the repo and enter it.
 
