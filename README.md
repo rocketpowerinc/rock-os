@@ -244,6 +244,15 @@ stable latest-style binary is missing or older than the latest release, they
 download it into the `Website` folder. If the release check or download is not
 available, they continue with local files.
 
+Run the helper scripts from a real Git clone, not a GitHub ZIP download. ZIP
+downloads do not include the hidden `.git` folder, so `git-crypt` cannot unlock
+private markdown. Clone the repo instead:
+
+```bash
+git clone https://github.com/rocketpowerinc/rock-os.git
+cd rock-os
+```
+
 The scripts print green status lines for healthy checks, yellow lines when they
 fall back to local files or Go source, and red warnings for blocking or security
 related checks. They also report whether `git-crypt` is installed before

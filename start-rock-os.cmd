@@ -1,6 +1,15 @@
 @echo off
 setlocal
 
+if not exist "%~dp0.git" (
+    call :red "This folder is not a cloned Git repository."
+    call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Private markdown."
+    call :yellow "Use this instead:"
+    echo git clone https://github.com/rocketpowerinc/rock-os.git
+    echo cd rock-os
+    exit /b 1
+)
+
 cd /d "%~dp0Website"
 
 set "ROCK_OS_REPO=rocketpowerinc/rock-os"

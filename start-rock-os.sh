@@ -13,6 +13,17 @@ red() {
     printf '\033[31m%s\033[0m\n' "$1"
 }
 
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+
+if [ ! -e "$SCRIPT_DIR/.git" ]; then
+    red "This folder is not a cloned Git repository."
+    yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Private markdown."
+    yellow "Use this instead:"
+    printf '%s\n' "git clone https://github.com/rocketpowerinc/rock-os.git"
+    printf '%s\n' "cd rock-os"
+    exit 1
+fi
+
 check_git_crypt() {
     if command -v git-crypt >/dev/null 2>&1; then
         green "git-crypt is installed."
@@ -68,7 +79,7 @@ check_private() {
     fi
 }
 
-cd "$(dirname "$0")/Website"
+cd "$SCRIPT_DIR/Website"
 
 REPO="rocketpowerinc/rock-os"
 VERSION_FILE=".rock-os-wiki-version"
