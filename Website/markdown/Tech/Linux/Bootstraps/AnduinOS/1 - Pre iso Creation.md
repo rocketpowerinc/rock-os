@@ -73,18 +73,16 @@ sudo mv go-pwr /usr/bin/go-pwr
 
 ### Go-PWR
 
-- With Go-PWR Install Bashrc
-- With Go-PWR Install AnduinOS Justfile + Yad Toolkit
-
-### AnduinOS Toolkit
-
-- With Toolkit Install Wallpapers
+- With Go-PWR Install 
+  - Bashrc
+  - AnduinOS Justfile + Yad Toolkit
+  - Wallpapers
 
 ### Docker - Install
 
 - `curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh`
 
-# Users
+### Users
 
 - set rocket user avatar
 
@@ -102,3 +100,4 @@ EOF" &&
 
 sudo systemctl restart accounts-daemon
 ```
+### Install Essential Cli-Tools
