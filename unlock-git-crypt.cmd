@@ -16,9 +16,11 @@ if errorlevel 1 (
 )
 
 set "KEY_FILE="
+set "KEY_NAME="
 for %%F in (*.key) do (
     if not defined KEY_FILE (
         set "KEY_FILE=%%~fF"
+        set "KEY_NAME=%%~nxF"
     ) else (
         echo More than one .key file was found in the repo root.
         echo Keep only the git-crypt key here, then run this script again.
@@ -50,6 +52,14 @@ if errorlevel 1 (
 
 "%GIT_CRYPT%" unlock "%TEMP_KEY%"
 set "UNLOCK_RESULT=%ERRORLEVEL%"
+
+copy /Y "%TEMP_KEY%" "%~dp0%KEY_NAME%" >nul
+if errorlevel 1 (
+    echo Failed to copy the key back to the repo root.
+    echo Your key is still at "%TEMP_KEY%".
+    exit /b 1
+)
+
 del "%TEMP_KEY%" >nul 2>nul
 
 if not "%UNLOCK_RESULT%"=="0" (
@@ -58,3 +68,4 @@ if not "%UNLOCK_RESULT%"=="0" (
 )
 
 echo Repository unlocked.
+echo Key restored to "%~dp0%KEY_NAME%".

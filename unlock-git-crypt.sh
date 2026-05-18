@@ -24,6 +24,7 @@ if [ "$#" -gt 1 ]; then
 fi
 
 echo "Unlocking repository with $1..."
+key_name="$(basename "$1")"
 temp_key="${TMPDIR:-/tmp}/rock-os-git-crypt-$$.key"
 cp "$1" "$temp_key"
 rm "$1"
@@ -31,6 +32,11 @@ set +e
 git-crypt unlock "$temp_key"
 unlock_result=$?
 set -e
+if ! cp "$temp_key" "./$key_name"; then
+    echo "Failed to copy the key back to the repo root."
+    echo "Your key is still at $temp_key."
+    exit 1
+fi
 rm -f "$temp_key"
 if [ "$unlock_result" -ne 0 ]; then
     echo "Failed to unlock the repository."
@@ -38,3 +44,4 @@ if [ "$unlock_result" -ne 0 ]; then
 fi
 
 echo "Repository unlocked."
+echo "Key restored to ./$key_name."
