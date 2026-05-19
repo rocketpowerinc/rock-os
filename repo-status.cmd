@@ -3,7 +3,8 @@ setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
-call :header "Rock-OS Repo Status"
+echo.
+call :green "== Rock-OS Repo Status =="
 
 if not exist ".git" (
     call :red "This folder is not a cloned Git repository."
@@ -20,6 +21,7 @@ if not defined BRANCH set "BRANCH=(detached HEAD)"
 call :info "Branch: !BRANCH!"
 
 for /f "delims=" %%H in ('git rev-parse --short HEAD 2^>nul') do call :info "Commit: %%H"
+for /f "delims=" %%C in ('git rev-list --count HEAD 2^>nul') do call :info "Total commits: %%C"
 for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name @{u} 2^>nul') do set "UPSTREAM=%%U"
 if defined UPSTREAM (
     call :info "Upstream: !UPSTREAM!"
@@ -27,7 +29,12 @@ if defined UPSTREAM (
     call :warn "No upstream branch configured."
 )
 
-for /f "delims=" %%S in ('git status -sb 2^>nul') do call :info "%%S"
+for /f "delims=" %%S in ('git status -sb 2^>nul') do (
+    set "STATUS_LINE=%%S"
+    goto :printed_status_line
+)
+:printed_status_line
+if defined STATUS_LINE call :info "!STATUS_LINE!"
 
 set "DIRTY="
 for /f "delims=" %%S in ('git status --short 2^>nul') do (
@@ -38,6 +45,37 @@ for /f "delims=" %%S in ('git status --short 2^>nul') do (
     echo   %%S
 )
 if not defined DIRTY call :ok "Working tree clean."
+
+call :section "Website"
+if exist "Website\main.go" (
+    call :ok "Go server source present for source fallback."
+) else (
+    call :bad "Website\main.go missing."
+)
+
+set "BINARY_FOUND="
+for %%B in (Website\rock-os-wiki-*) do set "BINARY_FOUND=1"
+if defined BINARY_FOUND (
+    call :ok "Release binary present. Site can run without Go installed."
+) else (
+    call :warn "No release binary found in Website folder."
+)
+
+call :section "Tools"
+where go >nul 2>nul
+if errorlevel 1 (
+    call :warn "Go is not installed or not on PATH. Not needed if using release binary."
+) else (
+    for /f "delims=" %%G in ('go version 2^>nul') do call :ok "%%G"
+)
+
+call :section "Port 8000"
+set "PORT_OPEN="
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":8000 .*LISTENING" 2^>nul') do (
+    set "PORT_OPEN=1"
+    call :ok "Port 8000 is listening on PID %%P."
+)
+if not defined PORT_OPEN call :info "Port 8000 is not currently listening."
 
 call :section "git-crypt"
 where git-crypt >nul 2>nul
@@ -75,55 +113,6 @@ if defined KEY_FOUND (
     call :ok "No .key files found in repo root."
 )
 
-call :section "Website"
-if exist "Website\main.go" (
-    call :ok "Go server source present."
-) else (
-    call :bad "Website\main.go missing."
-)
-
-if exist "Website\index.html" (
-    call :ok "Landing page present."
-) else (
-    call :bad "Website\index.html missing."
-)
-
-if exist "Website\wiki.html" (
-    call :ok "Wiki page present."
-) else (
-    call :bad "Website\wiki.html missing."
-)
-
-if exist "Website\markdown-index.json" (
-    call :info "Generated markdown index exists."
-) else (
-    call :warn "Generated markdown index is missing. Start the Go server to regenerate it."
-)
-
-set "BINARY_FOUND="
-for %%B in (Website\rock-os-wiki-*) do set "BINARY_FOUND=1"
-if defined BINARY_FOUND (
-    call :ok "Release binary present in Website folder."
-) else (
-    call :warn "No release binary found in Website folder."
-)
-
-call :section "Tools"
-where go >nul 2>nul
-if errorlevel 1 (
-    call :warn "Go is not installed or not on PATH. Not needed if using release binary."
-) else (
-    for /f "delims=" %%G in ('go version 2^>nul') do call :ok "%%G"
-)
-
-call :section "Port 8000"
-set "PORT_OPEN="
-for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":8000 .*LISTENING" 2^>nul') do (
-    set "PORT_OPEN=1"
-    call :ok "Port 8000 is listening on PID %%P."
-)
-if not defined PORT_OPEN call :info "Port 8000 is not currently listening."
-
 call :section "Full git-crypt status"
 if defined GIT_CRYPT (
     "%GIT_CRYPT%" status
@@ -152,11 +141,6 @@ if errorlevel 1 (
     exit /b 0
 )
 call :ok "Private Markdown Folder Unlocked."
-exit /b 0
-
-:header
-echo.
-call :green "== %~1 =="
 exit /b 0
 
 :section

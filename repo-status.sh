@@ -58,6 +58,7 @@ branch="$(git branch --show-current 2>/dev/null || true)"
 [ -n "$branch" ] || branch="(detached HEAD)"
 info "Branch: $branch"
 info "Commit: $(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
+info "Total commits: $(git rev-list --count HEAD 2>/dev/null || printf 'unknown')"
 
 upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
 if [ -n "$upstream" ]; then
@@ -66,9 +67,8 @@ else
     warn "No upstream branch configured."
 fi
 
-git status -sb 2>/dev/null | while IFS= read -r line; do
-    info "$line"
-done
+status_branch="$(git status -sb 2>/dev/null | sed -n '1p')"
+[ -n "$status_branch" ] && info "$status_branch"
 
 status_short="$(git status --short 2>/dev/null || true)"
 if [ -n "$status_short" ]; then
@@ -76,6 +76,41 @@ if [ -n "$status_short" ]; then
     printf '%s\n' "$status_short" | sed 's/^/  /'
 else
     ok "Working tree clean."
+fi
+
+section "Website"
+[ -f "Website/main.go" ] && ok "Go server source present for source fallback." || bad "Website/main.go missing."
+
+if find Website -maxdepth 1 -type f -name 'rock-os-wiki-*' | grep -q .; then
+    ok "Release binary present. Site can run without Go installed."
+else
+    warn "No release binary found in Website folder."
+fi
+
+section "Tools"
+if command -v go >/dev/null 2>&1; then
+    ok "$(go version)"
+else
+    warn "Go is not installed or not on PATH. Not needed if using release binary."
+fi
+
+section "Port 8000"
+pids=""
+if command -v lsof >/dev/null 2>&1; then
+    pids="$(lsof -tiTCP:8000 -sTCP:LISTEN 2>/dev/null || true)"
+elif command -v ss >/dev/null 2>&1; then
+    pids="$(ss -ltnp 'sport = :8000' 2>/dev/null | awk -F'pid=' 'NF > 1 { split($2, parts, ","); print parts[1] }' | sort -u)"
+elif command -v netstat >/dev/null 2>&1; then
+    pids="$(netstat -ltnp 2>/dev/null | awk '$4 ~ /:8000$/ { split($7, parts, "/"); print parts[1] }' | sort -u)"
+fi
+
+if [ -n "$pids" ]; then
+    printf '%s\n' "$pids" | while IFS= read -r pid; do
+        [ -n "$pid" ] || continue
+        ok "Port 8000 is listening on PID $pid."
+    done
+else
+    info "Port 8000 is not currently listening."
 fi
 
 section "git-crypt"
@@ -126,49 +161,6 @@ if [ "$key_count" -gt 0 ]; then
     warn ".key file present in repo root. Keep it private and never commit it."
 else
     ok "No .key files found in repo root."
-fi
-
-section "Website"
-[ -f "Website/main.go" ] && ok "Go server source present." || bad "Website/main.go missing."
-[ -f "Website/index.html" ] && ok "Landing page present." || bad "Website/index.html missing."
-[ -f "Website/wiki.html" ] && ok "Wiki page present." || bad "Website/wiki.html missing."
-
-if [ -f "Website/markdown-index.json" ]; then
-    info "Generated markdown index exists."
-else
-    warn "Generated markdown index is missing. Start the Go server to regenerate it."
-fi
-
-if find Website -maxdepth 1 -type f -name 'rock-os-wiki-*' | grep -q .; then
-    ok "Release binary present in Website folder."
-else
-    warn "No release binary found in Website folder."
-fi
-
-section "Tools"
-if command -v go >/dev/null 2>&1; then
-    ok "$(go version)"
-else
-    warn "Go is not installed or not on PATH. Not needed if using release binary."
-fi
-
-section "Port 8000"
-pids=""
-if command -v lsof >/dev/null 2>&1; then
-    pids="$(lsof -tiTCP:8000 -sTCP:LISTEN 2>/dev/null || true)"
-elif command -v ss >/dev/null 2>&1; then
-    pids="$(ss -ltnp 'sport = :8000' 2>/dev/null | awk -F'pid=' 'NF > 1 { split($2, parts, ","); print parts[1] }' | sort -u)"
-elif command -v netstat >/dev/null 2>&1; then
-    pids="$(netstat -ltnp 2>/dev/null | awk '$4 ~ /:8000$/ { split($7, parts, "/"); print parts[1] }' | sort -u)"
-fi
-
-if [ -n "$pids" ]; then
-    printf '%s\n' "$pids" | while IFS= read -r pid; do
-        [ -n "$pid" ] || continue
-        ok "Port 8000 is listening on PID $pid."
-    done
-else
-    info "Port 8000 is not currently listening."
 fi
 
 section "Full git-crypt status"

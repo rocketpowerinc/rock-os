@@ -62,8 +62,10 @@ Markdown notes should be clear, practical, and a little human.
 - Root launcher scripts should remain friendly, colored where useful, and
   explicit about what they are checking.
 - Shell scripts committed to Git should have executable mode `100755`.
-- If a new `.sh` script is added, mark it executable in Git before finishing.
-  This is a standing repo rule and does not require asking for confirmation.
+- If a new `.sh` script is added, make sure the user knows it should be
+  committed with executable mode `100755`.
+  The purpose is to prevent Linux/macOS users from needing manual `chmod`
+  changes that dirty the working tree and block `git-crypt unlock`.
 - Windows `.cmd` scripts should have matching behavior where practical.
 - Windows scripts should remain readable when double-clicked. If a `.cmd` script
   finishes instead of staying open as a long-running server process, pause at
@@ -98,7 +100,9 @@ This area is intended to be encrypted with `git-crypt`.
 - Do not commit, stash, push, or open pull requests for the user unless they
   explicitly ask for that action.
 - Do not stage files unless the user explicitly asks. The user prefers to review
-  and commit changes themselves.
+  and commit changes themselves. Do not leave files staged, including executable
+  mode changes. If a `.sh` file needs executable mode, explain the command for
+  the user to run or do it only after an explicit request.
 - Avoid unnecessary dependencies.
 - Do not call external assets from the website unless the user explicitly wants
   an online-only feature.
