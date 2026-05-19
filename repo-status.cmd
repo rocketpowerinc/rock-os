@@ -22,19 +22,6 @@ call :info "Branch: !BRANCH!"
 
 for /f "delims=" %%H in ('git rev-parse --short HEAD 2^>nul') do call :info "Commit: %%H"
 for /f "delims=" %%C in ('git rev-list --count HEAD 2^>nul') do call :info "Total commits: %%C"
-for /f "delims=" %%U in ('git rev-parse --abbrev-ref --symbolic-full-name @{u} 2^>nul') do set "UPSTREAM=%%U"
-if defined UPSTREAM (
-    call :info "Upstream: !UPSTREAM!"
-) else (
-    call :warn "No upstream branch configured."
-)
-
-for /f "delims=" %%S in ('git status -sb 2^>nul') do (
-    set "STATUS_LINE=%%S"
-    goto :printed_status_line
-)
-:printed_status_line
-if defined STATUS_LINE call :info "!STATUS_LINE!"
 
 set "DIRTY="
 for /f "delims=" %%S in ('git status --short 2^>nul') do (
@@ -47,12 +34,6 @@ for /f "delims=" %%S in ('git status --short 2^>nul') do (
 if not defined DIRTY call :ok "Working tree clean."
 
 call :section "Website"
-if exist "Website\main.go" (
-    call :ok "Go server source present for source fallback."
-) else (
-    call :bad "Website\main.go missing."
-)
-
 set "BINARY_FOUND="
 for %%B in (Website\rock-os-wiki-*) do set "BINARY_FOUND=1"
 if defined BINARY_FOUND (
@@ -61,7 +42,12 @@ if defined BINARY_FOUND (
     call :warn "No release binary found in Website folder."
 )
 
-call :section "Tools"
+if exist "Website\main.go" (
+    call :ok "Go server source present for source fallback."
+) else (
+    call :bad "Website\main.go missing."
+)
+
 where go >nul 2>nul
 if errorlevel 1 (
     call :warn "Go is not installed or not on PATH. Not needed if using release binary."
@@ -71,9 +57,14 @@ if errorlevel 1 (
 
 call :section "Port 8000"
 set "PORT_OPEN="
+set "SEEN_PIDS= "
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":8000 .*LISTENING" 2^>nul') do (
-    set "PORT_OPEN=1"
-    call :ok "Port 8000 is listening on PID %%P."
+    echo !SEEN_PIDS! | findstr /C:" %%P " >nul
+    if errorlevel 1 (
+        set "PORT_OPEN=1"
+        set "SEEN_PIDS=!SEEN_PIDS!%%P "
+        call :ok "Port 8000 is listening on PID %%P."
+    )
 )
 if not defined PORT_OPEN call :info "Port 8000 is not currently listening."
 

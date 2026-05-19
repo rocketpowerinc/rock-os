@@ -60,16 +60,6 @@ info "Branch: $branch"
 info "Commit: $(git rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
 info "Total commits: $(git rev-list --count HEAD 2>/dev/null || printf 'unknown')"
 
-upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
-if [ -n "$upstream" ]; then
-    info "Upstream: $upstream"
-else
-    warn "No upstream branch configured."
-fi
-
-status_branch="$(git status -sb 2>/dev/null | sed -n '1p')"
-[ -n "$status_branch" ] && info "$status_branch"
-
 status_short="$(git status --short 2>/dev/null || true)"
 if [ -n "$status_short" ]; then
     warn "Working tree has changes:"
@@ -79,15 +69,14 @@ else
 fi
 
 section "Website"
-[ -f "Website/main.go" ] && ok "Go server source present for source fallback." || bad "Website/main.go missing."
-
 if find Website -maxdepth 1 -type f -name 'rock-os-wiki-*' | grep -q .; then
     ok "Release binary present. Site can run without Go installed."
 else
     warn "No release binary found in Website folder."
 fi
 
-section "Tools"
+[ -f "Website/main.go" ] && ok "Go server source present for source fallback." || bad "Website/main.go missing."
+
 if command -v go >/dev/null 2>&1; then
     ok "$(go version)"
 else
