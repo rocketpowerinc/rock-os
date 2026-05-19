@@ -10,3 +10,6 @@ set "GOCACHE=%CD%\.gocache"
 
 echo Starting Rock-OS from Go source...
 go run main.go --host local
+
+echo.
+pause

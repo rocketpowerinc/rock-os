@@ -7,6 +7,7 @@ if not exist "%~dp0.git" (
     call :yellow "Use this instead:"
     echo git clone https://github.com/rocketpowerinc/rock-os.git
     echo cd rock-os
+    call :wait
     exit /b 1
 )
 
@@ -64,12 +65,14 @@ if defined ROCK_OS_BINARY (
     powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
     if errorlevel 1 (
         call :red "Cannot start from source because Go is not installed."
+        call :wait
         exit /b 1
     )
     set "GOCACHE=%CD%\.gocache"
     go run . --host local
 )
 
+call :wait
 exit /b %ERRORLEVEL%
 
 :green
@@ -123,4 +126,9 @@ if errorlevel 1 (
     exit /b 0
 )
 call :green "Private Markdown Folder Unlocked."
+exit /b 0
+
+:wait
+echo.
+pause
 exit /b 0

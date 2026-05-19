@@ -63,7 +63,11 @@ Markdown notes should be clear, practical, and a little human.
   explicit about what they are checking.
 - Shell scripts committed to Git should have executable mode `100755`.
 - If a new `.sh` script is added, mark it executable in Git before finishing.
+  This is a standing repo rule and does not require asking for confirmation.
 - Windows `.cmd` scripts should have matching behavior where practical.
+- Windows scripts should remain readable when double-clicked. If a `.cmd` script
+  finishes instead of staying open as a long-running server process, pause at
+  the end so the user can read the output and close the window themselves.
 - Start scripts should prefer release binaries, then fall back to Go source.
 - If `Website/main.go` or server behavior changes, remind the user that a new
   release binary should be built and published.
@@ -91,8 +95,11 @@ This area is intended to be encrypted with `git-crypt`.
 - Keep changes scoped to the user request.
 - Update `README.md` when adding user-facing features, scripts, dependencies,
   or workflow changes.
+- Do not commit, stash, push, or open pull requests for the user unless they
+  explicitly ask for that action.
+- Do not stage files unless the user explicitly asks. The user prefers to review
+  and commit changes themselves.
 - Avoid unnecessary dependencies.
 - Do not call external assets from the website unless the user explicitly wants
   an online-only feature.
 - Before finishing, run a relevant sanity check such as `git diff --check`.
-

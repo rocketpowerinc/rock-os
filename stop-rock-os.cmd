@@ -18,6 +18,7 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"')
         taskkill /PID !PID! /F >nul
         if errorlevel 1 (
             echo Failed to stop process !PID!.
+            call :wait
             exit /b 1
         )
         set "STOPPED_PIDS=!STOPPED_PIDS!!PID! "
@@ -26,7 +27,14 @@ for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"')
 
 if not defined FOUND (
     echo No process is listening on port %PORT%.
+    call :wait
     exit /b 0
 )
 
 echo Rock-OS stop request complete.
+call :wait
+
+:wait
+echo.
+pause
+exit /b 0

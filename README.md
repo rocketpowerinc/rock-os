@@ -233,6 +233,17 @@ Helper scripts are also included:
 sh ./start-rock-os.sh
 ```
 
+Check repo, Git, `git-crypt`, private markdown, local binaries, tools, and port
+status:
+
+```powershell
+.\repo-status.cmd
+```
+
+```bash
+./repo-status.sh
+```
+
 Linux and macOS shell scripts are committed with executable permissions. If the
 permissions are missing because of a ZIP extraction, file copy, or unusual
 filesystem, run:
