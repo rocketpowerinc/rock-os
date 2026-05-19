@@ -6,6 +6,8 @@ Rock OS is a lightweight local wiki website for keeping markdown notes,
 commands, media, and setup docs in a simple folder structure. It is served by a
 small cross-platform Go binary and rendered in the browser.
 
+For project direction and AI agent development rules, see `AGENTS.md`.
+
 ## Features
 
 - Markdown files rendered as a website wiki
