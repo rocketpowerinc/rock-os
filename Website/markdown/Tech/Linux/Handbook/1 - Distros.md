@@ -131,6 +131,118 @@ excellent engineering. But company influence is still part of the picture.
 Fedora is a great distro. Just understand the relationship before you build
 your whole worldview on it.
 
+## Stable Enterprise Distros
+
+Enterprise Linux is its own world. These distros are usually less exciting on
+purpose. They care about long support windows, predictable behavior, server
+workloads, documentation, and compatibility more than having the newest shiny
+desktop toy five minutes after it lands upstream.
+
+That makes them excellent for servers, labs, infrastructure, and learning how
+Linux is used in business environments. It also means they can feel a little
+slow-moving on a personal desktop. That is not a bug. That is the whole
+assignment.
+
+### Rocky Linux
+
+Rocky Linux is a stable enterprise-focused distro built to be compatible with
+Red Hat Enterprise Linux style systems.
+
+It is a strong option when you want to learn the enterprise Linux ecosystem
+without directly using RHEL. Think servers, homelabs, infrastructure services,
+containers, virtualization, automation, and anything where boring stability is
+more valuable than shiny chaos.
+
+Rocky Linux is great for:
+
+- Server labs
+- Enterprise Linux practice
+- Long-lived services
+- Learning RHEL-style administration
+- Stable infrastructure where surprise is the enemy
+
+The tradeoff is package freshness. Rocky is not where you go because you want
+the newest desktop stack, newest kernel, newest compositor, and the thrill of
+every update feeling like opening a mystery envelope. Rocky is where you go
+when you want the machine to keep doing its job while you go live your life.
+
+## Other Strong Options
+
+Not every good distro fits neatly into the Debian, Arch, Fedora, or enterprise
+boxes. Some sit in their own lane and are absolutely worth understanding.
+
+### openSUSE
+
+openSUSE is another good option, especially because it has a long history,
+strong tooling, and a very capable system administration culture.
+
+The two main branches to know are:
+
+- **openSUSE Leap**: more stable and traditional
+- **openSUSE Tumbleweed**: rolling release with newer packages
+- **openSUSE MicroOS**: immutable, transactional, and container-focused
+
+One of openSUSE's standout tools is YaST, a powerful system configuration tool
+that can manage a lot of settings from one place. Some people love that kind of
+centralized control. Other people see a big admin panel and immediately start
+looking for the nearest plain text config file. Both reactions are valid. Linux
+contains multitudes.
+
+openSUSE is great for:
+
+- Users who want a polished alternative to the usual big names
+- KDE users who want a strong desktop experience
+- People who like good system administration tools
+- Testing a rolling distro that is not Arch-based
+- Learning another major Linux ecosystem
+
+If Debian is the dependable foundation, Arch is the sharp learning tool, and
+Fedora is the modern preview lane, openSUSE is the capable neighbor with a
+well-organized garage and strangely good documentation.
+
+## Educational And Offline Learning Distros
+
+Some distros are built less around power-user customization and more around
+helping people learn, especially in places where internet access may be slow,
+limited, expensive, or unreliable.
+
+That matters. A good educational system is not just "Linux with a browser." It
+can be a complete learning environment with offline content, simple navigation,
+safer defaults, and fewer ways for a beginner to accidentally turn the system
+into modern art.
+
+### Endless OS
+
+Endless OS is one of the most interesting distros in this category.
+
+It is designed around education, accessibility, and offline usefulness. Instead
+of assuming the internet is always available, Endless OS can include learning
+apps, reference material, and a very beginner-friendly desktop experience.
+That makes it especially useful for students, families, classrooms, community
+labs, and places where connectivity is not guaranteed.
+
+Endless OS is also built with an immutable-style system design. The base system
+is harder to casually break, and applications are commonly handled through
+Flatpak. That fits the mission well: if the machine is meant for learning, the
+operating system should not require a tiny systems administrator living inside
+every student's backpack.
+
+Endless OS is great for:
+
+- Offline learning environments
+- Kids, families, and classrooms
+- Community computer labs
+- Simple app-focused usage
+- A more appliance-like Linux experience
+- People who need useful local content without depending on the cloud
+
+The tradeoff is that Endless OS is not trying to be Arch, Debian, or Fedora for
+tinkerers. It is opinionated, simplified, and focused. That is exactly why it
+can work well for education. Sometimes the best Linux system is not the one
+with the most knobs. Sometimes it is the one that lets someone learn math,
+science, writing, and computers without needing to understand bootloaders before
+lunch.
+
 ## Immutable And Reproducible Distros
 
 Immutable distros are built around a different idea: the base system should be
@@ -220,6 +332,42 @@ understand what lane it is driving in.
 If Debian is a dependable workshop and Arch is a box of sharp tools, SteamOS is
 the gaming console that secretly runs Linux under the hood and smiles politely
 while doing it.
+
+## OSINT And Security Tooling Distros
+
+Some distros are not meant to be general desktop operating systems. They are
+toolboxes. Very sharp toolboxes. The kind where you should probably know what
+you are reaching for before you start waving things around.
+
+### Kali Linux
+
+Kali Linux is famous in cybersecurity circles because it ships with a large
+collection of offensive security, penetration testing, forensics, wireless,
+reverse engineering, and OSINT tools.
+
+For OSINT work, Kali can be useful because many investigation and recon tools
+are already packaged or easy to install. It gives you a ready-made environment
+for learning security workflows, testing labs, practicing responsible research,
+and building muscle memory with tools that security people actually use.
+
+Kali Linux is great for:
+
+- OSINT labs
+- Penetration testing practice
+- Security tool exploration
+- Capture-the-flag and training environments
+- Forensics, recon, and wireless testing labs
+
+The important warning: Kali is usually not the best daily driver. You can use
+it that way, but that does not mean you should. Kali is built for security
+work, not for being your cozy everyday desktop where you manage photos, write
+notes, watch videos, and accidentally run every tool as root because the vibes
+felt official.
+
+Use Kali with purpose. Learn from it. Build labs with it. Respect the legal and
+ethical boundaries. If you are doing security research, stay on systems you own
+or have explicit permission to test. The goal is skill, not becoming the reason
+someone invents a new firewall rule.
 
 ## Security-Focused Distros
 

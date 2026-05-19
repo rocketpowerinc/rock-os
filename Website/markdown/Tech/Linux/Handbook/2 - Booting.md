@@ -325,6 +325,201 @@ General advice:
 Do not randomly change every firmware setting at once. Change one thing, test,
 then continue. Firmware menus are where confidence goes to get humbled.
 
+## Legacy BIOS vs UEFI
+
+When people talk about a computer "booting," they are usually talking about
+one of two firmware worlds: old Legacy BIOS or modern UEFI.
+
+Legacy BIOS is the older method. It expects boot code in places like the master
+boot record, often called the MBR. It is simpler in some ways, but it is also
+more limited. BIOS-era booting comes from a time when computers wore smaller
+shoes and thought a 2 TB disk sounded like science fiction.
+
+UEFI is the modern replacement. Instead of relying on old MBR boot code, UEFI
+usually boots from an EFI System Partition, often called the ESP. That partition
+contains `.efi` boot files, and the firmware can keep boot entries that point
+to those files.
+
+The practical difference looks like this:
+
+| Boot Mode | Common Partition Style | Boot Files Usually Live In | Notes |
+| --- | --- | --- | --- |
+| Legacy BIOS | MBR | Boot sector / bootloader area | Older, simpler, more limited |
+| UEFI | GPT | EFI System Partition | Modern, flexible, Secure Boot capable |
+
+Most modern computers should use UEFI with GPT partitioning. If you are
+installing Linux on a current laptop or desktop, UEFI is usually the right
+choice.
+
+Legacy BIOS still matters for:
+
+- Older computers
+- Some virtual machines
+- Compatibility testing
+- Certain rescue situations
+- Machines with strange firmware behavior
+
+UEFI matters for:
+
+- Modern hardware
+- Secure Boot
+- Cleaner multi-boot setups
+- EFI boot managers like rEFInd
+- GPT disks and larger modern drives
+
+The important rule is consistency. If Windows is installed in UEFI mode and you
+install Linux in Legacy BIOS mode, dual booting can get messy. If one system is
+wearing modern boots and the other brought sandals from 2007, do not be
+surprised when the boot menu gets confused.
+
+To check your current boot mode from a Linux live environment, run:
+
+```bash
+ls /sys/firmware/efi
+```
+
+If that directory exists, you are booted in UEFI mode. If it does not exist,
+you are probably booted in Legacy BIOS mode.
+
+That matters before installing. If you boot the installer USB in the wrong mode,
+the installer may set up the bootloader for that mode. So when the boot menu
+shows two entries for the same USB, one marked UEFI and one not, choose the one
+that matches the way you want the installed system to boot.
+
+## Bootloaders
+
+Once the firmware finds something bootable, it usually hands control to a
+bootloader.
+
+The bootloader is the little program that knows how to start the operating
+system. On Linux, it usually loads the Linux kernel, points it at the initramfs,
+passes boot options, and then gets out of the way so the real system can start.
+
+If firmware is the person opening the front door, the bootloader is the person
+who says, "This way, please," and then tries not to trip over the furniture.
+
+Bootloaders matter because they control things like:
+
+- Which operating system starts by default
+- Whether you can dual boot
+- Which kernel version boots
+- Whether rescue or fallback entries are available
+- What kernel parameters are passed at startup
+- How easy it is to recover from a bad kernel or config change
+
+Most users do not need to obsess over bootloaders every day. But when something
+breaks, knowing which one you use can save a lot of confusion.
+
+### GRUB
+
+GRUB is the classic Linux bootloader and still the most common one you will see.
+
+Most mainstream distros use GRUB by default because it is mature, flexible, and
+can handle a lot of setups. It supports UEFI, legacy BIOS, multiple operating
+systems, multiple kernels, recovery entries, and complicated boot scenarios
+that would make a normal computer look at you with concern.
+
+GRUB is great for:
+
+- Most normal Linux installs
+- Dual boot setups
+- Systems with multiple kernels
+- Recovery boot entries
+- Distros that manage boot entries automatically
+
+The tradeoff is that GRUB can feel a little old-school and complex. Its config
+is usually generated from files under places like `/etc/default/grub` and
+scripts under `/etc/grub.d/`, then rebuilt with a distro-specific command.
+
+Common commands you may see:
+
+```bash
+sudo update-grub
+```
+
+or:
+
+```bash
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+Which command is correct depends on the distro. Debian and Ubuntu-like systems
+usually use `update-grub`. Arch-like systems often use `grub-mkconfig`
+directly. This is Linux, so naturally the same thing has multiple names because
+we apparently enjoy character development.
+
+If you are new, GRUB is usually the safe default. It is not always pretty, but
+it is widely documented and battle-tested.
+
+### Limine
+
+Limine is a newer, modern bootloader that has become popular with some custom
+Linux setups, hobby OS projects, and users who want something simpler and
+cleaner than GRUB.
+
+It supports both BIOS and UEFI booting, which makes it flexible. Its
+configuration can also be easier to read than GRUB's generated maze, especially
+for simpler systems.
+
+Limine is great for:
+
+- Custom Linux builds
+- Minimal setups
+- Users who want a cleaner bootloader config
+- Systems where you want both BIOS and UEFI support
+- Learning how boot entries work without GRUB's extra machinery
+
+The tradeoff is ecosystem support. GRUB is deeply integrated into many distros.
+Limine can be excellent, but you may need to take more responsibility for setup,
+updates, and documentation depending on the distro.
+
+If GRUB is the old reliable toolbox, Limine is the cleaner modern toolbox where
+the labels are easier to read and fewer mystery screws fall out when you open
+it.
+
+### rEFInd
+
+rEFInd is a UEFI-only boot manager.
+
+That detail matters: **rEFInd is for UEFI systems, not legacy BIOS systems**.
+If the machine is booting in old BIOS/CSM mode, rEFInd is not the tool for that
+job.
+
+rEFInd is especially nice on machines where you want a clean graphical menu for
+choosing between operating systems or kernels. It can automatically detect many
+bootable EFI loaders, which makes it popular for multi-boot systems.
+
+rEFInd is great for:
+
+- UEFI-only systems
+- Multi-boot setups
+- Cleaner graphical boot menus
+- Choosing between Linux, Windows, macOS, or multiple kernels
+- Users who want a boot manager instead of a traditional heavy bootloader
+
+The important distinction is that rEFInd is more of a boot manager. It often
+finds and launches other EFI bootloaders or EFI-stub kernels rather than acting
+like GRUB in every possible scenario.
+
+That can be elegant. It can also be confusing if you expect it to behave exactly
+like GRUB. Different tool, different job.
+
+### Which Bootloader Should You Use?
+
+For most people:
+
+- Use **GRUB** if your distro installs it by default and you want the normal,
+  supported path.
+- Consider **Limine** if you are building a custom or minimal setup and want a
+  cleaner bootloader.
+- Consider **rEFInd** if you are on UEFI and want a polished boot menu for
+  multiple operating systems or kernels.
+
+If you are just learning Linux, do not turn the bootloader into your first boss
+fight. Let the distro installer choose the default, get the system working, and
+then learn bootloaders from a position of calm instead of from a blinking cursor
+at 1:00 AM.
+
 ## Before Installing
 
 Before installing Linux, do a few boring but important things.
