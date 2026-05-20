@@ -146,12 +146,7 @@ function scriptButton(script) {
         document.createElement('strong');
     name.textContent = script.name;
 
-    const details =
-        document.createElement('small');
-    details.textContent =
-        script.runnable ? script.platform : `${script.platform} - preview only`;
-
-    button.append(name, details);
+    button.append(name);
     button.addEventListener('click', () => selectScript(script));
 
     return button;
