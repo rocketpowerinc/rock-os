@@ -70,6 +70,18 @@ Markdown notes should be clear, practical, and a little human.
 - Windows scripts should remain readable when double-clicked. If a `.cmd` script
   finishes instead of staying open as a long-running server process, pause at
   the end so the user can read the output and close the window themselves.
+- User-managed website scripts live in `Website/scripts/`. The script dashboard
+  should only expose allowlisted script files from that folder and should never
+  become an arbitrary web command prompt.
+- Organize user scripts under platform folders such as `Website/scripts/Windows/`,
+  `Website/scripts/Linux/`, and `Website/scripts/Mac/`. The dashboard should
+  render those folders as a collapsible tree.
+- The script dashboard supports `.cmd`, `.bat`, `.sh`, and `.ps1` files. Keep
+  preview-before-run behavior, and only show the interactive terminal after the
+  user clicks Run.
+- For password prompts in the script dashboard, provide a hidden input mode.
+  Linux scripts that need `sudo` from the web terminal should use `sudo -S`
+  because raw `sudo` often expects a real TTY.
 - Start scripts should prefer release binaries, then fall back to Go source.
 - If `Website/main.go` or server behavior changes, remind the user that a new
   release binary should be built and published.

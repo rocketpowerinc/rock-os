@@ -2,9 +2,15 @@
 set -eu
 
 # Source-only launcher for development or troubleshooting when you want to run
-# the Go server directly instead of using or downloading a release binary.
+# the Go server from local source instead of using or downloading a release
+# binary. It builds a local dev binary first so behavior matches Windows.
 
 cd "$(dirname "$0")"
 
-echo "Starting Rock-OS from Go source..."
-GOCACHE="$PWD/.gocache" go run main.go --host local
+DEV_BINARY="./rock-os-wiki-dev"
+
+echo "Building Rock-OS from Go source..."
+GOCACHE="$PWD/.gocache" go build -o "$DEV_BINARY" .
+
+echo "Starting Rock-OS from local dev binary..."
+"$DEV_BINARY" --host local

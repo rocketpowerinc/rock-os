@@ -14,6 +14,7 @@ For project direction and AI agent development rules, see `AGENTS.md`.
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
+- Local script dashboard with preview, guarded run buttons, and streamed terminal output
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
@@ -210,7 +211,8 @@ go run .
 ```
 
 Source-only helper scripts are also available inside the `Website` folder.
-They skip release binaries and run `go run main.go --host local` directly:
+They skip release binaries, build a local dev binary from the current source,
+and run that dev binary:
 
 ```powershell
 cd Website
@@ -222,6 +224,38 @@ cd Website
 chmod +x ./run-go-server.sh
 ./run-go-server.sh
 ```
+
+The Windows helper intentionally builds a visible local dev binary instead of
+using `go run`, because some Windows Application Control policies block the
+hidden temporary executable that `go run` creates inside `.gocache`.
+
+## Local Script Dashboard
+
+Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
+`Website/scripts/`. The dashboard lists allowed scripts, renders the script
+contents for review, and only then enables a run button for scripts compatible
+with the current operating system.
+
+Organize scripts into folders such as `Website/scripts/Windows/`,
+`Website/scripts/Linux/`, and `Website/scripts/Mac/`. The dashboard renders
+those folders as a collapsible tree, similar to the wiki sidebar.
+
+Script output is streamed into an in-browser terminal. If a script asks for
+input, type the answer into the terminal input box and send it to the running
+process.
+
+For password prompts, enable `Hide input` before sending the password. Scripts
+that need `sudo` from the web dashboard should use `sudo -S` so `sudo` reads the
+password from the dashboard input stream, for example:
+
+```bash
+sudo -S -p "sudo password: " apt update
+```
+
+For safety, the Go server only exposes scripts from `Website/scripts/` and does
+not provide an arbitrary command prompt. Supported script types are `.cmd`,
+`.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
+on the machine running the Go server.
 
 Helper scripts are also included:
 

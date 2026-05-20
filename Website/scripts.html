@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rock-OS Scripts</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#4f6475">
+<script src="js/theme-init.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="grid-overlay"></div>
+
+<nav class="navbar">
+
+<div class="logo-group">
+<img src="assets/Rock-OS-Hero-Steel.png" class="logo theme-logo" alt="Rock-OS">
+<div class="brand">Rock-OS</div>
+</div>
+
+<div class="nav-links">
+<a href="index.html">HOME</a>
+<a href="wiki.html">WIKI</a>
+<a href="scripts.html">SCRIPTS</a>
+<select id="themeSelect" class="theme-select" aria-label="Theme">
+<option value="steel">Steel</option>
+<option value="papers">Rugged</option>
+<option value="rock">Cyberpunk</option>
+<option value="scissors">Blue-Grass</option>
+</select>
+</div>
+
+</nav>
+
+<main class="scripts-layout">
+
+<aside class="scripts-sidebar" aria-label="Available scripts">
+<div class="sidebar-header">
+<h3>Scripts</h3>
+</div>
+<p class="script-sidebar-note">Preview first. Run second.</p>
+<div id="scriptList" class="script-list"></div>
+</aside>
+
+<section class="script-workbench">
+<div class="script-workbench-header">
+<div>
+<p class="command-kicker">Local Script Runner</p>
+<h1>Scripts</h1>
+</div>
+<button id="runScriptBtn" class="command-button primary" type="button" disabled>Run</button>
+</div>
+
+<div id="scriptStatus" class="script-status">
+Select a script to preview it before running.
+</div>
+
+<div class="script-stage">
+<section class="script-panel" id="previewPanel">
+<div class="script-panel-header">
+<span>Preview</span>
+<small id="scriptMeta">No script selected</small>
+</div>
+<pre class="script-preview"><code id="scriptPreview">Select a script from the left.</code></pre>
+</section>
+
+<section class="script-panel terminal-panel" id="terminalPanel" hidden>
+<div class="script-panel-header">
+<span>Terminal</span>
+<small id="terminalMeta">Idle</small>
+</div>
+<pre id="scriptTerminal" class="script-terminal">Terminal output will appear here.</pre>
+<form id="terminalInputForm" class="terminal-input-row">
+<input id="terminalInput" type="text" autocomplete="off" placeholder="Type input for the running script" aria-label="Terminal input" disabled>
+<label class="terminal-secret-toggle">
+<input id="terminalSecretInput" type="checkbox" disabled>
+<span>Hide input</span>
+</label>
+<button class="command-button" type="submit" disabled id="sendInputBtn">Send</button>
+</form>
+</section>
+</div>
+</section>
+
+</main>
+
+<script src="js/theme.js"></script>
+<script src="js/scripts.js"></script>
+</body>
+</html>
