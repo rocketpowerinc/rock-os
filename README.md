@@ -8,6 +8,49 @@ small cross-platform Go binary and rendered in the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
+## Quick Install
+
+These installers clone Rock OS into `~/rock-os`, create a `rock-os` terminal
+command, add a desktop launcher, and start Rock-OS immediately.
+
+### Windows PowerShell
+
+```powershell
+irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 | iex
+```
+
+After install, open a new terminal and run:
+
+```powershell
+rock-os
+```
+
+### Linux And macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.sh | sh
+```
+
+After install, open a new terminal and run:
+
+```bash
+rock-os
+```
+
+The Windows installer creates a Start-compatible `rock-os.cmd` shim in
+`%USERPROFILE%\Bin` and a desktop shortcut using the local Rock-OS icon. The
+Linux/macOS installer creates `~/.local/bin/rock-os`; Linux also gets a `.desktop`
+launcher when `~/Desktop` exists, while macOS gets a `Rock-OS.app` desktop
+launcher.
+
+If an older install created a `rock` command, rerunning the installer removes
+that old shim and replaces it with `rock-os`.
+
+Every launch through `rock-os`, the desktop launcher, or the start scripts checks
+the Git repo for updates first with a safe fast-forward pull. If the machine is
+offline or local changes block the update, Rock OS keeps starting from the local
+copy and prints a warning.
+
 ## Features
 
 - Markdown files rendered as a website wiki
@@ -177,64 +220,6 @@ source ~/.bashrc
 
 The wiki server serves files from the current directory, so run the binary from
 inside the `Website` folder after cloning or extracting the project.
-
-## Quick Install
-
-These installers clone Rock OS into `~/rock-os`, create a `rock` terminal
-command, add a desktop launcher, and start Rock-OS immediately.
-
-### Windows PowerShell
-
-```powershell
-irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 | iex
-```
-
-If you prefer the explicit `Invoke-WebRequest` form:
-
-```powershell
-iwr https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 -UseBasicParsing | Select-Object -ExpandProperty Content | iex
-```
-
-If you use PowerShell 7:
-
-```powershell
-pwsh -NoProfile -Command "iwr https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 | Select-Object -ExpandProperty Content | iex"
-```
-
-If you are in a terminal where `curl.exe` is the easiest option:
-
-```powershell
-curl.exe -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 | powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ([Console]::In.ReadToEnd())"
-```
-
-After install, open a new terminal and run:
-
-```powershell
-rock
-```
-
-### Linux And macOS
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.sh | sh
-```
-
-After install, open a new terminal and run:
-
-```bash
-rock
-```
-
-The Windows installer creates a Start-compatible `rock.cmd` shim in
-`%USERPROFILE%\Bin` and a desktop shortcut using the local Rock-OS icon. The
-Linux/macOS installer creates `~/.local/bin/rock`; Linux also gets a `.desktop`
-launcher when `~/Desktop` exists, while macOS gets a `Rock-OS.app` desktop
-launcher.
-
-Every launch through `rock`, the desktop launcher, or the start scripts checks
-the Git repo for updates first with a safe fast-forward pull. If the machine is
-offline or local changes block the update, Rock OS keeps starting from the local
-copy and prints a warning.
 
 ### Windows
 

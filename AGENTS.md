@@ -87,7 +87,7 @@ Markdown notes should be clear, practical, and a little human.
   `git pull --ff-only`, warn if updating fails, and continue launching from the
   local copy.
 - Quick install scripts are `install-rock-os.ps1` and `install-rock-os.sh`.
-  They should create a `rock` terminal command and desktop launcher while using
+  They should create a `rock-os` terminal command and desktop launcher while using
   the existing `start-rock-os.cmd` and `start-rock-os.sh` launchers.
 - If `Website/main.go` or server behavior changes, remind the user that a new
   release binary should be built and published.

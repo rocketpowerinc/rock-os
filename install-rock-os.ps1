@@ -3,7 +3,8 @@ $ErrorActionPreference = 'Stop'
 $RepoUrl = 'https://github.com/rocketpowerinc/rock-os.git'
 $InstallDir = Join-Path $HOME 'rock-os'
 $BinDir = Join-Path $HOME 'Bin'
-$RockCommand = Join-Path $BinDir 'rock.cmd'
+$RockCommand = Join-Path $BinDir 'rock-os.cmd'
+$LegacyRockCommand = Join-Path $BinDir 'rock.cmd'
 $DesktopShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Rock-OS.lnk'
 
 function Write-Green($Message) {
@@ -50,7 +51,7 @@ function Ensure-BinOnPath {
 
         [Environment]::SetEnvironmentVariable('Path', $nextPath, 'User')
         $env:Path = "$env:Path;$BinDir"
-        Write-Yellow "Added $BinDir to your user PATH. New terminals can run rock."
+        Write-Yellow "Added $BinDir to your user PATH. New terminals can run rock-os."
     }
 }
 
@@ -58,12 +59,17 @@ function Write-RockCommand {
     $startScript =
         Join-Path $InstallDir 'start-rock-os.cmd'
 
+    if (Test-Path $LegacyRockCommand) {
+        Remove-Item -Path $LegacyRockCommand -Force
+        Write-Yellow 'Removed old terminal command: rock'
+    }
+
     @"
 @echo off
 call "$startScript" %*
 "@ | Set-Content -Path $RockCommand -Encoding ASCII
 
-    Write-Green "Created terminal command: rock"
+    Write-Green "Created terminal command: rock-os"
 }
 
 function Create-DesktopShortcut {
@@ -94,7 +100,7 @@ Create-DesktopShortcut
 
 Write-Green ''
 Write-Green 'Rock-OS is installed.'
-Write-Green 'Run it from a new terminal with: rock'
+Write-Green 'Run it from a new terminal with: rock-os'
 Write-Green 'Or use the Rock-OS desktop shortcut.'
 Write-Green 'Starting Rock-OS now...'
 

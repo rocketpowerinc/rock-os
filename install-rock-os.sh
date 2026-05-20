@@ -4,7 +4,8 @@ set -eu
 REPO_URL="https://github.com/rocketpowerinc/rock-os.git"
 INSTALL_DIR="$HOME/rock-os"
 BIN_DIR="$HOME/.local/bin"
-ROCK_COMMAND="$BIN_DIR/rock"
+ROCK_COMMAND="$BIN_DIR/rock-os"
+LEGACY_ROCK_COMMAND="$BIN_DIR/rock"
 
 green() {
     printf '\033[32m%s\033[0m\n' "$1"
@@ -63,18 +64,23 @@ ensure_path() {
             if [ -n "${BASH_VERSION:-}" ] || [ -f "$HOME/.bashrc" ]; then
                 add_path_to_profile "$HOME/.bashrc"
             fi
-            yellow "Open a new terminal before running rock if this shell does not see the new PATH yet."
+            yellow "Open a new terminal before running rock-os if this shell does not see the new PATH yet."
             ;;
     esac
 }
 
 write_rock_command() {
+    if [ -f "$LEGACY_ROCK_COMMAND" ]; then
+        rm -f "$LEGACY_ROCK_COMMAND"
+        yellow "Removed old terminal command: rock"
+    fi
+
     cat > "$ROCK_COMMAND" <<EOF
 #!/usr/bin/env sh
 exec "$INSTALL_DIR/start-rock-os.sh" "\$@"
 EOF
     chmod +x "$ROCK_COMMAND"
-    green "Created terminal command: rock"
+    green "Created terminal command: rock-os"
 }
 
 create_linux_desktop_launcher() {
@@ -183,7 +189,7 @@ esac
 
 green ""
 green "Rock-OS is installed."
-green "Run it from a new terminal with: rock"
+green "Run it from a new terminal with: rock-os"
 green "Or use the Rock-OS desktop launcher."
 green "Starting Rock-OS now..."
 

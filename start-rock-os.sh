@@ -31,7 +31,7 @@ pull_updates() {
     fi
 
     green "Checking for Rock-OS repo updates..."
-    if git -C "$SCRIPT_DIR" pull --ff-only; then
+    if git -C "$SCRIPT_DIR" pull --ff-only >/dev/null; then
         green "Rock-OS repo is up to date."
     else
         yellow "Could not update from GitHub. Continuing with local files."

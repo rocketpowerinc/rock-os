@@ -102,7 +102,7 @@ if errorlevel 1 (
     exit /b 0
 )
 call :green "Checking for Rock-OS repo updates..."
-git -C "%~dp0." pull --ff-only
+git -C "%~dp0." pull --ff-only >nul
 if errorlevel 1 (
     call :yellow "Could not update from GitHub. Continuing with local files."
     call :yellow "If you have local changes, commit them before pulling updates."
