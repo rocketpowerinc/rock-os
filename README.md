@@ -231,6 +231,11 @@ Linux/macOS installer creates `~/.local/bin/rock`; Linux also gets a `.desktop`
 launcher when `~/Desktop` exists, while macOS gets a `Rock-OS.app` desktop
 launcher.
 
+Every launch through `rock`, the desktop launcher, or the start scripts checks
+the Git repo for updates first with a safe fast-forward pull. If the machine is
+offline or local changes block the update, Rock OS keeps starting from the local
+copy and prints a warning.
+
 ### Windows
 
 ```powershell

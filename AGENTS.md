@@ -83,6 +83,9 @@ Markdown notes should be clear, practical, and a little human.
   Linux scripts that need `sudo` from the web terminal should use `sudo -S`
   because raw `sudo` often expects a real TTY.
 - Start scripts should prefer release binaries, then fall back to Go source.
+- Start scripts should check for Git repo updates first with a safe
+  `git pull --ff-only`, warn if updating fails, and continue launching from the
+  local copy.
 - Quick install scripts are `install-rock-os.ps1` and `install-rock-os.sh`.
   They should create a `rock` terminal command and desktop launcher while using
   the existing `start-rock-os.cmd` and `start-rock-os.sh` launchers.

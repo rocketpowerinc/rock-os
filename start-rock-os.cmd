@@ -11,6 +11,8 @@ if not exist "%~dp0.git" (
     exit /b 1
 )
 
+call :pull_updates
+
 cd /d "%~dp0Website"
 
 set "ROCK_OS_REPO=rocketpowerinc/rock-os"
@@ -91,6 +93,22 @@ exit /b 0
 set "ROCK_OS_MSG=%~1"
 powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Red" 2>nul
 if errorlevel 1 echo %~1
+exit /b 0
+
+:pull_updates
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    call :yellow "Git is not installed. Skipping repo update and using local files."
+    exit /b 0
+)
+call :green "Checking for Rock-OS repo updates..."
+git -C "%~dp0." pull --ff-only
+if errorlevel 1 (
+    call :yellow "Could not update from GitHub. Continuing with local files."
+    call :yellow "If you have local changes, commit them before pulling updates."
+    exit /b 0
+)
+call :green "Rock-OS repo is up to date."
 exit /b 0
 
 :check_git_crypt

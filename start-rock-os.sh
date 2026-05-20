@@ -24,6 +24,21 @@ if [ ! -e "$SCRIPT_DIR/.git" ]; then
     exit 1
 fi
 
+pull_updates() {
+    if ! command -v git >/dev/null 2>&1; then
+        yellow "Git is not installed. Skipping repo update and using local files."
+        return
+    fi
+
+    green "Checking for Rock-OS repo updates..."
+    if git -C "$SCRIPT_DIR" pull --ff-only; then
+        green "Rock-OS repo is up to date."
+    else
+        yellow "Could not update from GitHub. Continuing with local files."
+        yellow "If you have local changes, commit them before pulling updates."
+    fi
+}
+
 check_git_crypt() {
     if command -v git-crypt >/dev/null 2>&1; then
         green "git-crypt is installed."
@@ -78,6 +93,8 @@ check_private() {
         green "Private Markdown Folder Unlocked."
     fi
 }
+
+pull_updates
 
 cd "$SCRIPT_DIR/Website"
 
