@@ -4,7 +4,6 @@ $RepoUrl = 'https://github.com/rocketpowerinc/rock-os.git'
 $InstallDir = Join-Path $HOME 'rock-os'
 $BinDir = Join-Path $HOME 'Bin'
 $RockCommand = Join-Path $BinDir 'rock-os.cmd'
-$LegacyRockCommand = Join-Path $BinDir 'rock.cmd'
 $DesktopShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Rock-OS.lnk'
 
 function Write-Green($Message) {
@@ -58,11 +57,6 @@ function Ensure-BinOnPath {
 function Write-RockCommand {
     $startScript =
         Join-Path $InstallDir 'start-rock-os.cmd'
-
-    if (Test-Path $LegacyRockCommand) {
-        Remove-Item -Path $LegacyRockCommand -Force
-        Write-Yellow 'Removed old terminal command: rock'
-    }
 
     @"
 @echo off

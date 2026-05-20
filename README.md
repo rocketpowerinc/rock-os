@@ -43,9 +43,6 @@ Linux/macOS installer creates `~/.local/bin/rock-os`; Linux also gets a `.deskto
 launcher when `~/Desktop` exists, while macOS gets a `Rock-OS.app` desktop
 launcher.
 
-If an older install created a `rock` command, rerunning the installer removes
-that old shim and replaces it with `rock-os`.
-
 Every launch through `rock-os`, the desktop launcher, or the start scripts checks
 the Git repo for updates first with a safe fast-forward pull. If the machine is
 offline or local changes block the update, Rock OS keeps starting from the local
