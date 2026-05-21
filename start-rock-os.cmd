@@ -1,6 +1,13 @@
 @echo off
 setlocal
 
+set "ROCK_OS_HOST=127.0.0.1"
+if /I "%~1"=="lan" set "ROCK_OS_HOST=local"
+if /I "%~1"=="local" set "ROCK_OS_HOST=local"
+if /I "%~1"=="all" set "ROCK_OS_HOST=local"
+if /I "%~1"=="0.0.0.0" set "ROCK_OS_HOST=0.0.0.0"
+if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
+
 if not exist "%~dp0.git" (
     call :red "This folder is not a cloned Git repository."
     call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Private markdown."
@@ -21,6 +28,11 @@ set "ROCK_OS_BINARY="
 set "ROCK_OS_BINARY_SOURCE="
 
 call :green "[Rock-OS] Launcher online."
+if /I "%ROCK_OS_HOST%"=="127.0.0.1" (
+    call :green "Host mode: local-only. Other computers cannot connect."
+) else (
+    call :yellow "Host mode: LAN. Use only on a trusted network."
+)
 
 set "ROCK_OS_ARCH=%PROCESSOR_ARCHITEW6432%"
 if "%ROCK_OS_ARCH%"=="" set "ROCK_OS_ARCH=%PROCESSOR_ARCHITECTURE%"
@@ -61,7 +73,7 @@ if defined ROCK_OS_BINARY (
         call :yellow "Using versioned fallback binary: %ROCK_OS_BINARY%"
     )
     call :green "Starting Rock-OS..."
-    "%ROCK_OS_BINARY%" --host local
+    "%ROCK_OS_BINARY%" --host "%ROCK_OS_HOST%"
 ) else (
     call :yellow "Release binary not found. Starting Rock-OS from Go source..."
     powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
@@ -71,7 +83,7 @@ if defined ROCK_OS_BINARY (
         exit /b 1
     )
     set "GOCACHE=%CD%\.gocache"
-    go run . --host local
+    go run . --host "%ROCK_OS_HOST%"
 )
 
 call :wait

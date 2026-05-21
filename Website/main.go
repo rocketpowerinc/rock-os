@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,8 +41,15 @@ type scriptRunRequest struct {
 	ID string `json:"id"`
 }
 
+type serverStatus struct {
+	Mode        string   `json:"mode"`
+	Host        string   `json:"host"`
+	Description string   `json:"description"`
+	URLs        []string `json:"urls"`
+}
+
 func main() {
-	host := flag.String("host", "local", "host to bind: local, 127.0.0.1, 0.0.0.0, or a specific IP")
+	host := flag.String("host", "127.0.0.1", "host to bind: 127.0.0.1, local, lan, 0.0.0.0, or a specific IP")
 	port := flag.Int("port", 8000, "port to listen on")
 	open := flag.Bool("open", true, "open the site in your default browser")
 	buildIndex := flag.Bool("build-index", false, "build markdown-index.json and exit")
@@ -73,6 +81,7 @@ func main() {
 	mux.HandleFunc("/api/scripts", scriptsListHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
+	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -108,6 +117,34 @@ func main() {
 	}
 
 	log.Fatal(http.Serve(listener, mux))
+}
+
+func serverStatusHandler(bindHost string, displayHosts []string, port int) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		mode := "lan"
+		description := "Rock-OS is listening on the local network. Trusted devices on this LAN can connect."
+		if bindHost == "127.0.0.1" || bindHost == "localhost" {
+			mode = "local"
+			description = "Rock-OS is listening only on this computer. Other devices on the network cannot connect."
+		}
+
+		urls := make([]string, 0, len(displayHosts))
+		for _, displayHost := range displayHosts {
+			urls = append(urls, fmt.Sprintf("http://%s:%d/", displayHost, port))
+		}
+
+		writeJSON(w, serverStatus{
+			Mode:        mode,
+			Host:        bindHost,
+			Description: description,
+			URLs:        urls,
+		})
+	}
 }
 
 func scriptsListHandler(siteRoot string) http.HandlerFunc {
@@ -160,6 +197,11 @@ func scriptRunHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
+		if !scriptRunRequestAllowed(r) {
+			http.Error(w, "unauthorized script request", http.StatusForbidden)
+			return
+		}
+
 		var request scriptRunRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -184,6 +226,29 @@ func scriptRunHandler(siteRoot string) http.HandlerFunc {
 
 		writeJSON(w, map[string]string{"status": "launched"})
 	}
+}
+
+func scriptRunRequestAllowed(r *http.Request) bool {
+	if r.Header.Get("X-Rock-OS-Requested") != "true" {
+		return false
+	}
+
+	return sameOriginHeaderAllowed(r, "Origin") &&
+		sameOriginHeaderAllowed(r, "Referer")
+}
+
+func sameOriginHeaderAllowed(r *http.Request, header string) bool {
+	value := strings.TrimSpace(r.Header.Get(header))
+	if value == "" {
+		return true
+	}
+
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Host == "" {
+		return false
+	}
+
+	return strings.EqualFold(parsed.Host, r.Host)
 }
 
 func collectScripts(siteRoot string) ([]scriptEntry, error) {

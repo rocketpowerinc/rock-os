@@ -413,14 +413,14 @@ function renderWikiError(title, message, details = []) {
 
     const detailItems =
         details
-            .map(detail => `<li>${detail}</li>`)
+            .map(detail => `<li>${escapeHtml(detail)}</li>`)
             .join('');
 
     content.innerHTML = `
         <div class="wiki-error-panel">
             <p class="wiki-error-kicker">Wiki offline</p>
-            <h1>${title}</h1>
-            <p>${message}</p>
+            <h1>${escapeHtml(title)}</h1>
+            <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
             <pre><code>cd Website
 go run .</code></pre>
@@ -1491,7 +1491,7 @@ async function loadDoc(path, options = {}) {
         );
 
     const md = window.markdownit({
-        html: true,
+        html: false,
         linkify: true,
         breaks: true,
         typographer: true

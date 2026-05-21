@@ -8,6 +8,27 @@ small cross-platform Go binary and rendered in the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
+## Connection Modes
+
+Rock OS starts in **Local Mode** by default. In this mode the server binds to
+`127.0.0.1`, so only the computer running Rock OS can open the site. This is the
+safest everyday mode and is what the `rock-os` command, desktop launcher, and
+start scripts use unless you explicitly ask for LAN access.
+
+Use **LAN Mode** when you intentionally want other trusted devices in your home
+network to connect:
+
+```bash
+rock-os lan
+```
+
+LAN Mode binds the server to the local network so phones, tablets, and other
+computers can reach the wiki from an address such as `http://192.168.1.2:8000/`.
+That is useful for an intranet, but it also means anyone on the same network may
+be able to reach Rock OS. Avoid LAN Mode on public Wi-Fi, guest networks, hotels,
+schools, coffee shops, or any network you do not control. Keep private markdown
+locked when you do not need it, and stop the server when you are done sharing it.
+
 ## Quick Install
 
 These installers clone Rock OS into `~/rock-os`, create a `rock-os` terminal
@@ -73,23 +94,23 @@ copy and prints a warning.
 - Helper scripts for unlocking and re-locking private markdown
 - Cross-platform Go server for Windows, Linux, and macOS
 
-## 2.0 Release Binaries
+## 5.0 Release Binaries
 
 Prebuilt binaries are available on the
-[Rock OS 2.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v2.0).
+[Rock OS 5.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v5.0).
 
 Choose the binary for your system:
 
 | System | Binary |
 | --- | --- |
-| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v2.0-windows-amd64.exe` |
-| Windows ARM64 | `rock-os-wiki-v2.0-windows-arm64.exe` |
-| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v2.0-linux-amd64` |
-| Linux ARM64 | `rock-os-wiki-v2.0-linux-arm64` |
-| macOS Intel | `rock-os-wiki-v2.0-macos-amd64` |
-| macOS Apple Silicon | `rock-os-wiki-v2.0-macos-arm64` |
+| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v5.0-windows-amd64.exe` |
+| Windows ARM64 | `rock-os-wiki-windows-arm64.exe` or `rock-os-wiki-v5.0-windows-arm64.exe` |
+| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v5.0-linux-amd64` |
+| Linux ARM64 | `rock-os-wiki-linux-arm64` or `rock-os-wiki-v5.0-linux-arm64` |
+| macOS Intel | `rock-os-wiki-macos-amd64` or `rock-os-wiki-v5.0-macos-amd64` |
+| macOS Apple Silicon | `rock-os-wiki-macos-arm64` or `rock-os-wiki-v5.0-macos-arm64` |
 
-The release also includes `rock-os-wiki-v2.0-checksums.txt` for verifying
+The release also includes `rock-os-wiki-v5.0-checksums.txt` for verifying
 downloads.
 
 ## Dependencies
@@ -237,8 +258,8 @@ chmod +x ./rock-os-wiki-linux-amd64
 
 ```bash
 cd Website
-chmod +x ./rock-os-wiki-v2.0-macos-arm64
-./rock-os-wiki-v2.0-macos-arm64
+chmod +x ./rock-os-wiki-macos-arm64
+./rock-os-wiki-macos-arm64
 ```
 
 ## Running From Source
@@ -252,7 +273,8 @@ go run .
 
 Source-only helper scripts are also available inside the `Website` folder.
 They skip release binaries, build a local dev binary from the current source,
-and run that dev binary:
+and run that dev binary. By default, they bind to `127.0.0.1` so only the
+current computer can connect:
 
 ```powershell
 cd Website
@@ -263,6 +285,16 @@ cd Website
 cd Website
 chmod +x ./run-go-server.sh
 ./run-go-server.sh
+```
+
+Use LAN mode only on a trusted home/private network:
+
+```powershell
+.\run-go-server.cmd lan
+```
+
+```bash
+./run-go-server.sh lan
 ```
 
 The Windows helper intentionally builds a visible local dev binary instead of
@@ -348,7 +380,7 @@ After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-linux-amd64`, `rock-os-wiki-linux-arm64`,
 `rock-os-wiki-macos-amd64`, or `rock-os-wiki-macos-arm64`. If that is not
 present, they try a versioned binary such as
-`rock-os-wiki-v2.0-windows-amd64.exe`. If no matching binary is present, they
+`rock-os-wiki-v5.0-windows-amd64.exe`. If no matching binary is present, they
 fall back to `go run .`.
 
 When `Website/main.go` changes, rebuild and publish a new release binary. The
@@ -373,8 +405,22 @@ sh ./stop-rock-os.sh 8001
 ```
 
 By default, the server listens on port `8000`, opens the site in your browser,
-and uses your local network IP when available. Other devices on the same network
-can open the printed LAN URL.
+and binds to `127.0.0.1`. That means only the computer running Rock OS can
+connect.
+
+To share Rock OS with other devices on a trusted home/private network, start it
+in LAN mode:
+
+```powershell
+.\start-rock-os.cmd lan
+```
+
+```bash
+sh ./start-rock-os.sh lan
+```
+
+LAN mode binds to the local network interface and prints URLs that other devices
+on the same network can open.
 
 ## Server Options
 
@@ -387,8 +433,10 @@ go run . --open=false
 go run . --build-index
 ```
 
-Use `--host 127.0.0.1` to serve only on the current computer. Use
-`--build-index` to rebuild `markdown-index.json` without starting the server.
+Use `--host 127.0.0.1` to serve only on the current computer. Use `--host local`
+or `--host lan` only when you intentionally want other devices on the trusted
+LAN to connect. Use `--build-index` to rebuild `markdown-index.json` without
+starting the server.
 
 ## Unlocking Private Markdown
 

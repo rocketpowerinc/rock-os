@@ -8,6 +8,13 @@ rem Application Control policies block the hidden executable created by go run.
 
 cd /d "%~dp0"
 
+set "ROCK_OS_HOST=127.0.0.1"
+if /I "%~1"=="lan" set "ROCK_OS_HOST=local"
+if /I "%~1"=="local" set "ROCK_OS_HOST=local"
+if /I "%~1"=="all" set "ROCK_OS_HOST=local"
+if /I "%~1"=="0.0.0.0" set "ROCK_OS_HOST=0.0.0.0"
+if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
+
 set "GOCACHE=%CD%\.gocache"
 set "DEV_BINARY=rock-os-wiki-dev.exe"
 
@@ -22,7 +29,7 @@ if errorlevel 1 (
 )
 
 echo Starting Rock-OS from local dev binary...
-"%CD%\%DEV_BINARY%" --host local
+"%CD%\%DEV_BINARY%" --host "%ROCK_OS_HOST%"
 
 echo.
 pause

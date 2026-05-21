@@ -361,7 +361,8 @@ async function runSelectedScript() {
             await fetch('/api/scripts/run', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Rock-OS-Requested': 'true'
                 },
                 body: JSON.stringify({
                     id: selectedScript.id

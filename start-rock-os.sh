@@ -14,6 +14,21 @@ red() {
 }
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+ROCK_OS_HOST="${ROCK_OS_HOST:-127.0.0.1}"
+
+case "${1:-}" in
+    lan|local|all)
+        ROCK_OS_HOST="local"
+        ;;
+    127.0.0.1|0.0.0.0)
+        ROCK_OS_HOST="$1"
+        ;;
+    "")
+        ;;
+    *)
+        ROCK_OS_HOST="$1"
+        ;;
+esac
 
 if [ ! -e "$SCRIPT_DIR/.git" ]; then
     red "This folder is not a cloned Git repository."
@@ -104,6 +119,11 @@ BINARY=""
 BINARY_SOURCE=""
 
 green "[Rock-OS] Launcher online."
+if [ "$ROCK_OS_HOST" = "127.0.0.1" ]; then
+    green "Host mode: local-only. Other computers cannot connect."
+else
+    yellow "Host mode: LAN. Use only on a trusted network."
+fi
 
 case "$(uname -s)" in
     Darwin)
@@ -202,17 +222,17 @@ if [ -n "$BINARY" ] && [ -x "$BINARY" ]; then
     fi
 
     green "Starting Rock-OS..."
-    "$BINARY" --host local
+    "$BINARY" --host "$ROCK_OS_HOST"
 elif [ -n "$BINARY" ] && [ -f "$BINARY" ]; then
     yellow "Release binary found but is not executable. Making it executable..."
     chmod +x "$BINARY"
     green "Starting Rock-OS..."
-    "$BINARY" --host local
+    "$BINARY" --host "$ROCK_OS_HOST"
 else
     yellow "Release binary not found. Starting Rock-OS from Go source..."
     if ! command -v go >/dev/null 2>&1; then
         red "Cannot start from source because Go is not installed."
         exit 1
     fi
-    GOCACHE="$PWD/.gocache" go run . --host local
+    GOCACHE="$PWD/.gocache" go run . --host "$ROCK_OS_HOST"
 fi
