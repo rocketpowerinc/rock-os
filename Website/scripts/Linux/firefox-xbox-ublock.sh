@@ -25,6 +25,9 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
+printf '%s\n' "Requesting sudo once so the rest of the policy install can run cleanly."
+sudo -S -v -p "sudo password: "
+
 POLICY_DIR=""
 
 # Firefox policy location varies by distro/package, so check the common paths
@@ -49,7 +52,7 @@ TEMP_POLICY="$(mktemp)"
 EXISTING_POLICY="$POLICY_DIR/policies.json"
 
 if [ -f "$EXISTING_POLICY" ]; then
-    sudo -S -p "sudo password: " cp "$EXISTING_POLICY" "$TEMP_POLICY.existing"
+    sudo -n cp "$EXISTING_POLICY" "$TEMP_POLICY.existing"
 else
     printf '%s\n' '{}' > "$TEMP_POLICY.existing"
 fi
@@ -97,15 +100,15 @@ with open(output_path, "w", encoding="utf-8") as target:
     target.write("\n")
 PY
 
-sudo -S -p "sudo password: " mkdir -p "$POLICY_DIR"
+sudo -n mkdir -p "$POLICY_DIR"
 
 if [ -f "$EXISTING_POLICY" ]; then
     backup="$EXISTING_POLICY.rock-os-backup.$(date +%Y%m%d-%H%M%S)"
-    sudo -S -p "sudo password: " cp "$EXISTING_POLICY" "$backup"
+    sudo -n cp "$EXISTING_POLICY" "$backup"
     printf '%s\n' "Backed up existing policy to $backup"
 fi
 
-sudo -S -p "sudo password: " install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
+sudo -n install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
 
 rm -f "$TEMP_POLICY" "$TEMP_POLICY.existing"
 
