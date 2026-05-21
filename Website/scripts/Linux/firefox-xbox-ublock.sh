@@ -111,7 +111,8 @@ fi
 
 sudo install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
 
-rm -f "$TEMP_POLICY" "$TEMP_POLICY.existing"
+rm -f "$TEMP_POLICY"
+sudo rm -f "$TEMP_POLICY.existing"
 
 # NoDefaultBookmarks stops Firefox from adding the prompt in new profiles, but
 # existing profiles may already have it saved in places.sqlite. Remove only that
