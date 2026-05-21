@@ -1,9 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
-printf '%s\n' "This example shows how to run apt update from the web terminal."
-printf '%s\n' "Use the Hide input checkbox before sending your sudo password."
-printf '%s\n' "This script uses sudo -S so sudo reads the password from the dashboard input."
+printf '%s\n' "This example shows how to run apt update."
+printf '%s\n' "Rock-OS opens this script in your OS terminal so sudo prompts work normally."
 printf '\n'
 
-sudo -S -p "sudo password: " apt update
+sudo apt update

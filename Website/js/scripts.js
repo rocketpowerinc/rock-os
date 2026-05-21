@@ -10,186 +10,12 @@ const runScriptBtn =
     document.getElementById('runScriptBtn');
 const toggleAllScriptsBtn =
     document.getElementById('toggleAllScriptsBtn');
-const previewPanel =
-    document.getElementById('previewPanel');
-const terminalPanel =
-    document.getElementById('terminalPanel');
-const scriptTerminal =
-    document.getElementById('scriptTerminal');
-const terminalMeta =
-    document.getElementById('terminalMeta');
-const terminalInputForm =
-    document.getElementById('terminalInputForm');
-const terminalInput =
-    document.getElementById('terminalInput');
-const terminalSecretInput =
-    document.getElementById('terminalSecretInput');
-const sendInputBtn =
-    document.getElementById('sendInputBtn');
 
 let selectedScript = null;
-let activeSessionId = null;
-let outputStream = null;
-let terminalAnsiClasses = [];
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
     scriptStatus.dataset.type = type;
-}
-
-function setTerminalInputEnabled(enabled) {
-    terminalInput.disabled = !enabled;
-    terminalSecretInput.disabled = !enabled;
-    sendInputBtn.disabled = !enabled;
-}
-
-function showPreviewMode() {
-    previewPanel.hidden = false;
-    terminalPanel.hidden = true;
-    terminalMeta.textContent = 'Idle';
-    setTerminalInputEnabled(false);
-}
-
-function showTerminalMode() {
-    previewPanel.hidden = true;
-    terminalPanel.hidden = false;
-}
-
-function terminalAnsiClass(code) {
-    const classes = {
-        1: 'ansi-bold',
-        2: 'ansi-dim',
-        3: 'ansi-italic',
-        4: 'ansi-underline',
-        30: 'ansi-black',
-        31: 'ansi-red',
-        32: 'ansi-green',
-        33: 'ansi-yellow',
-        34: 'ansi-blue',
-        35: 'ansi-magenta',
-        36: 'ansi-cyan',
-        37: 'ansi-white',
-        90: 'ansi-bright-black',
-        91: 'ansi-bright-red',
-        92: 'ansi-bright-green',
-        93: 'ansi-bright-yellow',
-        94: 'ansi-bright-blue',
-        95: 'ansi-bright-magenta',
-        96: 'ansi-bright-cyan',
-        97: 'ansi-bright-white'
-    };
-
-    return classes[code] || null;
-}
-
-function resetTerminalAnsi() {
-    terminalAnsiClasses = [];
-}
-
-function updateTerminalAnsi(codes) {
-    if (codes.length === 0) {
-        resetTerminalAnsi();
-        return;
-    }
-
-    codes.forEach(code => {
-        if (code === 0) {
-            resetTerminalAnsi();
-            return;
-        }
-
-        if (code === 22) {
-            terminalAnsiClasses = terminalAnsiClasses
-                .filter(item => item !== 'ansi-bold' && item !== 'ansi-dim');
-            return;
-        }
-
-        if (code === 23) {
-            terminalAnsiClasses = terminalAnsiClasses
-                .filter(item => item !== 'ansi-italic');
-            return;
-        }
-
-        if (code === 24) {
-            terminalAnsiClasses = terminalAnsiClasses
-                .filter(item => item !== 'ansi-underline');
-            return;
-        }
-
-        if (code === 39) {
-            terminalAnsiClasses = terminalAnsiClasses
-                .filter(item => !item.startsWith('ansi-') || ['ansi-bold', 'ansi-dim', 'ansi-italic', 'ansi-underline'].includes(item));
-            return;
-        }
-
-        const className =
-            terminalAnsiClass(code);
-
-        if (!className) {
-            return;
-        }
-
-        if (code >= 30) {
-            terminalAnsiClasses = terminalAnsiClasses
-                .filter(item => !item.startsWith('ansi-') || ['ansi-bold', 'ansi-dim', 'ansi-italic', 'ansi-underline'].includes(item));
-        }
-
-        if (!terminalAnsiClasses.includes(className)) {
-            terminalAnsiClasses.push(className);
-        }
-    });
-}
-
-function renderTerminalAnsi(text) {
-    const ansiPattern =
-        /\x1b\[([0-9;]*)m/g;
-    let html =
-        '';
-    let lastIndex =
-        0;
-    let match;
-
-    while ((match = ansiPattern.exec(text)) !== null) {
-        html += renderTerminalText(text.slice(lastIndex, match.index));
-
-        const codes =
-            match[1]
-                .split(';')
-                .filter(Boolean)
-                .map(value => Number.parseInt(value, 10))
-                .filter(Number.isFinite);
-
-        updateTerminalAnsi(codes);
-        lastIndex = ansiPattern.lastIndex;
-    }
-
-    html += renderTerminalText(text.slice(lastIndex));
-
-    return html;
-}
-
-function renderTerminalText(text) {
-    if (!text) {
-        return '';
-    }
-
-    const escaped =
-        escapeHTML(text);
-
-    if (terminalAnsiClasses.length === 0) {
-        return escaped;
-    }
-
-    return `<span class="${terminalAnsiClasses.join(' ')}">${escaped}</span>`;
-}
-
-function appendTerminal(text) {
-    if (scriptTerminal.textContent === 'Terminal output will appear here.') {
-        scriptTerminal.textContent = '';
-    }
-
-    scriptTerminal.insertAdjacentHTML('beforeend', renderTerminalAnsi(text));
-    scriptTerminal.scrollTop = scriptTerminal.scrollHeight;
 }
 
 function escapeHTML(value) {
@@ -343,7 +169,7 @@ function scriptButton(script) {
     return button;
 }
 
-function folderNode(name, depth) {
+function folderNode(name) {
     const details =
         document.createElement('details');
     details.className = 'script-tree-folder';
@@ -425,13 +251,13 @@ function renderScriptTree(scripts) {
         let key =
             '';
 
-        parts.slice(0, -1).forEach((part, index) => {
+        parts.slice(0, -1).forEach(part => {
             key =
                 key ? `${key}/${part}` : part;
 
             if (!folders.has(key)) {
                 const node =
-                    folderNode(part, index);
+                    folderNode(part);
 
                 folders.set(key, node.children);
                 parent.appendChild(node.details);
@@ -481,7 +307,6 @@ async function loadScripts() {
 async function selectScript(script) {
     selectedScript = script;
     runScriptBtn.disabled = !script.runnable;
-    showPreviewMode();
 
     document.querySelectorAll('.script-tree-file')
         .forEach(item => {
@@ -529,16 +354,7 @@ async function runSelectedScript() {
         return;
     }
 
-    if (outputStream) {
-        outputStream.close();
-    }
-
-    showTerminalMode();
-    scriptTerminal.textContent = '';
-    resetTerminalAnsi();
-    terminalMeta.textContent = 'Starting';
-    setTerminalInputEnabled(false);
-    setStatus('Starting script...', 'info');
+    setStatus('Opening script in your OS terminal...', 'info');
 
     try {
         const response =
@@ -556,75 +372,10 @@ async function runSelectedScript() {
             throw new Error(await response.text());
         }
 
-        const result =
-            await response.json();
-
-        activeSessionId = result.sessionId;
-        terminalMeta.textContent = 'Running';
-        setTerminalInputEnabled(true);
-        setStatus('Script is running. Type into the terminal input if the script asks a question.', 'info');
-
-        outputStream =
-            new EventSource('/api/scripts/output/' + encodeURIComponent(activeSessionId));
-
-        outputStream.onmessage = event => {
-            appendTerminal(JSON.parse(event.data));
-        };
-
-        outputStream.addEventListener('done', () => {
-            terminalMeta.textContent = 'Finished';
-            setTerminalInputEnabled(false);
-            setStatus('Script finished.', 'success');
-            outputStream.close();
-        });
-
-        outputStream.onerror = () => {
-            terminalMeta.textContent = 'Disconnected';
-            setTerminalInputEnabled(false);
-            setStatus('Terminal stream disconnected.', 'error');
-        };
+        setStatus('Script opened in your OS terminal.', 'success');
     }
     catch (err) {
-        terminalMeta.textContent = 'Failed';
-        setTerminalInputEnabled(false);
         setStatus(err.message, 'error');
-    }
-}
-
-async function sendTerminalInput(event) {
-    event.preventDefault();
-
-    if (!activeSessionId || terminalInput.disabled) {
-        return;
-    }
-
-    const input =
-        terminalInput.value;
-    const secretInput =
-        terminalSecretInput.checked;
-
-    terminalInput.value = '';
-
-    if (secretInput) {
-        appendTerminal('[hidden input sent]\n');
-    }
-    else {
-        appendTerminal(input + '\n');
-    }
-
-    const response =
-        await fetch('/api/scripts/input/' + encodeURIComponent(activeSessionId), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                input: input + '\n'
-            })
-        });
-
-    if (!response.ok) {
-        setStatus(await response.text(), 'error');
     }
 }
 
@@ -632,5 +383,4 @@ runScriptBtn.addEventListener('click', runSelectedScript);
 toggleAllScriptsBtn.addEventListener('click', () => {
     setAllScriptFoldersExpanded(!allScriptFoldersExpanded());
 });
-terminalInputForm.addEventListener('submit', sendTerminalInput);
 loadScripts();

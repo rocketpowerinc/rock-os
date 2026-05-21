@@ -11,7 +11,7 @@ printf '%s\n' "  - Always show the bookmarks toolbar"
 printf '%s\n' "  - Add an Xbox bookmark to the toolbar"
 printf '%s\n' "  - Install uBlock Origin from Mozilla Add-ons"
 printf '%s\n' ""
-printf '%s\n' "Use the Hide input checkbox before sending your sudo password."
+printf '%s\n' "Rock-OS opens this script in your OS terminal so sudo prompts work normally."
 printf '%s\n' "Close Firefox before running this script so policies reload cleanly."
 printf '%s\n' ""
 
@@ -24,9 +24,6 @@ if ! command -v python3 >/dev/null 2>&1; then
     printf '%s\n' "python3 is required to safely merge Firefox policies."
     exit 1
 fi
-
-printf '%s\n' "Requesting sudo once so the rest of the policy install can run cleanly."
-sudo -S -v -p "sudo password: "
 
 POLICY_DIR=""
 
@@ -52,7 +49,7 @@ TEMP_POLICY="$(mktemp)"
 EXISTING_POLICY="$POLICY_DIR/policies.json"
 
 if [ -f "$EXISTING_POLICY" ]; then
-    sudo -n cp "$EXISTING_POLICY" "$TEMP_POLICY.existing"
+    sudo cp "$EXISTING_POLICY" "$TEMP_POLICY.existing"
 else
     printf '%s\n' '{}' > "$TEMP_POLICY.existing"
 fi
@@ -100,15 +97,15 @@ with open(output_path, "w", encoding="utf-8") as target:
     target.write("\n")
 PY
 
-sudo -n mkdir -p "$POLICY_DIR"
+sudo mkdir -p "$POLICY_DIR"
 
 if [ -f "$EXISTING_POLICY" ]; then
     backup="$EXISTING_POLICY.rock-os-backup.$(date +%Y%m%d-%H%M%S)"
-    sudo -n cp "$EXISTING_POLICY" "$backup"
+    sudo cp "$EXISTING_POLICY" "$backup"
     printf '%s\n' "Backed up existing policy to $backup"
 fi
 
-sudo -n install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
+sudo install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
 
 rm -f "$TEMP_POLICY" "$TEMP_POLICY.existing"
 

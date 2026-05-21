@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -41,26 +39,6 @@ type scriptEntry struct {
 type scriptRunRequest struct {
 	ID string `json:"id"`
 }
-
-type scriptInputRequest struct {
-	Input string `json:"input"`
-}
-
-type scriptRunResponse struct {
-	SessionID string `json:"sessionId"`
-}
-
-type scriptSession struct {
-	id     string
-	stdin  io.WriteCloser
-	output chan string
-	done   chan struct{}
-}
-
-var (
-	scriptSessionsMu sync.Mutex
-	scriptSessions   = map[string]*scriptSession{}
-)
 
 func main() {
 	host := flag.String("host", "local", "host to bind: local, 127.0.0.1, 0.0.0.0, or a specific IP")
@@ -95,8 +73,6 @@ func main() {
 	mux.HandleFunc("/api/scripts", scriptsListHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
-	mux.HandleFunc("/api/scripts/output/", scriptOutputHandler())
-	mux.HandleFunc("/api/scripts/input/", scriptInputHandler())
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -201,129 +177,12 @@ func scriptRunHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		commandName, args, err := scriptCommand(path)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		cmd := exec.Command(commandName, args...)
-		cmd.Dir = siteRoot
-
-		stdin, err := cmd.StdinPipe()
-		if err != nil {
+		if err := launchScriptTerminal(siteRoot, path); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		session := &scriptSession{
-			id:     fmt.Sprintf("%d", time.Now().UnixNano()),
-			stdin:  stdin,
-			output: make(chan string, 200),
-			done:   make(chan struct{}),
-		}
-
-		if err := cmd.Start(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		storeScriptSession(session)
-
-		var streams sync.WaitGroup
-		streams.Add(2)
-		go streamScriptPipe(session, stdout, &streams)
-		go streamScriptPipe(session, stderr, &streams)
-		go func() {
-			err := cmd.Wait()
-			streams.Wait()
-			if err != nil {
-				session.output <- fmt.Sprintf("\n[exit] %v\n", err)
-			} else {
-				session.output <- "\n[exit] script completed successfully\n"
-			}
-			close(session.output)
-			close(session.done)
-			go deleteScriptSessionLater(session.id, 5*time.Minute)
-		}()
-
-		writeJSON(w, scriptRunResponse{SessionID: session.id})
-	}
-}
-
-func scriptOutputHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		sessionID := strings.TrimPrefix(r.URL.Path, "/api/scripts/output/")
-		session := getScriptSession(sessionID)
-		if session == nil {
-			http.Error(w, "script session not found", http.StatusNotFound)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("Connection", "keep-alive")
-
-		flusher, ok := w.(http.Flusher)
-		if !ok {
-			http.Error(w, "streaming is not supported", http.StatusInternalServerError)
-			return
-		}
-
-		for output := range session.output {
-			payload, _ := json.Marshal(output)
-			fmt.Fprintf(w, "data: %s\n\n", payload)
-			flusher.Flush()
-		}
-
-		fmt.Fprint(w, "event: done\ndata: true\n\n")
-		flusher.Flush()
-	}
-}
-
-func scriptInputHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		sessionID := strings.TrimPrefix(r.URL.Path, "/api/scripts/input/")
-		session := getScriptSession(sessionID)
-		if session == nil {
-			http.Error(w, "script session not found", http.StatusNotFound)
-			return
-		}
-
-		var request scriptInputRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if _, err := io.WriteString(session.stdin, request.Input); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		writeJSON(w, map[string]string{"status": "sent"})
+		writeJSON(w, map[string]string{"status": "launched"})
 	}
 }
 
@@ -456,7 +315,83 @@ func scriptPlatformLabel(ext string) string {
 	}
 }
 
-func scriptCommand(path string) (string, []string, error) {
+func launchScriptTerminal(siteRoot string, path string) error {
+	commandName, args, err := terminalCommand(siteRoot, path)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(commandName, args...)
+	cmd.Dir = siteRoot
+
+	return cmd.Start()
+}
+
+func scriptCommandLine(path string) (string, error) {
+	ext := strings.ToLower(filepath.Ext(path))
+
+	if ext == ".ps1" {
+		command, err := powershellCommand()
+		if err != nil {
+			return "", err
+		}
+
+		args := []string{
+			"-NoProfile",
+			"-File",
+			path,
+		}
+		if runtime.GOOS == "windows" {
+			args = []string{
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				path,
+			}
+		}
+
+		return shellJoin(append([]string{command}, args...)), nil
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		return shellJoin([]string{"cmd", "/c", path}), nil
+	default:
+		return shellJoin([]string{"sh", path}), nil
+	}
+}
+
+func terminalCommand(siteRoot string, path string) (string, []string, error) {
+	switch runtime.GOOS {
+	case "windows":
+		return windowsTerminalCommand(path)
+	case "darwin":
+		commandLine, err := scriptCommandLine(path)
+		if err != nil {
+			return "", nil, err
+		}
+		runLine := fmt.Sprintf(
+			"cd %s && %s; printf '\\n[Rock-OS] Script finished. Press Enter to close...'; read _",
+			shellQuote(siteRoot),
+			commandLine,
+		)
+
+		return "osascript", []string{
+			"-e",
+			fmt.Sprintf(
+				`tell application "Terminal" to do script %q`,
+				runLine,
+			),
+			"-e",
+			`tell application "Terminal" to activate`,
+		}, nil
+	default:
+		return linuxTerminalCommand(siteRoot, path)
+	}
+}
+
+func windowsTerminalCommand(path string) (string, []string, error) {
 	ext := strings.ToLower(filepath.Ext(path))
 
 	if ext == ".ps1" {
@@ -466,29 +401,76 @@ func scriptCommand(path string) (string, []string, error) {
 		}
 
 		args := []string{
+			"/c",
+			"start",
+			"Rock-OS Script",
+			command,
+			"-NoExit",
 			"-NoProfile",
-			"-Command",
-			powershellScriptCommand(path),
-		}
-		if runtime.GOOS == "windows" {
-			args = []string{
-				"-NoProfile",
-				"-ExecutionPolicy",
-				"Bypass",
-				"-Command",
-				powershellScriptCommand(path),
-			}
+			"-ExecutionPolicy",
+			"Bypass",
+			"-File",
+			path,
 		}
 
-		return command, args, nil
+		return "cmd", args, nil
 	}
 
-	switch runtime.GOOS {
-	case "windows":
-		return "cmd", []string{"/c", path}, nil
-	default:
-		return "sh", []string{path}, nil
+	return "cmd", []string{"/c", "start", "Rock-OS Script", "cmd", "/k", windowsQuote(path)}, nil
+}
+
+func linuxTerminalCommand(siteRoot string, path string) (string, []string, error) {
+	commandLine, err := scriptCommandLine(path)
+	if err != nil {
+		return "", nil, err
 	}
+
+	runLine := fmt.Sprintf(
+		"cd %s && %s; printf '\\n[Rock-OS] Script finished. Press Enter to close...'; read _",
+		shellQuote(siteRoot),
+		commandLine,
+	)
+
+	candidates := []struct {
+		name string
+		args []string
+	}{
+		{"x-terminal-emulator", []string{"-e", "sh", "-c", runLine}},
+		{"gnome-terminal", []string{"--", "sh", "-c", runLine}},
+		{"konsole", []string{"-e", "sh", "-c", runLine}},
+		{"xfce4-terminal", []string{"--command", "sh -c " + shellQuote(runLine)}},
+		{"mate-terminal", []string{"--command", "sh -c " + shellQuote(runLine)}},
+		{"alacritty", []string{"-e", "sh", "-c", runLine}},
+		{"kitty", []string{"sh", "-c", runLine}},
+		{"wezterm", []string{"start", "--", "sh", "-c", runLine}},
+		{"xterm", []string{"-e", "sh", "-c", runLine}},
+	}
+
+	for _, candidate := range candidates {
+		command, err := exec.LookPath(candidate.name)
+		if err == nil {
+			return command, candidate.args, nil
+		}
+	}
+
+	return "", nil, fmt.Errorf("no supported terminal emulator was found")
+}
+
+func shellJoin(parts []string) string {
+	quoted := make([]string, 0, len(parts))
+	for _, part := range parts {
+		quoted = append(quoted, shellQuote(part))
+	}
+
+	return strings.Join(quoted, " ")
+}
+
+func shellQuote(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+}
+
+func windowsQuote(value string) string {
+	return `"` + strings.ReplaceAll(value, `"`, `\"`) + `"`
 }
 
 func powershellCommand() (string, error) {
@@ -503,59 +485,6 @@ func powershellCommand() (string, error) {
 	}
 
 	return "", fmt.Errorf("PowerShell was not found. Install PowerShell 7+ to run .ps1 scripts")
-}
-
-func powershellScriptCommand(path string) string {
-	quotedPath := "'" + strings.ReplaceAll(path, "'", "''") + "'"
-
-	return strings.Join([]string{
-		"function global:Read-Host {",
-		"param([string]$Prompt)",
-		"if ($Prompt) { [Console]::Out.Write($Prompt + ' ') }",
-		"[Console]::In.ReadLine()",
-		"}",
-		"& " + quotedPath,
-	}, " ")
-}
-
-func streamScriptPipe(session *scriptSession, pipe io.Reader, streams *sync.WaitGroup) {
-	defer streams.Done()
-
-	buffer := make([]byte, 1024)
-	for {
-		count, err := pipe.Read(buffer)
-		if count > 0 {
-			session.output <- string(buffer[:count])
-		}
-
-		if err == io.EOF {
-			return
-		}
-
-		if err != nil {
-			session.output <- fmt.Sprintf("\n[stream] %v\n", err)
-			return
-		}
-	}
-}
-
-func storeScriptSession(session *scriptSession) {
-	scriptSessionsMu.Lock()
-	defer scriptSessionsMu.Unlock()
-	scriptSessions[session.id] = session
-}
-
-func getScriptSession(id string) *scriptSession {
-	scriptSessionsMu.Lock()
-	defer scriptSessionsMu.Unlock()
-	return scriptSessions[id]
-}
-
-func deleteScriptSessionLater(id string, delay time.Duration) {
-	time.Sleep(delay)
-	scriptSessionsMu.Lock()
-	defer scriptSessionsMu.Unlock()
-	delete(scriptSessions, id)
 }
 
 func writeJSON(w http.ResponseWriter, value any) {

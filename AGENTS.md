@@ -80,11 +80,9 @@ Markdown notes should be clear, practical, and a little human.
   The scripts folder may grow to hundreds of entries. Put useful comments inside
   scripts instead so each script explains itself where it runs.
 - The script dashboard supports `.cmd`, `.bat`, `.sh`, and `.ps1` files. Keep
-  preview-before-run behavior, and only show the interactive terminal after the
-  user clicks Run.
-- For password prompts in the script dashboard, provide a hidden input mode.
-  Linux scripts that need `sudo` from the web terminal should use `sudo -S`
-  because raw `sudo` often expects a real TTY.
+  preview-before-run behavior. When the user clicks Run, launch the script in
+  the operating system's terminal instead of a browser-rendered pseudo-terminal.
+  This keeps `sudo`, prompts, and long-running commands simple and native.
 - Start scripts should prefer release binaries, then fall back to Go source.
 - Start scripts should check for Git repo updates first with a safe
   `git pull --ff-only`, warn if updating fails, and continue launching from the
