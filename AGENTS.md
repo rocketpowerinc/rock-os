@@ -76,6 +76,9 @@ Markdown notes should be clear, practical, and a little human.
 - Organize user scripts under platform folders such as `Website/scripts/Windows/`,
   `Website/scripts/Linux/`, and `Website/scripts/Mac/`. The dashboard should
   render those folders as a collapsible tree.
+- Do not update `README.md` for every new script added under `Website/scripts/`.
+  The scripts folder may grow to hundreds of entries. Put useful comments inside
+  scripts instead so each script explains itself where it runs.
 - The script dashboard supports `.cmd`, `.bat`, `.sh`, and `.ps1` files. Keep
   preview-before-run behavior, and only show the interactive terminal after the
   user clicks Run.
@@ -113,8 +116,8 @@ This area is intended to be encrypted with `git-crypt`.
 
 - Use existing project patterns before inventing new ones.
 - Keep changes scoped to the user request.
-- Update `README.md` when adding user-facing features, scripts, dependencies,
-  or workflow changes.
+- Update `README.md` when adding user-facing features, dependencies, or workflow
+  changes. Do not update it for ordinary additions under `Website/scripts/`.
 - Do not commit, stash, push, or open pull requests for the user unless they
   explicitly ask for that action.
 - Do not stage files unless the user explicitly asks. The user prefers to review
