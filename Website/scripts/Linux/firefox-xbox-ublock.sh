@@ -113,6 +113,61 @@ sudo install -m 0644 "$TEMP_POLICY" "$EXISTING_POLICY"
 
 rm -f "$TEMP_POLICY" "$TEMP_POLICY.existing"
 
+# NoDefaultBookmarks stops Firefox from adding the prompt in new profiles, but
+# existing profiles may already have it saved in places.sqlite. Remove only that
+# default import bookmark from each local profile, backing up first.
+python3 - <<'PY'
+import glob
+import os
+import shutil
+import sqlite3
+import time
+
+profile_root = os.path.expanduser("~/.mozilla/firefox")
+databases = glob.glob(os.path.join(profile_root, "*.default*", "places.sqlite"))
+titles = (
+    "Import bookmarks from another browser",
+    "Import Bookmarks from Another Browser",
+)
+
+if not databases:
+    print("No Firefox profile bookmark databases found to clean.")
+else:
+    removed_total = 0
+    for database in databases:
+        backup = f"{database}.rock-os-backup.{time.strftime('%Y%m%d-%H%M%S')}"
+        try:
+            shutil.copy2(database, backup)
+            connection = sqlite3.connect(database)
+            try:
+                cursor = connection.cursor()
+                cursor.execute(
+                    """
+                    DELETE FROM moz_bookmarks
+                    WHERE type = 1
+                      AND (
+                        title IN (?, ?)
+                        OR lower(title) LIKE 'import bookmarks from another browser%'
+                      )
+                    """,
+                    titles,
+                )
+                removed = cursor.rowcount
+                connection.commit()
+            finally:
+                connection.close()
+
+            removed_total += max(removed, 0)
+            print(f"Cleaned {removed} import bookmark(s) from {database}")
+            print(f"Bookmark database backup saved to {backup}")
+        except sqlite3.OperationalError as error:
+            print(f"Could not clean {database}: {error}")
+            print("Close Firefox completely, then run this script again.")
+
+    if removed_total == 0:
+        print("No existing import-bookmarks toolbar prompt was found.")
+PY
+
 printf '%s\n' ""
 printf '%s\n' "Firefox policy installed:"
 printf '%s\n' "$EXISTING_POLICY"
