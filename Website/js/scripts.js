@@ -8,6 +8,8 @@ const scriptMeta =
     document.getElementById('scriptMeta');
 const runScriptBtn =
     document.getElementById('runScriptBtn');
+const toggleAllScriptsBtn =
+    document.getElementById('toggleAllScriptsBtn');
 const previewPanel =
     document.getElementById('previewPanel');
 const terminalPanel =
@@ -28,6 +30,7 @@ const sendInputBtn =
 let selectedScript = null;
 let activeSessionId = null;
 let outputStream = null;
+let terminalAnsiClasses = [];
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -52,12 +55,140 @@ function showTerminalMode() {
     terminalPanel.hidden = false;
 }
 
+function terminalAnsiClass(code) {
+    const classes = {
+        1: 'ansi-bold',
+        2: 'ansi-dim',
+        3: 'ansi-italic',
+        4: 'ansi-underline',
+        30: 'ansi-black',
+        31: 'ansi-red',
+        32: 'ansi-green',
+        33: 'ansi-yellow',
+        34: 'ansi-blue',
+        35: 'ansi-magenta',
+        36: 'ansi-cyan',
+        37: 'ansi-white',
+        90: 'ansi-bright-black',
+        91: 'ansi-bright-red',
+        92: 'ansi-bright-green',
+        93: 'ansi-bright-yellow',
+        94: 'ansi-bright-blue',
+        95: 'ansi-bright-magenta',
+        96: 'ansi-bright-cyan',
+        97: 'ansi-bright-white'
+    };
+
+    return classes[code] || null;
+}
+
+function resetTerminalAnsi() {
+    terminalAnsiClasses = [];
+}
+
+function updateTerminalAnsi(codes) {
+    if (codes.length === 0) {
+        resetTerminalAnsi();
+        return;
+    }
+
+    codes.forEach(code => {
+        if (code === 0) {
+            resetTerminalAnsi();
+            return;
+        }
+
+        if (code === 22) {
+            terminalAnsiClasses = terminalAnsiClasses
+                .filter(item => item !== 'ansi-bold' && item !== 'ansi-dim');
+            return;
+        }
+
+        if (code === 23) {
+            terminalAnsiClasses = terminalAnsiClasses
+                .filter(item => item !== 'ansi-italic');
+            return;
+        }
+
+        if (code === 24) {
+            terminalAnsiClasses = terminalAnsiClasses
+                .filter(item => item !== 'ansi-underline');
+            return;
+        }
+
+        if (code === 39) {
+            terminalAnsiClasses = terminalAnsiClasses
+                .filter(item => !item.startsWith('ansi-') || ['ansi-bold', 'ansi-dim', 'ansi-italic', 'ansi-underline'].includes(item));
+            return;
+        }
+
+        const className =
+            terminalAnsiClass(code);
+
+        if (!className) {
+            return;
+        }
+
+        if (code >= 30) {
+            terminalAnsiClasses = terminalAnsiClasses
+                .filter(item => !item.startsWith('ansi-') || ['ansi-bold', 'ansi-dim', 'ansi-italic', 'ansi-underline'].includes(item));
+        }
+
+        if (!terminalAnsiClasses.includes(className)) {
+            terminalAnsiClasses.push(className);
+        }
+    });
+}
+
+function renderTerminalAnsi(text) {
+    const ansiPattern =
+        /\x1b\[([0-9;]*)m/g;
+    let html =
+        '';
+    let lastIndex =
+        0;
+    let match;
+
+    while ((match = ansiPattern.exec(text)) !== null) {
+        html += renderTerminalText(text.slice(lastIndex, match.index));
+
+        const codes =
+            match[1]
+                .split(';')
+                .filter(Boolean)
+                .map(value => Number.parseInt(value, 10))
+                .filter(Number.isFinite);
+
+        updateTerminalAnsi(codes);
+        lastIndex = ansiPattern.lastIndex;
+    }
+
+    html += renderTerminalText(text.slice(lastIndex));
+
+    return html;
+}
+
+function renderTerminalText(text) {
+    if (!text) {
+        return '';
+    }
+
+    const escaped =
+        escapeHTML(text);
+
+    if (terminalAnsiClasses.length === 0) {
+        return escaped;
+    }
+
+    return `<span class="${terminalAnsiClasses.join(' ')}">${escaped}</span>`;
+}
+
 function appendTerminal(text) {
     if (scriptTerminal.textContent === 'Terminal output will appear here.') {
         scriptTerminal.textContent = '';
     }
 
-    scriptTerminal.textContent += text;
+    scriptTerminal.insertAdjacentHTML('beforeend', renderTerminalAnsi(text));
     scriptTerminal.scrollTop = scriptTerminal.scrollHeight;
 }
 
@@ -134,6 +265,66 @@ function renderScriptPreview(content, script) {
         highlightScript(content, script);
 }
 
+function currentClientPlatform() {
+    const platform =
+        (
+            navigator.userAgentData &&
+            navigator.userAgentData.platform ?
+                navigator.userAgentData.platform :
+                navigator.platform
+        ).toLowerCase();
+
+    if (platform.includes('win')) {
+        return 'Windows';
+    }
+
+    if (platform.includes('mac')) {
+        return 'Mac';
+    }
+
+    if (platform.includes('linux')) {
+        return 'Linux';
+    }
+
+    return 'Unknown';
+}
+
+function scriptFolderPlatform(script) {
+    const topFolder =
+        script.id.split('/')[0].toLowerCase();
+
+    if (topFolder === 'windows') {
+        return 'Windows';
+    }
+
+    if (topFolder === 'mac' || topFolder === 'macos') {
+        return 'Mac';
+    }
+
+    if (topFolder === 'linux') {
+        return 'Linux';
+    }
+
+    return 'Universal';
+}
+
+function scriptPlatformWarning(script) {
+    const currentPlatform =
+        currentClientPlatform();
+    const scriptPlatform =
+        scriptFolderPlatform(script);
+
+    if (
+        currentPlatform === 'Unknown' ||
+        scriptPlatform === 'Universal' ||
+        currentPlatform === scriptPlatform
+    ) {
+        return '';
+    }
+
+    return `This script is stored under ${scriptPlatform}, but this browser appears to be on ${currentPlatform}. It may not work here.`;
+}
+
 function scriptButton(script) {
     const button =
         document.createElement('button');
@@ -156,7 +347,7 @@ function folderNode(name, depth) {
     const details =
         document.createElement('details');
     details.className = 'script-tree-folder';
-    details.open = depth === 0;
+    details.open = false;
 
     const summary =
         document.createElement('summary');
@@ -167,11 +358,53 @@ function folderNode(name, depth) {
     children.className = 'script-tree-children';
 
     details.append(summary, children);
+    details.addEventListener('toggle', updateToggleAllScriptsButton);
 
     return {
         details,
         children
     };
+}
+
+function scriptFolders() {
+    return Array.from(
+        scriptList.querySelectorAll('.script-tree-folder')
+    );
+}
+
+function allScriptFoldersExpanded() {
+    const folders =
+        scriptFolders();
+
+    return folders.length > 0 &&
+        folders.every(folder => folder.open);
+}
+
+function updateToggleAllScriptsButton() {
+    if (!toggleAllScriptsBtn) {
+        return;
+    }
+
+    const allExpanded =
+        allScriptFoldersExpanded();
+
+    toggleAllScriptsBtn.innerHTML =
+        allExpanded ? '&#x229F;' : '&#x229E;';
+    toggleAllScriptsBtn.setAttribute(
+        'aria-label',
+        allExpanded ? 'Fold all script folders' : 'Expand all script folders'
+    );
+    toggleAllScriptsBtn.title =
+        allExpanded ? 'Fold all script folders' : 'Expand all script folders';
+}
+
+function setAllScriptFoldersExpanded(expanded) {
+    scriptFolders()
+        .forEach(folder => {
+            folder.open = expanded;
+        });
+
+    updateToggleAllScriptsButton();
 }
 
 function renderScriptTree(scripts) {
@@ -212,6 +445,7 @@ function renderScriptTree(scripts) {
     });
 
     scriptList.appendChild(root);
+    updateToggleAllScriptsButton();
 }
 
 async function loadScripts() {
@@ -254,12 +488,20 @@ async function selectScript(script) {
             item.classList.toggle('active', item.dataset.scriptId === script.id);
         });
 
-    setStatus(
-        script.runnable ?
-            'Review the script, then run it when ready.' :
-            'This script is visible for review but does not run on this operating system.',
-        script.runnable ? 'info' : 'warn'
-    );
+    const warning =
+        scriptPlatformWarning(script);
+
+    if (warning) {
+        setStatus(warning, 'warn');
+    }
+    else {
+        setStatus(
+            script.runnable ?
+                'Review the script, then run it when ready.' :
+                'This script is visible for review but does not run on this operating system.',
+            script.runnable ? 'info' : 'warn'
+        );
+    }
 
     scriptMeta.textContent =
         `${script.path} - ${script.platform}`;
@@ -293,6 +535,7 @@ async function runSelectedScript() {
 
     showTerminalMode();
     scriptTerminal.textContent = '';
+    resetTerminalAnsi();
     terminalMeta.textContent = 'Starting';
     setTerminalInputEnabled(false);
     setStatus('Starting script...', 'info');
@@ -386,5 +629,8 @@ async function sendTerminalInput(event) {
 }
 
 runScriptBtn.addEventListener('click', runSelectedScript);
+toggleAllScriptsBtn.addEventListener('click', () => {
+    setAllScriptFoldersExpanded(!allScriptFoldersExpanded());
+});
 terminalInputForm.addEventListener('submit', sendTerminalInput);
 loadScripts();

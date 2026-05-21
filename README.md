@@ -54,7 +54,7 @@ copy and prints a warning.
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
-- Local script dashboard with preview, guarded run buttons, and streamed terminal output
+- Local script dashboard with preview, guarded run buttons, and ANSI-colored terminal output
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
@@ -274,11 +274,13 @@ hidden temporary executable that `go run` creates inside `.gocache`.
 Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
 `Website/scripts/`. The dashboard lists allowed scripts, renders the script
 contents for review, and only then enables a run button for scripts compatible
-with the current operating system.
+with the current operating system. Terminal output preserves common ANSI colors,
+so colored script feedback stays readable in the browser.
 
 Organize scripts into folders such as `Website/scripts/Windows/`,
 `Website/scripts/Linux/`, and `Website/scripts/Mac/`. The dashboard renders
-those folders as a collapsible tree, similar to the wiki sidebar.
+those folders as a folded collapsible tree with an expand/fold-all control,
+similar to the wiki sidebar.
 
 Script output is streamed into an in-browser terminal. If a script asks for
 input, type the answer into the terminal input box and send it to the running

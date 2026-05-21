@@ -305,7 +305,7 @@ position:absolute;
 .icon-sidebar-btn {
 	background: transparent;
 	border: none;
-	color: #d0ff00;
+	color: var(--accent);
 	font-size: 1.3rem;
 	cursor: pointer;
 	padding: 4px 8px;
@@ -314,7 +314,7 @@ position:absolute;
 }
 
 .icon-sidebar-btn:hover {
-	background: rgba(208,255,0,0.08);
+	background: rgba(var(--accent-rgb), .08);
 }
 
 .icon-sidebar-btn:disabled {
@@ -323,7 +323,7 @@ position:absolute;
 }
 
 .icon-sidebar-btn.is-refreshing {
-	background: rgba(208,255,0,0.08);
+	background: rgba(var(--accent-rgb), .08);
 }
 
 .expand-sidebar-btn {
@@ -1222,7 +1222,7 @@ scroll-behavior:smooth;
 }
 
 .script-tree-folder summary {
-	color:var(--text-main);
+	color:var(--accent);
 	cursor:pointer;
 	font-size:.82rem;
 	font-weight:900;
@@ -1260,7 +1260,7 @@ scroll-behavior:smooth;
 .script-tree-file {
 	background:rgba(var(--accent-rgb), .045);
 	border:1px solid rgba(var(--accent-rgb), .13);
-	color:var(--text-main);
+	color:var(--accent);
 	cursor:pointer;
 	display:grid;
 	gap:6px;
@@ -1276,6 +1276,7 @@ scroll-behavior:smooth;
 }
 
 .script-tree-file strong {
+	color:var(--accent);
 	font-size:.9rem;
 }
 
@@ -1405,6 +1406,86 @@ scroll-behavior:smooth;
 		linear-gradient(rgba(var(--accent-rgb), .035) 1px, transparent 1px),
 		var(--code-bg);
 	background-size:100% 32px;
+}
+
+.script-terminal .ansi-bold {
+	font-weight:800;
+}
+
+.script-terminal .ansi-dim {
+	opacity:.72;
+}
+
+.script-terminal .ansi-italic {
+	font-style:italic;
+}
+
+.script-terminal .ansi-underline {
+	text-decoration:underline;
+}
+
+.script-terminal .ansi-black {
+	color:#111827;
+}
+
+.script-terminal .ansi-red {
+	color:#ef4444;
+}
+
+.script-terminal .ansi-green {
+	color:#22c55e;
+}
+
+.script-terminal .ansi-yellow {
+	color:#eab308;
+}
+
+.script-terminal .ansi-blue {
+	color:#3b82f6;
+}
+
+.script-terminal .ansi-magenta {
+	color:#d946ef;
+}
+
+.script-terminal .ansi-cyan {
+	color:#06b6d4;
+}
+
+.script-terminal .ansi-white {
+	color:#e5e7eb;
+}
+
+.script-terminal .ansi-bright-black {
+	color:#6b7280;
+}
+
+.script-terminal .ansi-bright-red {
+	color:#f87171;
+}
+
+.script-terminal .ansi-bright-green {
+	color:#4ade80;
+}
+
+.script-terminal .ansi-bright-yellow {
+	color:#facc15;
+}
+
+.script-terminal .ansi-bright-blue {
+	color:#60a5fa;
+}
+
+.script-terminal .ansi-bright-magenta {
+	color:#e879f9;
+}
+
+.script-terminal .ansi-bright-cyan {
+	color:#22d3ee;
+}
+
+.script-terminal .ansi-bright-white {
+	color:#f9fafb;
 }
 
 .terminal-input-row {
