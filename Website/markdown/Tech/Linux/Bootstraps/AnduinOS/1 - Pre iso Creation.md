@@ -41,7 +41,8 @@ restic -r ~/Backups/restic init
 # Backup
 restic -r ~/Backups/restic backup ~ \
   --exclude ~/Backups \
-  --exclude ~/Downloads
+  --exclude ~/Downloads \
+  --exclude ~/Docker
 
 # Retention policy + cleanup
 restic -r ~/Backups/restic forget \

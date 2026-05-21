@@ -8,6 +8,7 @@ set -eu
 printf '%s\n' "This script configures Firefox with a small Rock-OS policy."
 printf '%s\n' "It will:"
 printf '%s\n' "  - Always show the bookmarks toolbar"
+printf '%s\n' "  - Remove Firefox's default import-bookmarks toolbar prompt"
 printf '%s\n' "  - Add an Xbox bookmark to the toolbar"
 printf '%s\n' "  - Install uBlock Origin from Mozilla Add-ons"
 printf '%s\n' ""
@@ -61,7 +62,8 @@ import sys
 existing_path, output_path = sys.argv[1], sys.argv[2]
 
 # Preserve any existing policy settings, then add only the Firefox settings this
-# script owns: toolbar visibility, one bookmark, and uBlock Origin installation.
+# script owns: toolbar visibility, default bookmark/import cleanup, one bookmark,
+# and uBlock Origin installation.
 try:
     with open(existing_path, "r", encoding="utf-8") as source:
         data = json.load(source)
@@ -71,6 +73,8 @@ except json.JSONDecodeError:
 policies = data.setdefault("policies", {})
 
 policies["DisplayBookmarksToolbar"] = True
+policies["NoDefaultBookmarks"] = True
+policies["DisableProfileImport"] = True
 
 bookmarks = policies.setdefault("Bookmarks", [])
 xbox_bookmark = {
