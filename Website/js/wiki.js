@@ -373,7 +373,7 @@ function renderWikiError(title, message, details = []) {
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
-            <pre><code>cd Website
+            <pre><code>cd cmd/rock-os-wiki
 go run .</code></pre>
         </div>
     `;
@@ -687,29 +687,31 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        path + '?nocache=' + Date.now()
+        `/api/wiki/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
     );
 
     if (!response.ok) {
 
         console.error('Failed:', path);
         clearToc();
+        renderWikiError(
+            'Markdown document not found',
+            `The server could not render ${path}.`,
+            [
+                `The server returned HTTP ${response.status}.`,
+                'Click the refresh button after adding or renaming markdown files.'
+            ]
+        );
         return;
     }
 
-    const text = await response.text();
+    const doc =
+        await response.json();
 
     const lastEdited =
         formatEditedDate(
-            response.headers.get('Last-Modified')
+            doc.lastEdited
         );
-
-    const md = window.markdownit({
-        html: false,
-        linkify: true,
-        breaks: true,
-        typographer: true
-    });
 
     const content =
         document.getElementById('content');
@@ -717,7 +719,7 @@ async function loadDoc(path, options = {}) {
     content.innerHTML =
         `${renderBreadcrumbs(path)}${lastEdited
             ? `<div class="doc-meta">Last edited ${escapeHtml(lastEdited)}</div>`
-            : ''}${md.render(text)}`;
+            : ''}${doc.html || ''}`;
 
     enhanceCodeBlocks(content);
     enhanceInlineCode(content);
@@ -1234,7 +1236,7 @@ async function loadIndex() {
                 'Start the Rock-OS Wiki server',
                 'This page was opened directly from the filesystem, so the browser cannot safely load the markdown index or markdown files.',
                 [
-                    'Open a terminal in the Website folder.',
+                    'Open a terminal in the repo root or Website folder.',
                     'Run the Go server command below.',
                     'Use the http:// address printed by the server instead of opening wiki.html directly.'
                 ]
@@ -1254,7 +1256,7 @@ async function loadIndex() {
                 'Could not load the wiki index',
                 'The page loaded, but markdown-index.json was not available from the server.',
                 [
-                    'Make sure the Go server is running from the Website folder.',
+                    'Make sure the Go server is running from the repo root or Website folder.',
                     `The server returned HTTP ${response.status}.`
                 ]
             );
@@ -1331,9 +1333,9 @@ async function loadIndex() {
 
         renderWikiError(
             'Could not connect to the wiki server',
-            'The browser could not load the markdown index. The server may not be running, or the page may have been opened from the wrong place.',
-            [
-                'Start the Go server from the Website folder.',
+                'The browser could not load the markdown index. The server may not be running, or the page may have been opened from the wrong place.',
+                [
+                'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
             ]
         );

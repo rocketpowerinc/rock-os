@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
+
 set "ROCK_OS_HOST=127.0.0.1"
 if /I "%~1"=="lan" set "ROCK_OS_HOST=local"
 if /I "%~1"=="local" set "ROCK_OS_HOST=local"
@@ -8,19 +10,20 @@ if /I "%~1"=="all" set "ROCK_OS_HOST=local"
 if /I "%~1"=="0.0.0.0" set "ROCK_OS_HOST=0.0.0.0"
 if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
 
-if not exist "%~dp0.git" (
+if not exist "%ROCK_OS_ROOT%\.git" (
     call :red "This folder is not a cloned Git repository."
     call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Private markdown."
     call :yellow "Use this instead:"
     echo git clone https://github.com/rocketpowerinc/rock-os.git
     echo cd rock-os
+    echo cd START-HERE\Windows
     call :wait
     exit /b 1
 )
 
 call :pull_updates
 
-cd /d "%~dp0Website"
+cd /d "%ROCK_OS_ROOT%\Website"
 
 set "ROCK_OS_REPO=rocketpowerinc/rock-os"
 set "ROCK_OS_VERSION_FILE=.rock-os-wiki-version"
@@ -74,6 +77,7 @@ if defined ROCK_OS_BINARY (
     )
     call :green "Starting Rock-OS..."
     "%ROCK_OS_BINARY%" --host "%ROCK_OS_HOST%"
+    set "ROCK_OS_EXIT=%ERRORLEVEL%"
 ) else (
     call :yellow "Release binary not found. Starting Rock-OS from Go source..."
     powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
@@ -83,11 +87,15 @@ if defined ROCK_OS_BINARY (
         exit /b 1
     )
     set "GOCACHE=%CD%\.gocache"
-    go run . --host "%ROCK_OS_HOST%"
+    set "ROCK_OS_WEBSITE=%CD%"
+    pushd "%ROCK_OS_ROOT%\cmd\rock-os-wiki"
+    go run . --site-root "%ROCK_OS_WEBSITE%" --host "%ROCK_OS_HOST%"
+    set "ROCK_OS_EXIT=%ERRORLEVEL%"
+    popd
 )
 
 call :wait
-exit /b %ERRORLEVEL%
+exit /b %ROCK_OS_EXIT%
 
 :green
 set "ROCK_OS_MSG=%~1"
@@ -114,7 +122,7 @@ if errorlevel 1 (
     exit /b 0
 )
 call :green "Checking for Rock-OS repo updates..."
-git -C "%~dp0." pull --ff-only >nul
+git -C "%ROCK_OS_ROOT%" pull --ff-only >nul
 if errorlevel 1 (
     call :yellow "Could not update from GitHub. Continuing with local files."
     call :yellow "If you have local changes, commit them before pulling updates."

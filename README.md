@@ -4,7 +4,8 @@ Hardened for Collapse
 
 Rock OS is a lightweight local wiki website for keeping markdown notes,
 commands, media, and setup docs in a simple folder structure. It is served by a
-small cross-platform Go binary and rendered in the browser.
+small cross-platform Go binary that renders markdown locally before sending it
+to the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
@@ -37,7 +38,7 @@ command, add a desktop launcher, and start Rock-OS immediately.
 ### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.ps1 | iex
+irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Windows/install-rock-os.ps1 | iex
 ```
 
 After install, open a new terminal and run:
@@ -46,10 +47,22 @@ After install, open a new terminal and run:
 rock-os
 ```
 
-### Linux And macOS
+### Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/install-rock-os.sh | sh
+curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Linux/install-rock-os.sh | sh
+```
+
+After install, open a new terminal and run:
+
+```bash
+rock-os
+```
+
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Mac/install-rock-os.sh | sh
 ```
 
 After install, open a new terminal and run:
@@ -71,7 +84,7 @@ copy and prints a warning.
 
 ## Features
 
-- Markdown files rendered as a website wiki
+- Markdown files rendered server-side by the local Go wiki server
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
@@ -117,7 +130,12 @@ downloads.
 
 You can run Rock OS from a release binary without Go installed. Go is only
 needed if you want to run from source or if the start script cannot find a
-matching release binary and falls back to `go run .`.
+matching release binary and falls back to the Go source under
+`cmd/rock-os-wiki`.
+
+The Go source uses `goldmark` for local server-side markdown rendering. It is
+managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
+build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
 markdown stored under `Website/markdown/Private/`.
@@ -234,10 +252,25 @@ echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+## Project Layout
+
+```text
+cmd/rock-os-wiki/  Go server source and tests
+START-HERE/        Human-friendly launcher folders for Windows, Linux, and macOS
+Website/           HTML, CSS, JS, assets, markdown, media, and scripts
+```
+
+Run Go tests from the server module:
+
+```bash
+cd cmd/rock-os-wiki
+go test ./...
+```
+
 ## Running From A Release Binary
 
-The wiki server serves files from the current directory, so run the binary from
-inside the `Website` folder after cloning or extracting the project.
+Release binaries are normally kept inside the `Website` folder after cloning or
+extracting the project. The server serves that folder as the site root.
 
 ### Windows
 
@@ -267,9 +300,12 @@ chmod +x ./rock-os-wiki-macos-arm64
 Install Go from [go.dev/dl](https://go.dev/dl/), then run:
 
 ```bash
-cd Website
+cd cmd/rock-os-wiki
 go run .
 ```
+
+The server auto-detects the repo's `Website` folder from that location. You can
+also pass `--site-root` explicitly when testing unusual layouts.
 
 Source-only helper scripts are also available inside the `Website` folder.
 They skip release binaries, build a local dev binary from the current source,
@@ -323,22 +359,26 @@ on the machine running the Go server.
 Helper scripts are also included:
 
 ```powershell
-.\start-rock-os.cmd
+.\START-HERE\Windows\start-rock-os.cmd
 ```
 
 ```bash
-sh ./start-rock-os.sh
+./START-HERE/Linux/start-rock-os.sh
+# or on macOS
+./START-HERE/Mac/start-rock-os.sh
 ```
 
 Check repo, Git, `git-crypt`, private markdown, local binaries, tools, and port
 status:
 
 ```powershell
-.\repo-status.cmd
+.\START-HERE\Windows\repo-status.cmd
 ```
 
 ```bash
-./repo-status.sh
+./START-HERE/Linux/repo-status.sh
+# or on macOS
+./START-HERE/Mac/repo-status.sh
 ```
 
 Linux and macOS shell scripts are committed with executable permissions. If the
@@ -346,7 +386,7 @@ permissions are missing because of a ZIP extraction, file copy, or unusual
 filesystem, run:
 
 ```bash
-sh ./chmod-all.sh
+chmod +x ./START-HERE/*.sh ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh ./Website/run-go-server.sh
 ```
 
 This keeps fresh clones ready to run without needing manual `chmod` commands.
@@ -381,27 +421,29 @@ After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-macos-amd64`, or `rock-os-wiki-macos-arm64`. If that is not
 present, they try a versioned binary such as
 `rock-os-wiki-v5.0-windows-amd64.exe`. If no matching binary is present, they
-fall back to `go run .`.
+fall back to the Go source under `cmd/rock-os-wiki`.
 
-When `Website/main.go` changes, rebuild and publish a new release binary. The
-server binary is what carries LAN binding, port handling, markdown indexing,
-and other server-side behavior. Markdown, CSS, HTML, JavaScript, and asset-only
-changes do not require a new Go binary.
+When `cmd/rock-os-wiki/main.go` changes, rebuild and publish a new release
+binary. The server binary is what carries LAN binding, port handling, markdown
+rendering, markdown indexing, and other server-side behavior. Markdown, CSS,
+HTML, JavaScript, and asset-only changes do not require a new Go binary.
 
 To stop a running server on the default port:
 
 ```powershell
-.\stop-rock-os.cmd
+.\START-HERE\Windows\stop-rock-os.cmd
 ```
 
 ```bash
-sh ./stop-rock-os.sh
+./START-HERE/Linux/stop-rock-os.sh
+# or on macOS
+./START-HERE/Mac/stop-rock-os.sh
 ```
 
 Pass a port number if you started Rock-OS on a different port:
 
 ```bash
-sh ./stop-rock-os.sh 8001
+./START-HERE/Linux/stop-rock-os.sh 8001
 ```
 
 By default, the server listens on port `8000`, opens the site in your browser,
@@ -412,11 +454,13 @@ To share Rock OS with other devices on a trusted home/private network, start it
 in LAN mode:
 
 ```powershell
-.\start-rock-os.cmd lan
+.\START-HERE\Windows\start-rock-os.cmd lan
 ```
 
 ```bash
-sh ./start-rock-os.sh lan
+./START-HERE/Linux/start-rock-os.sh lan
+# or on macOS
+./START-HERE/Mac/start-rock-os.sh lan
 ```
 
 LAN mode binds to the local network interface and prints URLs that other devices
@@ -425,18 +469,21 @@ on the same network can open.
 ## Server Options
 
 ```bash
+cd cmd/rock-os-wiki
 go run . --host local
 go run . --host 127.0.0.1
 go run . --host 0.0.0.0
 go run . --port 9000
 go run . --open=false
 go run . --build-index
+go run . --site-root ../../Website
 ```
 
 Use `--host 127.0.0.1` to serve only on the current computer. Use `--host local`
 or `--host lan` only when you intentionally want other devices on the trusted
 LAN to connect. Use `--build-index` to rebuild `markdown-index.json` without
-starting the server.
+starting the server. The server usually finds `Website` automatically, but
+`--site-root` is available for custom layouts.
 
 ## Unlocking Private Markdown
 
@@ -471,8 +518,13 @@ Example:
 ```text
 rock-os/
   your-git-crypt-key.key
-  unlock-git-crypt.cmd
-  unlock-git-crypt.sh
+  START-HERE/
+    Windows/
+      unlock-git-crypt.cmd
+    Linux/
+      unlock-git-crypt.sh
+    Mac/
+      unlock-git-crypt.sh
   Website/
 ```
 
@@ -486,14 +538,15 @@ The restored `.key` file is ignored by Git.
 Windows:
 
 ```powershell
-.\unlock-git-crypt.cmd
+.\START-HERE\Windows\unlock-git-crypt.cmd
 ```
 
 macOS or Linux:
 
 ```bash
-chmod +x ./unlock-git-crypt.sh
-./unlock-git-crypt.sh
+./START-HERE/Linux/unlock-git-crypt.sh
+# or on macOS
+./START-HERE/Mac/unlock-git-crypt.sh
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
@@ -521,14 +574,15 @@ To re-lock private markdown after you are done editing:
 Windows:
 
 ```powershell
-.\lock-git-crypt.cmd
+.\START-HERE\Windows\lock-git-crypt.cmd
 ```
 
 macOS or Linux:
 
 ```bash
-chmod +x ./lock-git-crypt.sh
-./lock-git-crypt.sh
+./START-HERE/Linux/lock-git-crypt.sh
+# or on macOS
+./START-HERE/Mac/lock-git-crypt.sh
 ```
 
 The lock scripts run `git-crypt lock` from the repo root. If locking fails,
@@ -549,12 +603,17 @@ It writes:
 Website/markdown-index.json
 ```
 
-The browser reads that JSON file, builds the sidebar tree, fetches the selected
-markdown file, and renders it into the page.
+The browser reads that JSON file and builds the sidebar tree. When you open a
+document, it asks the Go server to render that markdown through the local
+`/api/wiki/doc` endpoint, then the browser adds wiki features such as code copy
+buttons, callouts, backlinks, and the table of contents.
 
 `markdown-index.json` is generated local state and is intentionally ignored by
 Git. That keeps local private or experimental markdown files from constantly
 dirtying the repo or leaking filenames into commits.
+
+Raw HTML inside markdown is omitted for safety. That protects the local script
+dashboard and other same-origin APIs from malicious markdown files.
 
 Example:
 
@@ -610,8 +669,9 @@ The site does not need external icon CDNs or remote assets for the wiki UI.
 
 ## Markdown And Media
 
-The wiki supports common markdown features including images, links, videos,
-tables, lists, code blocks, callouts, and HTML embeds.
+The wiki supports common markdown features including images, links, tables,
+lists, code blocks, and callouts. Raw HTML is not rendered, so use normal
+markdown links for videos and other media files.
 
 Large images and videos should live in:
 
@@ -628,7 +688,7 @@ Use local media in markdown like this:
 ```markdown
 ![Screenshot](/media/screenshots/setup.png)
 
-<video controls src="/media/videos/demo.mp4"></video>
+[Demo video](/media/videos/demo.mp4)
 ```
 
 When you update media, zip `Website/media/` again and store the ZIP wherever you

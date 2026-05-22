@@ -56,7 +56,7 @@ function Ensure-BinOnPath {
 
 function Write-RockCommand {
     $startScript =
-        Join-Path $InstallDir 'start-rock-os.cmd'
+        Join-Path $InstallDir 'START-HERE\Windows\start-rock-os.cmd'
 
     @"
 @echo off
@@ -68,7 +68,7 @@ call "$startScript" %*
 
 function Create-DesktopShortcut {
     $startScript =
-        Join-Path $InstallDir 'start-rock-os.cmd'
+        Join-Path $InstallDir 'START-HERE\Windows\start-rock-os.cmd'
     $iconPath =
         Join-Path $InstallDir 'Website\assets\favicon.ico'
 
@@ -78,7 +78,7 @@ function Create-DesktopShortcut {
         $shell.CreateShortcut($DesktopShortcut)
 
     $shortcut.TargetPath = $startScript
-    $shortcut.WorkingDirectory = $InstallDir
+    $shortcut.WorkingDirectory = Join-Path $InstallDir 'START-HERE\Windows'
     $shortcut.IconLocation = $iconPath
     $shortcut.Description = 'Start Rock-OS'
     $shortcut.Save()
@@ -98,4 +98,4 @@ Write-Green 'Run it from a new terminal with: rock-os'
 Write-Green 'Or use the Rock-OS desktop shortcut.'
 Write-Green 'Starting Rock-OS now...'
 
-& (Join-Path $InstallDir 'start-rock-os.cmd')
+& (Join-Path $InstallDir 'START-HERE\Windows\start-rock-os.cmd')

@@ -14,6 +14,7 @@ red() {
 }
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 ROCK_OS_HOST="${ROCK_OS_HOST:-127.0.0.1}"
 
 case "${1:-}" in
@@ -30,12 +31,13 @@ case "${1:-}" in
         ;;
 esac
 
-if [ ! -e "$SCRIPT_DIR/.git" ]; then
+if [ ! -e "$REPO_ROOT/.git" ]; then
     red "This folder is not a cloned Git repository."
     yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Private markdown."
     yellow "Use this instead:"
     printf '%s\n' "git clone https://github.com/rocketpowerinc/rock-os.git"
     printf '%s\n' "cd rock-os"
+    printf '%s\n' "cd START-HERE/Linux"
     exit 1
 fi
 
@@ -46,7 +48,7 @@ pull_updates() {
     fi
 
     green "Checking for Rock-OS repo updates..."
-    if git -C "$SCRIPT_DIR" pull --ff-only >/dev/null; then
+    if git -C "$REPO_ROOT" pull --ff-only >/dev/null; then
         green "Rock-OS repo is up to date."
     else
         yellow "Could not update from GitHub. Continuing with local files."
@@ -111,7 +113,7 @@ check_private() {
 
 pull_updates
 
-cd "$SCRIPT_DIR/Website"
+cd "$REPO_ROOT/Website"
 
 REPO="rocketpowerinc/rock-os"
 VERSION_FILE=".rock-os-wiki-version"
@@ -234,5 +236,7 @@ else
         red "Cannot start from source because Go is not installed."
         exit 1
     fi
-    GOCACHE="$PWD/.gocache" go run . --host "$ROCK_OS_HOST"
+    WEBSITE_DIR="$PWD"
+    cd "$REPO_ROOT/cmd/rock-os-wiki"
+    GOCACHE="$WEBSITE_DIR/.gocache" go run . --site-root "$WEBSITE_DIR" --host "$ROCK_OS_HOST"
 fi

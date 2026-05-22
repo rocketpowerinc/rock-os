@@ -1,7 +1,8 @@
 @echo off
 setlocal
 
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
+cd /d "%ROCK_OS_ROOT%"
 
 set "GIT_CRYPT=git-crypt"
 where git-crypt >nul 2>nul
@@ -58,7 +59,7 @@ if errorlevel 1 (
 "%GIT_CRYPT%" unlock "%TEMP_KEY%"
 set "UNLOCK_RESULT=%ERRORLEVEL%"
 
-copy /Y "%TEMP_KEY%" "%~dp0%KEY_NAME%" >nul
+copy /Y "%TEMP_KEY%" "%ROCK_OS_ROOT%\%KEY_NAME%" >nul
 if errorlevel 1 (
     echo Failed to copy the key back to the repo root.
     echo Your key is still at "%TEMP_KEY%".
@@ -75,7 +76,7 @@ if not "%UNLOCK_RESULT%"=="0" (
 )
 
 echo Repository unlocked.
-echo Key restored to "%~dp0%KEY_NAME%".
+echo Key restored to "%ROCK_OS_ROOT%\%KEY_NAME%".
 call :wait
 
 :wait

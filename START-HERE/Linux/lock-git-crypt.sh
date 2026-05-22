@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT"
 
 if ! command -v git-crypt >/dev/null 2>&1; then
     echo "git-crypt was not found."

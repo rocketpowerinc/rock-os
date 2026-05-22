@@ -90,10 +90,18 @@ Markdown notes should be clear, practical, and a little human.
 - Start scripts should check for Git repo updates first with a safe
   `git pull --ff-only`, warn if updating fails, and continue launching from the
   local copy.
-- Quick install scripts are `install-rock-os.ps1` and `install-rock-os.sh`.
+- User-facing launcher/helper scripts live under `START-HERE/Windows/`,
+  `START-HERE/Linux/`, and `START-HERE/Mac/`. The `START-HERE/` root may keep
+  small compatibility wrappers.
+- Quick install scripts are `START-HERE/Windows/install-rock-os.ps1`,
+  `START-HERE/Linux/install-rock-os.sh`, and
+  `START-HERE/Mac/install-rock-os.sh`.
   They should create a `rock-os` terminal command and desktop launcher while using
-  the existing `start-rock-os.cmd` and `start-rock-os.sh` launchers.
-- If `Website/main.go` or server behavior changes, remind the user that a new
+  the matching platform `start-rock-os` launcher.
+- Go server source lives under `cmd/rock-os-wiki/`; website content lives under
+  `Website/`.
+- Run Go server tests from `cmd/rock-os-wiki` with `go test ./...`.
+- If `cmd/rock-os-wiki/main.go` or server behavior changes, remind the user that a new
   release binary should be built and published.
 - Do not require Go when a release binary is available.
 

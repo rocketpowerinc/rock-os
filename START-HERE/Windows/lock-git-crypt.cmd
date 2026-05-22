@@ -1,7 +1,8 @@
 @echo off
 setlocal
 
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
+cd /d "%ROCK_OS_ROOT%"
 
 set "GIT_CRYPT=git-crypt"
 where git-crypt >nul 2>nul

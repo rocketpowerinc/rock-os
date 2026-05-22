@@ -23,9 +23,13 @@ case "${1:-}" in
 esac
 
 DEV_BINARY="./rock-os-wiki-dev"
+WEBSITE_DIR="$PWD"
+SOURCE_DIR="$(CDPATH= cd -- ".." && pwd)/cmd/rock-os-wiki"
 
 echo "Building Rock-OS from Go source..."
-GOCACHE="$PWD/.gocache" go build -o "$DEV_BINARY" .
+cd "$SOURCE_DIR"
+GOCACHE="$WEBSITE_DIR/.gocache" go build -o "$WEBSITE_DIR/$DEV_BINARY" .
 
 echo "Starting Rock-OS from local dev binary..."
-"$DEV_BINARY" --host "$ROCK_OS_HOST"
+cd "$WEBSITE_DIR"
+"$DEV_BINARY" --site-root "$WEBSITE_DIR" --host "$ROCK_OS_HOST"

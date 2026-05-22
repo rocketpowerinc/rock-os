@@ -16,6 +16,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 const (
@@ -48,14 +53,40 @@ type serverStatus struct {
 	URLs        []string `json:"urls"`
 }
 
+type wikiDocResponse struct {
+	Path       string `json:"path"`
+	HTML       string `json:"html"`
+	LastEdited string `json:"lastEdited,omitempty"`
+}
+
+var wikiMarkdown = goldmark.New(
+	goldmark.WithExtensions(
+		extension.GFM,
+		extension.Linkify,
+		extension.Typographer,
+	),
+	goldmark.WithParserOptions(
+		parser.WithAutoHeadingID(),
+	),
+	goldmark.WithRendererOptions(
+		html.WithHardWraps(),
+	),
+)
+
 func main() {
 	host := flag.String("host", "127.0.0.1", "host to bind: 127.0.0.1, local, lan, 0.0.0.0, or a specific IP")
 	port := flag.Int("port", 8000, "port to listen on")
 	open := flag.Bool("open", true, "open the site in your default browser")
 	buildIndex := flag.Bool("build-index", false, "build markdown-index.json and exit")
+	siteRootFlag := flag.String("site-root", "", "path to the Website folder; auto-detected when omitted")
 	flag.Parse()
 
-	siteRoot, err := os.Getwd()
+	workingDir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	siteRoot, err := resolveSiteRoot(workingDir, *siteRootFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,6 +113,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
+	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -145,6 +177,94 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int) http.
 			URLs:        urls,
 		})
 	}
+}
+
+func wikiDocHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		docPath, path, err := resolveMarkdownDoc(siteRoot, r.URL.Query().Get("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "markdown document not found", http.StatusNotFound)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rendered bytes.Buffer
+		if err := wikiMarkdown.Convert(content, &rendered); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := wikiDocResponse{
+			Path: docPath,
+			HTML: rendered.String(),
+		}
+
+		if info, err := os.Stat(path); err == nil {
+			response.LastEdited = info.ModTime().Format(time.RFC3339)
+		}
+
+		writeJSON(w, response)
+	}
+}
+
+func resolveMarkdownDoc(siteRoot string, docPath string) (string, string, error) {
+	normalized := filepath.ToSlash(
+		filepath.Clean(
+			strings.ReplaceAll(docPath, "\\", "/"),
+		),
+	)
+	normalized = strings.TrimPrefix(normalized, "/")
+
+	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
+		return "", "", fmt.Errorf("markdown document path is required")
+	}
+
+	if !strings.HasPrefix(normalized, markdownDir+"/") {
+		return "", "", fmt.Errorf("markdown document path must start with %s/", markdownDir)
+	}
+
+	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
+		return "", "", fmt.Errorf("markdown document must be a .md file")
+	}
+
+	markdownRoot, err := filepath.Abs(filepath.Join(siteRoot, markdownDir))
+	if err != nil {
+		return "", "", err
+	}
+
+	target, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(normalized)))
+	if err != nil {
+		return "", "", err
+	}
+
+	relativeTarget, err := filepath.Rel(markdownRoot, target)
+	if err != nil {
+		return "", "", err
+	}
+
+	if relativeTarget == "." ||
+		relativeTarget == ".." ||
+		filepath.IsAbs(relativeTarget) ||
+		strings.HasPrefix(relativeTarget, ".."+string(os.PathSeparator)) {
+		return "", "", fmt.Errorf("markdown document must stay inside %s", markdownDir)
+	}
+
+	return normalized, target, nil
 }
 
 func scriptsListHandler(siteRoot string) http.HandlerFunc {
@@ -558,6 +678,82 @@ func writeJSON(w http.ResponseWriter, value any) {
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func resolveSiteRoot(workingDir string, requestedSiteRoot string) (string, error) {
+	if strings.TrimSpace(requestedSiteRoot) != "" {
+		return cleanSiteRoot(requestedSiteRoot)
+	}
+
+	candidates := []string{
+		workingDir,
+		filepath.Join(workingDir, "Website"),
+		filepath.Join(workingDir, "..", "Website"),
+		filepath.Join(workingDir, "..", "..", "Website"),
+	}
+
+	seen := map[string]bool{}
+	for _, candidate := range candidates {
+		absoluteCandidate, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+
+		if seen[absoluteCandidate] {
+			continue
+		}
+		seen[absoluteCandidate] = true
+
+		if siteRootLooksValid(absoluteCandidate) {
+			return absoluteCandidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find the Website folder; pass --site-root with the path to Website")
+}
+
+func cleanSiteRoot(siteRoot string) (string, error) {
+	absoluteSiteRoot, err := filepath.Abs(siteRoot)
+	if err != nil {
+		return "", err
+	}
+
+	if !siteRootLooksValid(absoluteSiteRoot) {
+		return "", fmt.Errorf("%s does not look like the Rock-OS Website folder", absoluteSiteRoot)
+	}
+
+	return absoluteSiteRoot, nil
+}
+
+func siteRootLooksValid(siteRoot string) bool {
+	requiredFiles := []string{
+		"index.html",
+		"wiki.html",
+		"scripts.html",
+	}
+
+	for _, file := range requiredFiles {
+		info, err := os.Stat(filepath.Join(siteRoot, file))
+		if err != nil || info.IsDir() {
+			return false
+		}
+	}
+
+	requiredDirs := []string{
+		markdownDir,
+		scriptsDir,
+		"css",
+		"js",
+	}
+
+	for _, dir := range requiredDirs {
+		info, err := os.Stat(filepath.Join(siteRoot, dir))
+		if err != nil || !info.IsDir() {
+			return false
+		}
+	}
+
+	return true
 }
 
 func resolveHost(host string) (string, []string, error) {

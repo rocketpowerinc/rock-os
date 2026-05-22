@@ -71,7 +71,7 @@ ensure_path() {
 write_rock_command() {
     cat > "$ROCK_COMMAND" <<EOF
 #!/usr/bin/env sh
-exec "$INSTALL_DIR/start-rock-os.sh" "\$@"
+exec "$INSTALL_DIR/START-HERE/Mac/start-rock-os.sh" "\$@"
 EOF
     chmod +x "$ROCK_COMMAND"
     green "Created terminal command: rock-os"
@@ -89,7 +89,7 @@ create_linux_desktop_launcher() {
 Type=Application
 Name=Rock-OS
 Comment=Start Rock-OS
-Exec=$INSTALL_DIR/start-rock-os.sh
+Exec=$INSTALL_DIR/START-HERE/Linux/start-rock-os.sh
 Icon=$icon
 Terminal=true
 Categories=Utility;
@@ -116,7 +116,7 @@ create_macos_desktop_launcher() {
 #!/usr/bin/env sh
 osascript <<APPLESCRIPT
 tell application "Terminal"
-    do script "cd '$INSTALL_DIR' && ./start-rock-os.sh"
+    do script "cd '$INSTALL_DIR/START-HERE/Mac' && ./start-rock-os.sh"
     activate
 end tell
 APPLESCRIPT
@@ -187,4 +187,4 @@ green "Run it from a new terminal with: rock-os"
 green "Or use the Rock-OS desktop launcher."
 green "Starting Rock-OS now..."
 
-exec sh "$INSTALL_DIR/start-rock-os.sh"
+exec sh "$INSTALL_DIR/START-HERE/Mac/start-rock-os.sh"

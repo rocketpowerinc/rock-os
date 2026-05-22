@@ -1,7 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
+cd /d "%ROCK_OS_ROOT%"
 
 echo.
 call :green "== Rock-OS Repo Status =="
@@ -42,10 +43,10 @@ if defined BINARY_FOUND (
     call :warn "No release binary found in Website folder."
 )
 
-if exist "Website\main.go" (
+if exist "cmd\rock-os-wiki\main.go" (
     call :ok "Go server source present for source fallback."
 ) else (
-    call :bad "Website\main.go missing."
+    call :bad "cmd\rock-os-wiki\main.go missing."
 )
 
 where go >nul 2>nul

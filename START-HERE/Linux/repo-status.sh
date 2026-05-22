@@ -35,7 +35,8 @@ bad() {
 }
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+cd "$REPO_ROOT"
 
 printf '\n'
 green "== Rock-OS Repo Status =="
@@ -75,7 +76,7 @@ else
     warn "No release binary found in Website folder."
 fi
 
-[ -f "Website/main.go" ] && ok "Go server source present for source fallback." || bad "Website/main.go missing."
+[ -f "cmd/rock-os-wiki/main.go" ] && ok "Go server source present for source fallback." || bad "cmd/rock-os-wiki/main.go missing."
 
 if command -v go >/dev/null 2>&1; then
     ok "$(go version)"
