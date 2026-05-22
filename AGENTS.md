@@ -91,8 +91,12 @@ Markdown notes should be clear, practical, and a little human.
   `git pull --ff-only`, warn if updating fails, and continue launching from the
   local copy.
 - User-facing launcher/helper scripts live under `START-HERE/Windows/`,
-  `START-HERE/Linux/`, and `START-HERE/Mac/`. The `START-HERE/` root may keep
-  small compatibility wrappers.
+  `START-HERE/Linux/`, and `START-HERE/Mac/`. Keep the `START-HERE/` root clean
+  except for `instructions.md`.
+- Source-only `start-rock-os-from-source` helpers also live in the matching
+  platform `START-HERE` folders, not in `Website/`. The
+  `start-rock-os-from-source-lan` helpers are explicit LAN-mode wrappers for
+  trusted local networks.
 - Quick install scripts are `START-HERE/Windows/install-rock-os.ps1`,
   `START-HERE/Linux/install-rock-os.sh`, and
   `START-HERE/Mac/install-rock-os.sh`.

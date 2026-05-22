@@ -6,7 +6,11 @@ rem the Go server from the local source instead of using or downloading a releas
 rem binary. This builds a visible local dev binary first because some Windows
 rem Application Control policies block the hidden executable created by go run.
 
-cd /d "%~dp0"
+for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
+set "ROCK_OS_WEBSITE=%ROCK_OS_ROOT%\Website"
+set "ROCK_OS_SOURCE=%ROCK_OS_ROOT%\cmd\rock-os-wiki"
+
+cd /d "%ROCK_OS_WEBSITE%"
 
 set "ROCK_OS_HOST=127.0.0.1"
 if /I "%~1"=="lan" set "ROCK_OS_HOST=local"
@@ -17,9 +21,6 @@ if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
 
 set "GOCACHE=%CD%\.gocache"
 set "DEV_BINARY=rock-os-wiki-dev.exe"
-set "ROCK_OS_WEBSITE=%CD%"
-set "ROCK_OS_SOURCE=%~dp0..\cmd\rock-os-wiki"
-
 echo Building Rock-OS from Go source...
 pushd "%ROCK_OS_SOURCE%"
 go build -o "%ROCK_OS_WEBSITE%\%DEV_BINARY%" .

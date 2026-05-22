@@ -5,7 +5,12 @@ set -eu
 # the Go server from local source instead of using or downloading a release
 # binary. It builds a local dev binary first so behavior matches Windows.
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+WEBSITE_DIR="$REPO_ROOT/Website"
+SOURCE_DIR="$REPO_ROOT/cmd/rock-os-wiki"
+
+cd "$WEBSITE_DIR"
 
 ROCK_OS_HOST="${ROCK_OS_HOST:-127.0.0.1}"
 case "${1:-}" in
@@ -23,8 +28,6 @@ case "${1:-}" in
 esac
 
 DEV_BINARY="./rock-os-wiki-dev"
-WEBSITE_DIR="$PWD"
-SOURCE_DIR="$(CDPATH= cd -- ".." && pwd)/cmd/rock-os-wiki"
 
 echo "Building Rock-OS from Go source..."
 cd "$SOURCE_DIR"

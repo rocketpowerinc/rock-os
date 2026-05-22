@@ -260,6 +260,9 @@ START-HERE/        Human-friendly launcher folders for Windows, Linux, and macOS
 Website/           HTML, CSS, JS, assets, markdown, media, and scripts
 ```
 
+For a plain-language guide to the launcher scripts, read
+`START-HERE/instructions.md`.
+
 Run Go tests from the server module:
 
 ```bash
@@ -307,30 +310,32 @@ go run .
 The server auto-detects the repo's `Website` folder from that location. You can
 also pass `--site-root` explicitly when testing unusual layouts.
 
-Source-only helper scripts are also available inside the `Website` folder.
+Source-only helper scripts are also available inside the platform folders under
+`START-HERE`.
 They skip release binaries, build a local dev binary from the current source,
 and run that dev binary. By default, they bind to `127.0.0.1` so only the
 current computer can connect:
 
 ```powershell
-cd Website
-.\run-go-server.cmd
+.\START-HERE\Windows\start-rock-os-from-source.cmd
 ```
 
 ```bash
-cd Website
-chmod +x ./run-go-server.sh
-./run-go-server.sh
+./START-HERE/Linux/start-rock-os-from-source.sh
+# or on macOS
+./START-HERE/Mac/start-rock-os-from-source.sh
 ```
 
 Use LAN mode only on a trusted home/private network:
 
 ```powershell
-.\run-go-server.cmd lan
+.\START-HERE\Windows\start-rock-os-from-source-lan.cmd
 ```
 
 ```bash
-./run-go-server.sh lan
+./START-HERE/Linux/start-rock-os-from-source-lan.sh
+# or on macOS
+./START-HERE/Mac/start-rock-os-from-source-lan.sh
 ```
 
 The Windows helper intentionally builds a visible local dev binary instead of
@@ -386,7 +391,7 @@ permissions are missing because of a ZIP extraction, file copy, or unusual
 filesystem, run:
 
 ```bash
-chmod +x ./START-HERE/*.sh ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh ./Website/run-go-server.sh
+chmod +x ./START-HERE/*.sh ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh
 ```
 
 This keeps fresh clones ready to run without needing manual `chmod` commands.

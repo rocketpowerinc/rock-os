@@ -282,7 +282,7 @@ async function loadScripts() {
         if (!response.ok) {
             if (response.status === 404) {
                 throw new Error(
-                    'The running Rock-OS server does not support the script dashboard yet. Start from Go source with Website/run-go-server.cmd or build a new release binary.'
+                    'The running Rock-OS server does not support the script dashboard yet. Start from Go source with the platform start-rock-os-from-source script in START-HERE, or build a new release binary.'
                 );
             }
 
