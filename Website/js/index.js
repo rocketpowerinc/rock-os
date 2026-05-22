@@ -4,8 +4,6 @@ const serverModeBanner =
     document.getElementById('serverModeBanner');
 const serverModeTitle =
     document.getElementById('serverModeTitle');
-const serverModeText =
-    document.getElementById('serverModeText');
 
 function parseQuoteBullets(markdown) {
 
@@ -60,7 +58,7 @@ async function loadQuote() {
 
 function renderServerMode(status) {
 
-    if (!serverModeBanner || !serverModeTitle || !serverModeText) {
+    if (!serverModeBanner || !serverModeTitle) {
         return;
     }
 
@@ -74,24 +72,18 @@ function renderServerMode(status) {
 
     if (mode === 'lan') {
         serverModeTitle.textContent =
-            'LAN Mode';
-        serverModeText.textContent =
-            'Other trusted devices on this local network can reach Rock-OS. Avoid LAN mode on public or untrusted Wi-Fi.';
+            'Server Mode: LAN';
         return;
     }
 
     if (mode === 'local') {
         serverModeTitle.textContent =
-            'Local Mode';
-        serverModeText.textContent =
-            'Only this computer can reach Rock-OS. Use LAN mode only when you intentionally want trusted home devices to connect.';
+            'Server Mode: Host';
         return;
     }
 
     serverModeTitle.textContent =
-        'Mode Unavailable';
-    serverModeText.textContent =
-        'Start Rock-OS from the Go server to display whether it is running local-only or on your LAN.';
+        'Server Mode: Unknown';
 }
 
 async function loadServerMode() {
