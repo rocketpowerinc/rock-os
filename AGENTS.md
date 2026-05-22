@@ -41,6 +41,9 @@ marketing page.
   Blue-Grass.
 - UI changes should stay professional and theme-aware.
 - Keep visual assets local in `Website/assets`.
+- Keep wiki frontend code organized as native browser modules under
+  `Website/js/wiki/` when adding reusable rendering, navigation, search, or UI
+  helpers. Do not add a frontend build step unless the user explicitly asks.
 - Keep generated indexes, release binaries, caches, and downloaded artifacts out
   of Git unless there is a deliberate reason to track them.
 
