@@ -119,20 +119,20 @@ call :wait
 exit /b 0
 
 :check_private
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git ls-files -- 'Website/wiki/Private' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { if (Test-Path $file) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git ls-files -- 'Website/tabs/rocket' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { if (Test-Path $file) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
 if errorlevel 3 (
-    call :info "No tracked Private wiki files found."
+    call :info "No tracked Rocket wiki files found."
     exit /b 0
 )
 if errorlevel 2 (
-    call :bad "Private Wiki Folder Locked."
+    call :bad "Rocket Wiki Folder Locked."
     exit /b 0
 )
 if errorlevel 1 (
-    call :warn "Could not verify private wiki status."
+    call :warn "Could not verify Rocket wiki status."
     exit /b 0
 )
-call :ok "Private Wiki Folder Unlocked."
+call :ok "Rocket Wiki Folder Unlocked."
 exit /b 0
 
 :section

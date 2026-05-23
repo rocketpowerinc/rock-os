@@ -88,7 +88,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -102,7 +102,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "wiki/Test.md" {
+	if response.Path != "tabs/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -127,7 +127,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -151,7 +151,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -202,7 +202,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "tabs/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -338,7 +338,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "wiki/Fresh.md" {
+	if files[0].Path != "tabs/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -356,7 +356,7 @@ func TestCollectMarkdownFilesCachesMetadata(t *testing.T) {
 	}
 
 	cache := &markdownIndexCache{entries: map[string]markdownIndexCacheEntry{}}
-	files, err := collectMarkdownFilesWithCache(siteRoot, cache)
+	files, err := collectMarkdownFilesWithCache(siteRoot, markdownDir, cache)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -373,7 +373,7 @@ func TestCollectMarkdownFilesCachesMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err = collectMarkdownFilesWithCache(siteRoot, cache)
+	files, err = collectMarkdownFilesWithCache(siteRoot, markdownDir, cache)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -396,7 +396,7 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 	}
 
 	cache := &markdownIndexCache{entries: map[string]markdownIndexCacheEntry{}}
-	if _, err := collectMarkdownFilesWithCache(siteRoot, cache); err != nil {
+	if _, err := collectMarkdownFilesWithCache(siteRoot, markdownDir, cache); err != nil {
 		t.Fatal(err)
 	}
 
@@ -408,7 +408,7 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	files, err := collectMarkdownFilesWithCache(siteRoot, cache)
+	files, err := collectMarkdownFilesWithCache(siteRoot, markdownDir, cache)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -442,6 +442,12 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
 
+	// Write a wiki markdown file to ensure WikiCount is 1
+	wikiDoc := filepath.Join(siteRoot, markdownDir, "doc.md")
+	if err := os.WriteFile(wikiDoc, []byte("# Hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
 	// Case 1: missing (Private folder doesn't exist)
 	req := httptest.NewRequest(http.MethodGet, "/api/server/status", nil)
 	rec := httptest.NewRecorder()
@@ -459,15 +465,15 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status.GitCrypt != "missing" {
 		t.Errorf("expected gitCrypt to be 'missing', got %q", status.GitCrypt)
 	}
-	if status.WikiCount != 0 {
-		t.Errorf("expected wikiCount to be 0, got %d", status.WikiCount)
+	if status.WikiCount != 1 {
+		t.Errorf("expected wikiCount to be 1, got %d", status.WikiCount)
 	}
 	if status.ScriptsCount != 0 {
 		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
 	}
 
-	// Case 2: unlocked (Private folder exists with non-encrypted file)
-	privateDir := filepath.Join(siteRoot, markdownDir, "Private")
+	// Case 2: unlocked (rocket folder exists with non-encrypted file)
+	privateDir := filepath.Join(siteRoot, rocketDir)
 	if err := os.MkdirAll(privateDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -502,7 +508,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected scriptsCount to be 1, got %d", status2.ScriptsCount)
 	}
 
-	// Case 3: locked (Private folder exists with locked git-crypt file)
+	// Case 3: locked (rocket folder exists with locked git-crypt file)
 	if err := os.WriteFile(filepath.Join(privateDir, "locked-doc.md"), []byte("GITCRYPT\nencrypted data here"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -518,8 +524,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status3.GitCrypt != "locked" {
 		t.Errorf("expected gitCrypt to be 'locked', got %q", status3.GitCrypt)
 	}
-	if status3.WikiCount != 2 {
-		t.Errorf("expected wikiCount to be 2, got %d", status3.WikiCount)
+	if status3.WikiCount != 1 {
+		t.Errorf("expected wikiCount to be 1, got %d", status3.WikiCount)
 	}
 	if status3.ScriptsCount != 1 {
 		t.Errorf("expected scriptsCount to be 1, got %d", status3.ScriptsCount)
@@ -539,25 +545,25 @@ func TestResolveBootstrapDoc(t *testing.T) {
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "bootstraps/Setup.md")
+	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "tabs/bootstraps/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "bootstraps/Setup.md" {
-		t.Errorf("expected bootstraps/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "tabs/bootstraps/Setup.md" {
+		t.Errorf("expected tabs/bootstraps/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveBootstrapDoc(siteRoot, "bootstraps/../secret.md")
+	_, _, err = resolveBootstrapDoc(siteRoot, "tabs/bootstraps/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveBootstrapDoc(siteRoot, "bootstraps/Setup.txt")
+	_, _, err = resolveBootstrapDoc(siteRoot, "tabs/bootstraps/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
@@ -592,7 +598,112 @@ func TestBootstrapsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "bootstraps/Install.md" {
-		t.Errorf("expected bootstraps/Install.md, got %q", index[0].Path)
+	if index[0].Path != "tabs/bootstraps/Install.md" {
+		t.Errorf("expected tabs/bootstraps/Install.md, got %q", index[0].Path)
+	}
+}
+
+func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
+	siteRoot := t.TempDir()
+	rocketRoot := filepath.Join(siteRoot, rocketDir)
+	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(rocketRoot, "Test.md")
+	if err := os.WriteFile(docPath, []byte("# Secret\n\n- lock\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/api/rocket/doc?path=tabs/rocket/Test.md", nil)
+	recorder := httptest.NewRecorder()
+
+	rocketDocHandler(siteRoot).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var response wikiDocResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+
+	if response.Path != "tabs/rocket/Test.md" {
+		t.Fatalf("unexpected response path: %q", response.Path)
+	}
+
+	if !strings.Contains(response.HTML, "<h1 id=\"secret\">Secret</h1>") {
+		t.Fatalf("expected rendered heading, got: %s", response.HTML)
+	}
+}
+
+func TestResolveRocketDoc(t *testing.T) {
+	siteRoot := t.TempDir()
+	rocketRoot := filepath.Join(siteRoot, rocketDir)
+	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Normal doc check
+	docPath := filepath.Join(rocketRoot, "Target.md")
+	if err := os.WriteFile(docPath, []byte("# Target"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	normalized, target, err := resolveRocketDoc(siteRoot, "tabs/rocket/Target.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if normalized != "tabs/rocket/Target.md" {
+		t.Errorf("unexpected normalized path: %q", normalized)
+	}
+	if target != docPath {
+		t.Errorf("unexpected target path: %q", target)
+	}
+
+	// Traversals check
+	_, _, err = resolveRocketDoc(siteRoot, "tabs/rocket/../outside.md")
+	if err == nil {
+		t.Error("expected traversal error")
+	}
+
+	// Prefix check
+	_, _, err = resolveRocketDoc(siteRoot, "wiki/Target.md")
+	if err == nil {
+		t.Error("expected prefix error")
+	}
+}
+
+func TestRocketIndexHandlerRefreshesIndex(t *testing.T) {
+	siteRoot := t.TempDir()
+	rocketRoot := filepath.Join(siteRoot, rocketDir)
+	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(rocketRoot, "PrivateFile.md")
+	if err := os.WriteFile(docPath, []byte("# PrivateFile"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/rocket-index.json", nil)
+	rec := httptest.NewRecorder()
+	rocketIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 index entry, got %d", len(index))
+	}
+	if index[0].Path != "tabs/rocket/PrivateFile.md" {
+		t.Errorf("expected tabs/rocket/PrivateFile.md, got %q", index[0].Path)
 	}
 }

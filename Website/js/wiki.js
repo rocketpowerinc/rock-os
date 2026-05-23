@@ -923,7 +923,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('wiki/', '')
+            .replace('tabs/wiki/', '')
             .split('/');
 
         let current = tree;

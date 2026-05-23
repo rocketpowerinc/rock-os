@@ -109,12 +109,14 @@ Markdown notes should be clear, practical, and a little human.
   release binary should be built and published.
 - Do not require Go when a release binary is available.
 
+
+
 ## Private Markdown
 
 Private markdown lives under:
 
 ```text
-Website/wiki/Private/
+Website/tabs/rocket/
 ```
 
 This area is intended to be encrypted with `git-crypt`.

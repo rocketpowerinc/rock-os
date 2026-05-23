@@ -64,6 +64,8 @@ coverage/
 .gotest-cache/
 .release/
 Website/wiki-index.json
+Website/bootstraps-index.json
+Website/rocket-index.json
 Website/.rock-os-wiki-version
 Website/*.download
 Website/rock-os-wiki-*

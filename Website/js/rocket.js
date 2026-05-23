@@ -6,8 +6,8 @@ import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.
 import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
-const stateStorageKey = 'rock-os-bootstraps-state';
-const pinnedDocsStorageKey = 'rock-os-bootstraps-pinned-docs';
+const stateStorageKey = 'rock-os-rocket-state';
+const pinnedDocsStorageKey = 'rock-os-rocket-pinned-docs';
 
 let lastIndexText = '';
 let activeDocPath = '';
@@ -20,9 +20,6 @@ let searchLoading = false;
 let searchDebounceTimer = null;
 let searchRequestId = 0;
 let initialUrlDocLoaded = false;
-
-const markdownContentCache = new Map();
-const markdownContentLoads = new Map();
 
 loadSavedState();
 loadPinnedDocs();
@@ -37,7 +34,7 @@ function getSidebar() {
 function getSearchStatus() {
 
     return document.getElementById(
-        'bootstrapsSearchStatus'
+        'rocketSearchStatus'
     );
 }
 
@@ -48,151 +45,20 @@ function normalizeFiles(parsed) {
         ? parsed
         : [parsed];
 
-    const entries =
-        files
-            .map(file => {
+    return files.map(file => {
 
-                if (typeof file === 'string') {
-                    return file.trim();
-                }
-
-                if (
-                    file &&
-                    typeof file === 'object' &&
-                    typeof file.path === 'string'
-                ) {
-                    return file.path.trim();
-                }
-
-                return null;
-            })
-            .filter(path =>
-                path &&
-                path.toLowerCase().endsWith('.md')
-            )
-            .sort((a, b) =>
-                a.toLowerCase()
-                    .localeCompare(b.toLowerCase())
-            );
-
-    return entries;
-}
-
-function getDocFromUrl() {
-
-    const params =
-        new URLSearchParams(window.location.search);
-
-    const doc =
-        params.get('doc');
-
-    if (!doc || !doc.toLowerCase().endsWith('.md')) {
-        return '';
-    }
-
-    return doc;
-}
-
-function updateDocUrl(path, replace = false) {
-
-    const url =
-        new URL(window.location.href);
-
-    url.searchParams.set('doc', path);
-
-    if (replace) {
-        window.history.replaceState({}, '', url);
-    } else {
-        window.history.pushState({}, '', url);
-    }
-}
-
-function loadSavedState() {
-
-    try {
-
-        const saved =
-            JSON.parse(
-                localStorage.getItem(stateStorageKey) || '{}'
-            );
-
-        if (Array.isArray(saved.expandedFolders)) {
-
-            saved.expandedFolders
-                .filter(folderPath =>
-                    typeof folderPath === 'string'
-                )
-                .forEach(folderPath =>
-                    expandedFolders.add(folderPath)
-                );
+        if (typeof file === 'string') {
+            return file;
         }
-    }
-    catch (err) {
 
-        console.warn('Could not load wiki state:', err);
-    }
-}
+        if (file && typeof file === 'object' && typeof file.path === 'string') {
+            return file.path;
+        }
 
-function saveState() {
-
-    try {
-
-        localStorage.setItem(
-            stateStorageKey,
-            JSON.stringify({
-                expandedFolders: Array.from(
-                    expandedFolders
-                )
-            })
-        );
-    }
-    catch (err) {
-
-        console.warn('Could not save wiki state:', err);
-    }
-}
-
-function clearExpandedFolders() {
-
-    expandedFolders.clear();
-    saveState();
-}
-
-function loadPinnedDocs() {
-
-    try {
-
-        const saved =
-            JSON.parse(
-                localStorage.getItem(pinnedDocsStorageKey) || '[]'
-            );
-
-        pinnedDocPaths = new Set(
-            Array.isArray(saved)
-                ? saved.filter(path => typeof path === 'string')
-                : []
-        );
-    }
-    catch (err) {
-
-        console.warn('Could not load pinned docs:', err);
-        pinnedDocPaths = new Set();
-    }
-}
-
-function savePinnedDocs() {
-
-    try {
-
-        localStorage.setItem(
-            pinnedDocsStorageKey,
-            JSON.stringify(Array.from(pinnedDocPaths))
-        );
-    }
-    catch (err) {
-
-        console.warn('Could not save pinned docs:', err);
-    }
+        return '';
+    }).filter(path =>
+        path !== ''
+    );
 }
 
 function isDocPinned(path) {
@@ -202,10 +68,9 @@ function isDocPinned(path) {
 
 function toggleDocPin(path) {
 
-    if (isDocPinned(path)) {
+    if (pinnedDocPaths.has(path)) {
         pinnedDocPaths.delete(path);
-    }
-    else {
+    } else {
         pinnedDocPaths.add(path);
     }
 
@@ -213,20 +78,116 @@ function toggleDocPin(path) {
     rerenderSidebar();
 }
 
-function renderEmptyState(container) {
+function savePinnedDocs() {
 
-    const empty =
-        document.createElement('div');
-
-    empty.className = 'wiki-empty-state';
-
-    empty.innerText =
-        'No bootstrap files found.';
-
-    container.appendChild(empty);
+    try {
+        localStorage.setItem(
+            pinnedDocsStorageKey,
+            JSON.stringify(
+                Array.from(pinnedDocPaths)
+            )
+        );
+    }
+    catch (err) {
+        console.error(
+            'Error saving pinned docs:',
+            err
+        );
+    }
 }
 
-function pinnedBootstrapFiles() {
+function loadPinnedDocs() {
+
+    try {
+        const saved =
+            localStorage.getItem(
+                pinnedDocsStorageKey
+            );
+
+        if (saved) {
+
+            const parsed =
+                JSON.parse(saved);
+
+            pinnedDocPaths =
+                new Set(
+                    normalizeFiles(parsed)
+                );
+        }
+    }
+    catch (err) {
+        console.error(
+            'Error loading pinned docs:',
+            err
+        );
+    }
+}
+
+function saveState() {
+
+    try {
+
+        const state = {
+            expanded: Array.from(expandedFolders),
+            active: activeDocPath
+        };
+
+        localStorage.setItem(
+            stateStorageKey,
+            JSON.stringify(state)
+        );
+    }
+    catch (err) {
+        console.error(
+            'Error saving sidebar state:',
+            err
+        );
+    }
+}
+
+function loadSavedState() {
+
+    try {
+        const saved =
+            localStorage.getItem(
+                stateStorageKey
+            );
+
+        if (saved) {
+
+            const state =
+                JSON.parse(saved);
+
+            if (Array.isArray(state.expanded)) {
+
+                state.expanded.forEach(path =>
+                    expandedFolders.add(path)
+                );
+            }
+
+            if (typeof state.active === 'string') {
+                activeDocPath = state.active;
+            }
+        }
+    }
+    catch (err) {
+        console.error(
+            'Error loading sidebar state:',
+            err
+        );
+    }
+}
+
+function renderEmptyState(container) {
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <p>No rocket files found.</p>
+        </div>
+    `;
+}
+
+function pinnedMarkdownFiles() {
 
     return allMarkdownFiles.filter(file =>
         isDocPinned(file)
@@ -298,67 +259,23 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
     link.onclick = () => {
 
         loadDoc(path);
-
-        return false;
+        const searchInput = document.getElementById('rocketSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            searchQuery = '';
+            searchResults = [];
+            rerenderSidebar();
+        }
     };
 
     return link;
 }
 
-function renderPinnedDocs(container) {
-
-    const pinnedFiles =
-        pinnedBootstrapFiles();
-
-    if (!pinnedFiles.length) {
-        return;
-    }
-
-    const section =
-        document.createElement('section');
-
-    section.className = 'pinned-docs';
-    section.setAttribute('aria-label', 'Pinned docs');
-
-    const title =
-        document.createElement('div');
-
-    title.className = 'pinned-docs-title';
-    title.innerText = 'Favorites';
-
-    section.appendChild(title);
-
-    pinnedFiles.forEach(file => {
-
-        section.appendChild(
-            createSidebarDocLink(
-                file,
-                fileTitle(file),
-                'doc-link pinned-doc-link'
-            )
-        );
-    });
-
-    container.appendChild(section);
-}
-
-function renderNormalSidebar(container) {
-
-    renderPinnedDocs(container);
-
-    renderTree(
-        buildTree(allMarkdownFiles),
-        container,
-        ''
-    );
-}
-
-function renderWelcomeState() {
-
-    activeDocPath = '';
-    clearExpandedFolders();
-    updateActiveDocLinks();
-    clearToc();
+function renderWikiError(
+    title,
+    message,
+    details = []
+) {
 
     const content =
         document.getElementById('content');
@@ -366,87 +283,14 @@ function renderWelcomeState() {
     if (!content) {
         return;
     }
-
-    content.innerHTML = `
-        <h1>Rock-OS Bootstraps</h1>
-        <p>Select a bootstrap document.</p>
-    `;
-}
-
-async function loadMarkdownText(path) {
-
-    if (markdownContentCache.has(path)) {
-        return markdownContentCache.get(path);
-    }
-
-    if (markdownContentLoads.has(path)) {
-        return markdownContentLoads.get(path);
-    }
-
-    const pending =
-        fetch(path + '?nocache=' + Date.now())
-            .then(response => {
-
-                if (!response.ok) {
-                    return '';
-                }
-
-                return response.text();
-            })
-            .then(text => {
-
-                markdownContentCache.set(path, text);
-                markdownContentLoads.delete(path);
-                return text;
-            })
-            .catch(err => {
-
-                console.warn('Search index failed:', path, err);
-                markdownContentLoads.delete(path);
-                markdownContentCache.set(path, '');
-                return '';
-            });
-
-    markdownContentLoads.set(path, pending);
-
-    return pending;
-}
-
-function renderBootstrapsError(title, message, details = []) {
-
-    const sidebar =
-        getSidebar();
-
-    if (sidebar) {
-
-        sidebar.innerHTML = '';
-
-        const empty =
-            document.createElement('div');
-
-        empty.className = 'wiki-empty-state';
-        empty.innerText = 'bootstraps server is not available.';
-
-        sidebar.appendChild(empty);
-    }
-
-    const content =
-        document.getElementById('content');
-
-    if (!content) {
-        return;
-    }
-
-    clearToc();
 
     const detailItems =
-        details
-            .map(detail => `<li>${escapeHtml(detail)}</li>`)
-            .join('');
+        details.map(d =>
+            `<li>${escapeHtml(d)}</li>`
+        ).join('');
 
     content.innerHTML = `
         <div class="wiki-error-panel">
-            <p class="wiki-error-kicker">Bootstraps offline</p>
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
@@ -465,7 +309,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^bootstraps\//, '')
+            .replace(/^rocket\//, '')
             .split('/');
 
     parts.pop();
@@ -484,7 +328,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^bootstraps\//, '')
+                .replace(/^rocket\//, '')
                 .split('/');
 
         parts.pop();
@@ -526,107 +370,58 @@ function rerenderSidebar() {
     updateToggleAllFoldersButton();
 }
 
-function fallbackFilenameSearch(query) {
+function renderNormalSidebar(sidebar) {
 
-    const normalizedQuery =
-        query.toLowerCase();
+    const pinned =
+        pinnedMarkdownFiles();
 
-    return allMarkdownFiles
-        .filter(file =>
-            file.toLowerCase().includes(normalizedQuery) ||
-            fileTitle(file).toLowerCase().includes(normalizedQuery)
-        )
-        .map(file => ({
-            path: file,
-            title: fileTitle(file),
-            snippet: ''
-        }));
-}
+    if (pinned.length > 0) {
 
-function scheduleSearch() {
+        const pinnedHeader =
+            document.createElement('div');
 
-    clearTimeout(searchDebounceTimer);
+        pinnedHeader.className =
+            'sidebar-section-header';
+        pinnedHeader.innerText =
+            'Pinned';
 
-    const query =
-        searchQuery.trim();
+        const pinnedList =
+            document.createElement('div');
 
-    if (!query) {
-        searchLoading = false;
-        searchResults = [];
-        renderSearchResults();
-        return;
-    }
+        pinnedList.className =
+            'pinned-list';
 
-    searchLoading = true;
-    searchResults = [];
-    renderSearchResults();
+        pinned.forEach(path => {
 
-    const requestId =
-        ++searchRequestId;
-
-    searchDebounceTimer =
-        setTimeout(() => {
-            runSearch(query, requestId);
-        }, 250);
-}
-
-async function runSearch(query, requestId) {
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/bootstraps/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
-            );
-
-        if (!response.ok) {
-            throw new Error(
-                `Search failed with HTTP ${response.status}`
-            );
-        }
-
-        const payload =
-            await response.json();
-
-        if (
-            requestId !== searchRequestId ||
-            query !== searchQuery.trim()
-        ) {
-            return;
-        }
-
-        searchResults =
-            Array.isArray(payload.results)
-            ? payload.results
-                .filter(result =>
-                    result &&
-                    typeof result.path === 'string'
+            pinnedList.appendChild(
+                createSidebarDocLink(
+                    path,
+                    fileTitle(path),
+                    'doc-link pinned-doc-link'
                 )
-                .map(result => ({
-                    path: result.path,
-                    title: result.title || fileTitle(result.path),
-                    snippet: result.snippet || ''
-                }))
-            : [];
-        searchLoading = false;
-        renderSearchResults();
+            );
+        });
+
+        sidebar.appendChild(pinnedHeader);
+        sidebar.appendChild(pinnedList);
     }
-    catch (err) {
 
-        console.warn('Server search failed:', err);
+    const tree =
+        buildTree(
+            allMarkdownFiles
+        );
 
-        if (
-            requestId !== searchRequestId ||
-            query !== searchQuery.trim()
-        ) {
-            return;
-        }
+    renderTree(
+        tree,
+        sidebar
+    );
+}
 
-        searchResults =
-            fallbackFilenameSearch(query);
-        searchLoading = false;
-        renderSearchResults();
-    }
+function clearExpandedFolders() {
+
+    expandedFolders.clear();
+    saveState();
+    rerenderSidebar();
 }
 
 function setAllFoldersExpanded(expanded) {
@@ -867,34 +662,37 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        `/api/bootstraps/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
+        `/api/rocket/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
     );
 
     if (!response.ok) {
 
-        console.error('Failed:', path);
-        clearToc();
-        renderBootstrapsError(
-            'Bootstrap document not found',
-            `The server could not render ${path}.`,
-            [
-                `The server returned HTTP ${response.status}.`,
-                'Click the refresh button after adding or renaming markdown files.'
-            ]
+        console.error(
+            'Error loading document:',
+            response.statusText
         );
+
         return;
     }
 
     const doc =
         await response.json();
 
-    const lastEdited =
-        formatEditedDate(
-            doc.lastEdited
-        );
+    if (activeDocPath !== path) {
+        return;
+    }
 
     const content =
         document.getElementById('content');
+
+    if (!content) {
+        return;
+    }
+
+    clearToc();
+
+    const lastEdited =
+        formatEditedDate(doc.lastEdited);
 
     content.innerHTML =
         `${renderBreadcrumbs(path)}${lastEdited
@@ -920,7 +718,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('tabs/bootstraps/', '')
+            .replace('tabs/rocket/', '')
             .split('/');
 
         let current = tree;
@@ -1277,15 +1075,13 @@ function renderSearchResults() {
         searchResults;
 
     if (status) {
-
         status.innerText =
             searchLoading
             ? 'Searching...'
-            : `${results.length} result${results.length === 1 ? '' : 's'}`;
+            : `${results.length} results`;
     }
 
-    if (!results.length && !searchLoading) {
-
+    if (results.length === 0) {
         renderEmptyState(sidebar);
         return;
     }
@@ -1295,19 +1091,9 @@ function renderSearchResults() {
         const link =
             createSidebarDocLink(
                 result.path,
-                result.title
+                result.title,
+                'doc-link search-result-link'
             );
-        const meta =
-            document.createElement('span');
-        meta.className =
-            'search-result-meta';
-        meta.innerText =
-            result.path;
-
-        link.insertBefore(
-            meta,
-            link.querySelector('.pin-toggle')
-        );
 
         sidebar.appendChild(link);
 
@@ -1318,150 +1104,198 @@ function renderSearchResults() {
 
             snippet.className = 'search-result-snippet';
             snippet.innerHTML =
-                highlightSearchQuery(
-                    result.snippet,
-                    query
-                );
+                result.snippet;
 
             sidebar.appendChild(snippet);
         }
     });
 }
 
-function escapeRegExp(value) {
+function updateDocUrl(path, replace = false) {
 
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const url =
+        new URL(window.location.href);
+
+    url.searchParams.set('doc', path);
+
+    if (replace) {
+        window.history.replaceState(null, '', url.toString());
+    } else {
+        window.history.pushState(null, '', url.toString());
+    }
 }
 
-function highlightSearchQuery(text, query) {
+function getDocFromUrl() {
 
-    const trimmedQuery =
-        query.trim();
-
-    if (!trimmedQuery) {
-        return escapeHtml(text);
-    }
-
-    const matcher =
-        new RegExp(escapeRegExp(trimmedQuery), 'gi');
-
-    let html = '';
-    let lastIndex = 0;
-
-    text.replace(matcher, (match, offset) => {
-
-        html += escapeHtml(
-            text.slice(lastIndex, offset)
+    const params =
+        new URLSearchParams(
+            window.location.search
         );
-        html += `<mark class="search-match">${escapeHtml(match)}</mark>`;
-        lastIndex =
-            offset + match.length;
 
-        return match;
-    });
-
-    html += escapeHtml(
-        text.slice(lastIndex)
-    );
-
-    return html;
+    return params.get('doc');
 }
 
-function highlightDocText(container, query) {
+async function loadMarkdownText(path) {
 
-    const trimmedQuery =
-        query.trim();
-
-    if (!trimmedQuery) {
-        return;
+    if (markdownContentCache.has(path)) {
+        return markdownContentCache.get(path);
     }
 
-    const matcher =
-        new RegExp(escapeRegExp(trimmedQuery), 'gi');
-
-    const textNodes =
-        [];
-
-    const walker =
-        document.createTreeWalker(
-            container,
-            NodeFilter.SHOW_TEXT,
-            {
-                acceptNode(node) {
-
-                    const parent =
-                        node.parentElement;
-
-                    if (
-                        !parent ||
-                        !node.nodeValue.trim() ||
-                        parent.closest('pre, code, script, style, textarea, .doc-breadcrumbs, .doc-meta, .wiki-backlinks, mark')
-                    ) {
-                        return NodeFilter.FILTER_REJECT;
-                    }
-
-                    matcher.lastIndex = 0;
-
-                    return matcher.test(node.nodeValue)
-                        ? NodeFilter.FILTER_ACCEPT
-                        : NodeFilter.FILTER_REJECT;
-                }
-            }
-        );
-
-    while (walker.nextNode()) {
-        textNodes.push(walker.currentNode);
+    if (markdownContentLoads.has(path)) {
+        return markdownContentLoads.get(path);
     }
 
-    textNodes.forEach(node => {
+    const pending =
+        (async () => {
 
-        const fragment =
-            document.createDocumentFragment();
-        const text =
-            node.nodeValue;
-        let lastIndex =
-            0;
-
-        matcher.lastIndex = 0;
-
-        text.replace(matcher, (match, offset) => {
-
-            if (offset > lastIndex) {
-                fragment.appendChild(
-                    document.createTextNode(
-                        text.slice(lastIndex, offset)
-                    )
+            try {
+                const response = await fetch(
+                    `/api/rocket/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
                 );
+
+                if (!response.ok) {
+                    return '';
+                }
+
+                const data =
+                    await response.json();
+
+                return data.html || '';
             }
+            catch (err) {
+                console.error(
+                    'Error loading doc text:',
+                    err
+                );
+                return '';
+            }
+        })();
 
-            const mark =
-                document.createElement('mark');
+    const pendingWrapper =
+        (async () => {
+            const text =
+                await pending;
 
-            mark.className =
-                'wiki-content-highlight';
-            mark.textContent =
-                match;
-
-            fragment.appendChild(mark);
-
-            lastIndex =
-                offset + match.length;
-
-            return match;
+            markdownContentCache.set(path, text);
+            markdownContentLoads.delete(path);
+            return text;
+        })()
+        .catch(() => {
+            markdownContentLoads.delete(path);
+            markdownContentCache.set(path, '');
+            return '';
         });
 
-        if (lastIndex < text.length) {
-            fragment.appendChild(
-                document.createTextNode(
-                    text.slice(lastIndex)
-                )
+    markdownContentLoads.set(path, pendingWrapper);
+
+    return pendingWrapper;
+}
+
+function debounceSearch(callback, delay) {
+
+    return (...args) => {
+
+        if (searchDebounceTimer) {
+            clearTimeout(
+                searchDebounceTimer
             );
         }
 
-        node.parentNode.replaceChild(
-            fragment,
-            node
+        searchDebounceTimer =
+            setTimeout(() => {
+                callback(...args);
+            }, delay);
+    };
+}
+
+async function performSearch(query) {
+
+    const requestId =
+        ++searchRequestId;
+
+    searchLoading = true;
+    rerenderSidebar();
+
+    try {
+        const response = await fetch(
+            `/api/rocket/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
         );
+
+        if (requestId !== searchRequestId) {
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                response.statusText
+            );
+        }
+
+        const data =
+            await response.json();
+
+        searchResults =
+            data.results || [];
+    }
+    catch (err) {
+
+        if (requestId === searchRequestId) {
+            console.error(
+                'Search error:',
+                err
+            );
+            searchResults = [];
+        }
+    }
+    finally {
+
+        if (requestId === searchRequestId) {
+            searchLoading = false;
+            rerenderSidebar();
+        }
+    }
+}
+
+const scheduleSearch =
+    debounceSearch(
+        performSearch,
+        250
+    );
+
+function initSearchInput() {
+
+    const searchInput =
+        document.getElementById('rocketSearchInput');
+
+    if (!searchInput) {
+        return;
+    }
+
+    searchInput.addEventListener('input', () => {
+
+        searchQuery =
+            searchInput.value;
+
+        if (searchQuery.trim()) {
+            scheduleSearch(
+                searchQuery
+            );
+        } else {
+            searchResults = [];
+            searchLoading = false;
+            rerenderSidebar();
+        }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            searchQuery = '';
+            searchResults = [];
+            rerenderSidebar();
+            searchInput.blur();
+        }
     });
 }
 
@@ -1485,12 +1319,12 @@ async function openDocFromUrlIfNeeded() {
 
     if (!allMarkdownFiles.includes(doc)) {
 
-        renderBootstrapsError(
-            'Bootstrap document not found',
-            `The URL points to ${doc}, but that file is not in bootstraps-index.json.`,
+        renderWikiError(
+            'Rocket document not found',
+            `The URL points to ${doc}, but that file is not in rocket-index.json.`,
             [
-                'Check that the file exists under the bootstraps folder.',
-                'Click the refresh button after adding new bootstrap files.'
+                'Check that the file exists under the rocket folder.',
+                'Click the refresh button after adding new rocket files.'
             ]
         );
 
@@ -1514,13 +1348,13 @@ async function loadIndex() {
 
         if (isDirectFileOpen()) {
 
-            renderBootstrapsError(
-                'Start the Rock-OS Bootstraps server',
-                'This page was opened directly from the filesystem, so the browser cannot safely load the bootstraps index or markdown files.',
+            renderWikiError(
+                'Start the Rock-OS Rocket server',
+                'This page was opened directly from the filesystem, so the browser cannot safely load the rocket index or rocket files.',
                 [
                     'Open a terminal in the repo root or Website folder.',
                     'Run the Go server command below.',
-                    'Use the http:// address printed by the server instead of opening bootstraps.html directly.'
+                    'Use the http:// address printed by the server instead of opening rocket.html directly.'
                 ]
             );
 
@@ -1528,15 +1362,15 @@ async function loadIndex() {
         }
 
         const response = await fetch(
-            'bootstraps-index.json?nocache=' +
+            'rocket-index.json?nocache=' +
             Date.now()
         );
 
         if (!response.ok) {
 
-            renderBootstrapsError(
-                'Could not load the bootstraps index',
-                'The page loaded, but bootstraps-index.json was not available from the server.',
+            renderWikiError(
+                'Could not load the rocket index',
+                'The page loaded, but rocket-index.json was not available from the server.',
                 [
                     'Make sure the Go server is running from the repo root or Website folder.',
                     `The server returned HTTP ${response.status}.`
@@ -1611,9 +1445,9 @@ async function loadIndex() {
             err
         );
 
-        renderBootstrapsError(
-            'Could not connect to the bootstraps server',
-                'The browser could not load the bootstraps index. The server may not be running, or the page may have been opened from the wrong place.',
+        renderWikiError(
+            'Could not connect to the rocket server',
+                'The browser could not load the rocket index. The server may not be running, or the page may have been opened from the wrong place.',
                 [
                 'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
@@ -1626,80 +1460,103 @@ async function loadIndex() {
     }
 }
 
-async function refreshBootstraps() {
+function clearCacheAndReload() {
 
-    lastIndexText = '';
     markdownContentCache.clear();
     markdownContentLoads.clear();
+    lastIndexText = '';
+    loadIndex();
+}
 
-    await loadIndex();
+function initRefreshButton() {
 
-    if (activeDocPath) {
-        await loadDoc(activeDocPath);
+    const btn =
+        document.getElementById(
+            'refreshRocketBtn'
+        );
+
+    if (btn) {
+
+        btn.onclick = () => {
+
+            const originalText =
+                btn.innerHTML;
+
+            btn.innerHTML =
+                '&#x21BB;';
+
+            btn.classList.add(
+                'spinning'
+            );
+
+            clearCacheAndReload();
+
+            setTimeout(() => {
+                btn.classList.remove(
+                    'spinning'
+                );
+                btn.innerHTML =
+                    originalText;
+            }, 600);
+        };
     }
 }
 
-const refreshBootstrapsBtn =
-    document.getElementById('refreshBootstrapsBtn');
+function initSidebarResizer() {
+    // Sidebar resizing is loaded via sidebar-resizer.js
+}
 
-const toggleAllFoldersBtn =
-    document.getElementById('toggleAllFoldersBtn');
+function initNavigationListener() {
 
-const bootstrapsSearchInput =
-    document.getElementById('bootstrapsSearchInput');
+    window.addEventListener('popstate', () => {
 
-if (refreshBootstrapsBtn) {
+        const doc =
+            getDocFromUrl();
 
-    refreshBootstrapsBtn.addEventListener('click', async () => {
-
-        refreshBootstrapsBtn.disabled = true;
-        refreshBootstrapsBtn.classList.add('is-refreshing');
-
-        try {
-
-            await refreshBootstraps();
+        if (doc && allMarkdownFiles.includes(doc)) {
+            loadDoc(doc, {
+                updateUrl: false
+            });
+        } else if (!doc) {
+            clearExpandedFolders();
+            const content = document.getElementById('content');
+            if (content) {
+                content.innerHTML = `
+                    <h1>Rocket</h1>
+                    <p>Select a rocket document.</p>
+                `;
+            }
         }
-        finally {
-
-            refreshBootstrapsBtn.disabled = false;
-            refreshBootstrapsBtn.classList.remove('is-refreshing');
-        }
     });
 }
 
-if (toggleAllFoldersBtn) {
+function initToggleAllFoldersButton() {
 
-    toggleAllFoldersBtn.addEventListener('click', () => {
-        setAllFoldersExpanded(!areAllFoldersExpanded());
-    });
-}
+    const btn =
+        document.getElementById(
+            'toggleAllFoldersBtn'
+        );
 
-if (bootstrapsSearchInput) {
+    if (btn) {
 
-    bootstrapsSearchInput.addEventListener('input', () => {
+        btn.onclick = () => {
 
-        searchQuery =
-            bootstrapsSearchInput.value;
+            const allExpanded =
+                areAllFoldersExpanded();
 
-        scheduleSearch();
-    });
-}
-
-window.addEventListener('popstate', () => {
-
-    const doc =
-        getDocFromUrl();
-
-    if (doc && allMarkdownFiles.includes(doc)) {
-
-        loadDoc(doc, {
-            updateUrl: false
-        });
-
-        return;
+            setAllFoldersExpanded(
+                !allExpanded
+            );
+        };
     }
+}
 
-    renderWelcomeState();
+document.addEventListener('DOMContentLoaded', () => {
+
+    initSearchInput();
+    initRefreshButton();
+    initSidebarResizer();
+    initNavigationListener();
+    initToggleAllFoldersButton();
+    loadIndex();
 });
-
-loadIndex();

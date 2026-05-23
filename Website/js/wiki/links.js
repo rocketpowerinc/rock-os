@@ -25,8 +25,12 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (pathOnly.startsWith('wiki/')) {
+    if (pathOnly.startsWith('tabs/wiki/')) {
         return normalizeDocPath(pathOnly);
+    }
+
+    if (pathOnly.startsWith('wiki/')) {
+        return normalizeDocPath(`tabs/${pathOnly}`);
     }
 
     const currentFolder =
@@ -42,13 +46,21 @@ export function resolveMarkdownLink(
 
 export function wikiDocHref(path) {
 
+    let targetPage = 'wiki.html';
+    if (path.startsWith('tabs/rocket/')) {
+        targetPage = 'rocket.html';
+    } else if (path.startsWith('tabs/bootstraps/')) {
+        targetPage = 'bootstraps.html';
+    }
+
     const url =
-        new URL('wiki.html', window.location.href);
+        new URL(targetPage, window.location.href);
 
     url.searchParams.set('doc', path);
 
     return `${url.pathname}${url.search}`;
 }
+
 
 export function enhanceWikiLinks(
     container,

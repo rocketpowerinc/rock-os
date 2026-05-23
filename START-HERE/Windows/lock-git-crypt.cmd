@@ -25,13 +25,13 @@ if not exist ".git" (
     exit /b 1
 )
 
-echo Locking private markdown with git-crypt...
+echo Locking Rocket markdown with git-crypt...
 "%GIT_CRYPT%" lock
 set "LOCK_RESULT=%ERRORLEVEL%"
 
 if not "%LOCK_RESULT%"=="0" (
     echo Failed to lock the repository.
-    echo Close open private files or commit/stash changes, then try again.
+    echo Close open Rocket files or commit/stash changes, then try again.
     call :wait
     exit /b %LOCK_RESULT%
 )

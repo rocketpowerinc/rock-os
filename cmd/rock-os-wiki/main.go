@@ -31,10 +31,12 @@ import (
 
 const (
 	indexFile           = "wiki-index.json"
-	markdownDir         = "wiki"
-	scriptsDir          = "scripts"
-	bootstrapsDir       = "bootstraps"
+	markdownDir         = "tabs/wiki"
+	scriptsDir          = "tabs/scripts"
+	bootstrapsDir       = "tabs/bootstraps"
 	bootstrapsIndexFile = "bootstraps-index.json"
+	rocketDir           = "tabs/rocket"
+	rocketIndexFile     = "rocket-index.json"
 )
 
 const (
@@ -121,6 +123,10 @@ var globalBootstrapsIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
+var globalRocketIndexCache = &markdownIndexCache{
+	entries: map[string]markdownIndexCacheEntry{},
+}
+
 var wikiMarkdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
@@ -180,6 +186,9 @@ func main() {
 	mux.HandleFunc("/api/bootstraps/doc", bootstrapsDocHandler(siteRoot))
 	mux.HandleFunc("/api/bootstraps/search", bootstrapsSearchHandler(siteRoot))
 	mux.HandleFunc("/bootstraps-index.json", bootstrapsIndexHandler(siteRoot))
+	mux.HandleFunc("/api/rocket/doc", rocketDocHandler(siteRoot))
+	mux.HandleFunc("/api/rocket/search", rocketSearchHandler(siteRoot))
+	mux.HandleFunc("/rocket-index.json", rocketIndexHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -281,7 +290,7 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 	if _, err := exec.LookPath("git-crypt"); err == nil {
 		printStatus("OK", ansiGreen, "git-crypt installed.")
 	} else {
-		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Private markdown.")
+		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Rocket markdown.")
 	}
 
 	if gitCryptKeyPresent(siteRoot) {
@@ -292,11 +301,11 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 
 	switch privateMarkdownStatus(siteRoot) {
 	case "locked":
-		printStatus("INFO", ansiCyan, "Private Markdown Folder Locked.")
+		printStatus("INFO", ansiCyan, "Rocket Markdown Folder Locked.")
 	case "unlocked":
-		printStatus("OK", ansiGreen, "Private Markdown Folder Unlocked.")
+		printStatus("OK", ansiGreen, "Rocket Markdown Folder Unlocked.")
 	default:
-		printStatus("INFO", ansiCyan, "Private Markdown Folder not found.")
+		printStatus("INFO", ansiCyan, "Rocket Markdown Folder not found.")
 	}
 
 	printStatus("OK", ansiGreen, "Request logging enabled.")
@@ -315,7 +324,7 @@ func colorize(color string, value string) string {
 }
 
 func privateMarkdownStatus(siteRoot string) string {
-	privateRoot := filepath.Join(siteRoot, markdownDir, "Private")
+	privateRoot := filepath.Join(siteRoot, rocketDir)
 	if info, err := os.Stat(privateRoot); err != nil || !info.IsDir() {
 		return "missing"
 	}
@@ -456,7 +465,7 @@ func requestAcceptsGzip(r *http.Request) bool {
 }
 
 func shouldCompressPath(path string) bool {
-	if strings.HasPrefix(path, "/api/") || path == "/wiki-index.json" || path == "/bootstraps-index.json" {
+	if strings.HasPrefix(path, "/api/") || path == "/wiki-index.json" || path == "/bootstraps-index.json" || path == "/rocket-index.json" {
 		return true
 	}
 
@@ -1464,11 +1473,11 @@ func writeMarkdownIndex(siteRoot string) (bool, error) {
 }
 
 func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
-	return collectMarkdownFilesWithCache(siteRoot, globalMarkdownIndexCache)
+	return collectMarkdownFilesWithCache(siteRoot, markdownDir, globalMarkdownIndexCache)
 }
 
-func collectMarkdownFilesWithCache(siteRoot string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {
-	root := filepath.Join(siteRoot, markdownDir)
+func collectMarkdownFilesWithCache(siteRoot string, subDir string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {
+	root := filepath.Join(siteRoot, subDir)
 	files := []markdownIndexEntry{}
 	seen := map[string]struct{}{}
 
@@ -1845,4 +1854,210 @@ func searchBootstraps(siteRoot string, query string) ([]wikiSearchResult, error)
 	}
 
 	return results, nil
+}
+
+func rocketIndexHandler(siteRoot string) http.HandlerFunc {
+	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if _, err := writeRocketIndex(siteRoot); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
+	}
+}
+
+func rocketDocHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		docPath, path, err := resolveRocketDoc(siteRoot, r.URL.Query().Get("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "rocket document not found", http.StatusNotFound)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rendered bytes.Buffer
+		if err := wikiMarkdown.Convert(content, &rendered); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := wikiDocResponse{
+			Path: docPath,
+			HTML: rendered.String(),
+		}
+
+		if info, err := os.Stat(path); err == nil {
+			response.LastEdited = info.ModTime().Format(time.RFC3339)
+		}
+
+		writeJSON(w, response)
+	}
+}
+
+func resolveRocketDoc(siteRoot string, docPath string) (string, string, error) {
+	normalized := filepath.ToSlash(
+		filepath.Clean(
+			strings.ReplaceAll(docPath, "\\", "/"),
+		),
+	)
+	normalized = strings.TrimPrefix(normalized, "/")
+
+	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
+		return "", "", fmt.Errorf("rocket document path is required")
+	}
+
+	if !strings.HasPrefix(normalized, rocketDir+"/") {
+		return "", "", fmt.Errorf("rocket document path must start with %s/", rocketDir)
+	}
+
+	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
+		return "", "", fmt.Errorf("rocket document must be a .md file")
+	}
+
+	rocketRoot, err := filepath.Abs(filepath.Join(siteRoot, rocketDir))
+	if err != nil {
+		return "", "", err
+	}
+
+	target, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(normalized)))
+	if err != nil {
+		return "", "", err
+	}
+
+	relativeTarget, err := filepath.Rel(rocketRoot, target)
+	if err != nil {
+		return "", "", err
+	}
+
+	if strings.HasPrefix(relativeTarget, "..") || relativeTarget == "." {
+		return "", "", fmt.Errorf("rocket document must stay inside %s", rocketDir)
+	}
+
+	return normalized, target, nil
+}
+
+func rocketSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := strings.TrimSpace(r.URL.Query().Get("q"))
+		if query == "" {
+			writeJSON(w, wikiSearchResponse{
+				Results: []wikiSearchResult{},
+			})
+			return
+		}
+
+		results, err := searchRocket(siteRoot, query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, wikiSearchResponse{
+			Results: results,
+		})
+	}
+}
+
+func searchRocket(siteRoot string, query string) ([]wikiSearchResult, error) {
+	files, err := collectRocketFiles(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedQuery := strings.ToLower(query)
+	results := []wikiSearchResult{}
+
+	for _, file := range files {
+		title := fileTitle(file.Path)
+		searchablePath := strings.ToLower(file.Path)
+		searchableTitle := strings.ToLower(title)
+
+		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
+			strings.Contains(searchableTitle, normalizedQuery)
+
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
+		}
+
+		text := string(content)
+		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
+		if !pathMatch && !contentMatch {
+			continue
+		}
+
+		result := wikiSearchResult{
+			Path:  file.Path,
+			Title: title,
+		}
+		if contentMatch {
+			result.Snippet = searchSnippet(text, normalizedQuery)
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func writeRocketIndex(siteRoot string) (bool, error) {
+	files, err := collectRocketFiles(siteRoot)
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON = append(nextJSON, '\n')
+
+	indexPath := filepath.Join(siteRoot, rocketIndexFile)
+	previousJSON, err := os.ReadFile(indexPath)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	if bytes.Equal(previousJSON, nextJSON) {
+		return false, nil
+	}
+
+	return true, os.WriteFile(indexPath, nextJSON, 0o644)
+}
+
+func collectRocketFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectMarkdownFilesWithCache(siteRoot, rocketDir, globalRocketIndexCache)
 }

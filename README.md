@@ -139,7 +139,7 @@ managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
 build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/wiki/Private/`.
+markdown stored under `Website/tabs/rocket/`.
 
 ### Windows
 
@@ -346,18 +346,18 @@ hidden temporary executable that `go run` creates inside `.gocache`.
 ## Local Script Dashboard
 
 Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
-`Website/scripts/`. The dashboard lists allowed scripts, renders the script
+`Website/tabs/scripts/`. The dashboard lists allowed scripts, renders the script
 contents for review, and only then enables a run button for scripts compatible
 with the current operating system. When you click Run, the server opens the
 script in the operating system's default terminal so normal prompts, `sudo`,
 and long-running commands behave like they would outside the browser.
 
-Organize scripts into folders such as `Website/scripts/Windows/`,
-`Website/scripts/Linux/`, and `Website/scripts/Mac/`. The dashboard renders
+Organize scripts into folders such as `Website/tabs/scripts/Windows/`,
+`Website/tabs/scripts/Linux/`, and `Website/tabs/scripts/Mac/`. The dashboard renders
 those folders as a folded collapsible tree with an expand/fold-all control,
 similar to the wiki sidebar.
 
-For safety, the Go server only exposes scripts from `Website/scripts/` and does
+For safety, the Go server only exposes scripts from `Website/tabs/scripts/` and does
 not provide an arbitrary command prompt. Supported script types are `.cmd`,
 `.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
 on the machine running the Go server.
@@ -500,7 +500,7 @@ starting the server. The server usually finds `Website` automatically, but
 This repo can use `git-crypt` for private markdown notes stored under:
 
 ```text
-Website/wiki/Private/
+Website/tabs/rocket/
 ```
 
 Those files can be committed to the public repo, but their contents are stored
@@ -560,7 +560,7 @@ macOS or Linux:
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/wiki/Private/` should become readable, and the
+unlocking, files in `Website/tabs/rocket/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -604,7 +604,7 @@ again.
 The Go server scans:
 
 ```text
-Website/wiki/
+Website/tabs/wiki/
 ```
 
 It writes:
@@ -628,7 +628,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/wiki/
+Website/tabs/wiki/
   Linux/
     AnduinOS/
       Bootstrap.md
