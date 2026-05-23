@@ -10,7 +10,11 @@ const allowedThemes = [
 const legacyThemes = {
     terminal: 'rock',
     'warm-paper': 'papers',
-    'blue-glass': 'scissors'
+    'blue-glass': 'scissors',
+    cyberpunk: 'rock',
+    rugged: 'papers',
+    'blue-grass': 'scissors',
+    bluegrass: 'scissors'
 };
 
 const themeImages = {
@@ -33,12 +37,18 @@ function applyTheme(theme) {
 
     const nextTheme =
         normalizeTheme(theme);
+    const themeImage =
+        themeImages[nextTheme] || themeImages[defaultTheme];
 
     document.documentElement.dataset.theme = nextTheme;
 
     document.querySelectorAll('.theme-logo')
         .forEach(image => {
-            image.src = themeImages[nextTheme];
+            image.onerror = () => {
+                image.onerror = null;
+                image.src = themeImages[defaultTheme];
+            };
+            image.src = themeImage;
         });
 
     try {

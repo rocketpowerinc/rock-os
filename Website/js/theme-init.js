@@ -10,7 +10,11 @@
     const legacyThemes = {
         terminal: 'rock',
         'warm-paper': 'papers',
-        'blue-glass': 'scissors'
+        'blue-glass': 'scissors',
+        cyberpunk: 'rock',
+        rugged: 'papers',
+        'blue-grass': 'scissors',
+        bluegrass: 'scissors'
     };
 
     const defaultTheme =
