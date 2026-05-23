@@ -159,6 +159,76 @@ func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
 	}
 }
 
+func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
+	siteRoot := t.TempDir()
+	markdownRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(filepath.Join(markdownRoot, "Linux"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(
+		filepath.Join(markdownRoot, "Linux", "Booting.md"),
+		[]byte("# Booting\n\nGRUB and rEFInd both matter here.\n"),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(
+		filepath.Join(markdownRoot, "Linux", "Networking.md"),
+		[]byte("# Networking\n\nOffline LAN notes.\n"),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/search?q=refind", nil)
+	recorder := httptest.NewRecorder()
+
+	wikiSearchHandler(siteRoot).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var response wikiSearchResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(response.Results) != 1 {
+		t.Fatalf("expected one search result, got %#v", response.Results)
+	}
+
+	if response.Results[0].Path != "markdown/Linux/Booting.md" {
+		t.Fatalf("unexpected result path: %#v", response.Results[0])
+	}
+
+	if !strings.Contains(response.Results[0].Snippet, "rEFInd") {
+		t.Fatalf("expected snippet to include match, got %#v", response.Results[0])
+	}
+}
+
+func TestWikiSearchHandlerReturnsEmptyResultsForBlankQuery(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/search?q=+", nil)
+	recorder := httptest.NewRecorder()
+
+	wikiSearchHandler(t.TempDir()).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var response wikiSearchResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(response.Results) != 0 {
+		t.Fatalf("expected no search results, got %#v", response.Results)
+	}
+}
+
 func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
 	siteRoot := t.TempDir()
 	markdownRoot := filepath.Join(siteRoot, markdownDir)

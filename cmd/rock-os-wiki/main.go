@@ -60,6 +60,16 @@ type wikiDocResponse struct {
 	LastEdited string `json:"lastEdited,omitempty"`
 }
 
+type wikiSearchResponse struct {
+	Results []wikiSearchResult `json:"results"`
+}
+
+type wikiSearchResult struct {
+	Path    string `json:"path"`
+	Title   string `json:"title"`
+	Snippet string `json:"snippet,omitempty"`
+}
+
 type markdownIndexCacheEntry struct {
 	modTime time.Time
 	size    int64
@@ -130,6 +140,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
+	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -236,6 +247,113 @@ func wikiDocHandler(siteRoot string) http.HandlerFunc {
 
 		writeJSON(w, response)
 	}
+}
+
+func wikiSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := strings.TrimSpace(r.URL.Query().Get("q"))
+		if query == "" {
+			writeJSON(w, wikiSearchResponse{
+				Results: []wikiSearchResult{},
+			})
+			return
+		}
+
+		results, err := searchWiki(siteRoot, query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, wikiSearchResponse{
+			Results: results,
+		})
+	}
+}
+
+func searchWiki(siteRoot string, query string) ([]wikiSearchResult, error) {
+	files, err := collectMarkdownFiles(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedQuery := strings.ToLower(query)
+	results := []wikiSearchResult{}
+
+	for _, file := range files {
+		title := fileTitle(file.Path)
+		searchablePath := strings.ToLower(file.Path)
+		searchableTitle := strings.ToLower(title)
+
+		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
+			strings.Contains(searchableTitle, normalizedQuery)
+
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
+		}
+
+		text := string(content)
+		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
+		if !pathMatch && !contentMatch {
+			continue
+		}
+
+		result := wikiSearchResult{
+			Path:  file.Path,
+			Title: title,
+		}
+		if contentMatch {
+			result.Snippet = searchSnippet(text, normalizedQuery)
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func fileTitle(path string) string {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	return strings.TrimSuffix(parts[len(parts)-1], filepath.Ext(parts[len(parts)-1]))
+}
+
+func searchSnippet(text string, normalizedQuery string) string {
+	for _, line := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
+		if !strings.Contains(strings.ToLower(line), normalizedQuery) {
+			continue
+		}
+
+		trimmed := strings.TrimSpace(line)
+		if len(trimmed) <= 120 {
+			return trimmed
+		}
+
+		matchIndex := strings.Index(strings.ToLower(trimmed), normalizedQuery)
+		start := max(0, matchIndex-45)
+		end := min(len(trimmed), start+120)
+		prefix := ""
+		suffix := ""
+		if start > 0 {
+			prefix = "..."
+		}
+		if end < len(trimmed) {
+			suffix = "..."
+		}
+
+		return prefix + trimmed[start:end] + suffix
+	}
+
+	return ""
 }
 
 func resolveMarkdownDoc(siteRoot string, docPath string) (string, string, error) {

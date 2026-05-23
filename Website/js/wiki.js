@@ -3,7 +3,7 @@ import { enhanceCallouts } from './wiki/callouts.js';
 import { enhanceCodeBlocks, enhanceInlineCode } from './wiki/code-blocks.js';
 import { enhanceWikiLinks, markdownLinksInText, wikiDocHref } from './wiki/links.js';
 import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.js';
-import { escapeHtml, fileTitle, formatEditedDate, getSnippet } from './wiki/utils.js';
+import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
 const stateStorageKey = 'rock-os-wiki-state';
@@ -14,6 +14,10 @@ let indexLoadInProgress = false;
 let allMarkdownFiles = [];
 let markdownFileMeta = new Map();
 let searchQuery = '';
+let searchResults = [];
+let searchLoading = false;
+let searchDebounceTimer = null;
+let searchRequestId = 0;
 let initialUrlDocLoaded = false;
 
 const markdownContentCache = new Map();
@@ -321,20 +325,6 @@ async function loadMarkdownText(path) {
     return pending;
 }
 
-function warmSearchIndex(files) {
-
-    Promise.all(
-        files.map(file =>
-            loadMarkdownText(file)
-        )
-    ).then(() => {
-
-        if (searchQuery) {
-            renderSearchResults();
-        }
-    });
-}
-
 function renderWikiError(title, message, details = []) {
 
     const sidebar =
@@ -447,6 +437,109 @@ function rerenderSidebar() {
 
     updateActiveDocLinks();
     updateToggleAllFoldersButton();
+}
+
+function fallbackFilenameSearch(query) {
+
+    const normalizedQuery =
+        query.toLowerCase();
+
+    return allMarkdownFiles
+        .filter(file =>
+            file.toLowerCase().includes(normalizedQuery) ||
+            fileTitle(file).toLowerCase().includes(normalizedQuery)
+        )
+        .map(file => ({
+            path: file,
+            title: fileTitle(file),
+            snippet: ''
+        }));
+}
+
+function scheduleSearch() {
+
+    clearTimeout(searchDebounceTimer);
+
+    const query =
+        searchQuery.trim();
+
+    if (!query) {
+        searchLoading = false;
+        searchResults = [];
+        renderSearchResults();
+        return;
+    }
+
+    searchLoading = true;
+    searchResults = [];
+    renderSearchResults();
+
+    const requestId =
+        ++searchRequestId;
+
+    searchDebounceTimer =
+        setTimeout(() => {
+            runSearch(query, requestId);
+        }, 250);
+}
+
+async function runSearch(query, requestId) {
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/wiki/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                `Search failed with HTTP ${response.status}`
+            );
+        }
+
+        const payload =
+            await response.json();
+
+        if (
+            requestId !== searchRequestId ||
+            query !== searchQuery.trim()
+        ) {
+            return;
+        }
+
+        searchResults =
+            Array.isArray(payload.results)
+            ? payload.results
+                .filter(result =>
+                    result &&
+                    typeof result.path === 'string'
+                )
+                .map(result => ({
+                    path: result.path,
+                    title: result.title || fileTitle(result.path),
+                    snippet: result.snippet || ''
+                }))
+            : [];
+        searchLoading = false;
+        renderSearchResults();
+    }
+    catch (err) {
+
+        console.warn('Server search failed:', err);
+
+        if (
+            requestId !== searchRequestId ||
+            query !== searchQuery.trim()
+        ) {
+            return;
+        }
+
+        searchResults =
+            fallbackFilenameSearch(query);
+        searchLoading = false;
+        renderSearchResults();
+    }
 }
 
 function setAllFoldersExpanded(expanded) {
@@ -1076,7 +1169,7 @@ function renderSearchResults() {
         getSearchStatus();
 
     const query =
-        searchQuery.trim().toLowerCase();
+        searchQuery.trim();
 
     sidebar.innerHTML = '';
 
@@ -1092,55 +1185,17 @@ function renderSearchResults() {
     }
 
     const results =
-        allMarkdownFiles
-            .map(file => {
-
-                const title =
-                    fileTitle(file);
-
-                const searchablePath =
-                    file.toLowerCase();
-
-                const markdownText =
-                    markdownContentCache.get(file) || '';
-
-                const searchableText =
-                    markdownText.toLowerCase();
-
-                const nameMatch =
-                    searchablePath.includes(query) ||
-                    title.toLowerCase().includes(query);
-
-                const contentMatch =
-                    searchableText.includes(query);
-
-                if (!nameMatch && !contentMatch) {
-                    return null;
-                }
-
-                return {
-                    file,
-                    title,
-                    snippet: contentMatch
-                        ? getSnippet(markdownText, query)
-                        : ''
-                };
-            })
-            .filter(Boolean);
+        searchResults;
 
     if (status) {
 
-        const loadingCount =
-            allMarkdownFiles.filter(file =>
-                !markdownContentCache.has(file)
-            ).length;
-
         status.innerText =
-            `${results.length} result${results.length === 1 ? '' : 's'}` +
-            (loadingCount ? `, indexing ${loadingCount}` : '');
+            searchLoading
+            ? 'Searching...'
+            : `${results.length} result${results.length === 1 ? '' : 's'}`;
     }
 
-    if (!results.length) {
+    if (!results.length && !searchLoading) {
 
         renderEmptyState(sidebar);
         return;
@@ -1153,18 +1208,18 @@ function renderSearchResults() {
 
         link.className = 'doc-link';
         link.href = '#';
-        link.dataset.path = result.file;
+        link.dataset.path = result.path;
 
-        if (result.file === activeDocPath) {
+        if (result.path === activeDocPath) {
             link.classList.add('active');
         }
 
         link.innerHTML =
-            `${escapeHtml(result.title)}<span class="search-result-meta">${escapeHtml(result.file)}</span>`;
+            `${escapeHtml(result.title)}<span class="search-result-meta">${escapeHtml(result.path)}</span>`;
 
         link.onclick = () => {
 
-            loadDoc(result.file);
+            loadDoc(result.path);
             return false;
         };
 
@@ -1284,8 +1339,6 @@ async function loadIndex() {
             rememberActiveDoc(urlDoc);
         }
 
-        warmSearchIndex(files);
-
         const nextIndexText =
             rawText.trim();
 
@@ -1317,7 +1370,7 @@ async function loadIndex() {
         }
 
         if (searchQuery) {
-            renderSearchResults();
+            scheduleSearch();
         } else {
             renderNormalSidebar(sidebar);
         }
@@ -1401,11 +1454,7 @@ if (wikiSearchInput) {
         searchQuery =
             wikiSearchInput.value;
 
-        if (searchQuery) {
-            warmSearchIndex(allMarkdownFiles);
-        }
-
-        renderSearchResults();
+        scheduleSearch();
     });
 }
 
