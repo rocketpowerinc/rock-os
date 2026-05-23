@@ -48,7 +48,7 @@ pull_updates() {
     fi
 
     green "Checking for Rock-OS repo updates..."
-    if git -C "$REPO_ROOT" pull --ff-only >/dev/null; then
+    if git -C "$REPO_ROOT" pull --ff-only; then
         green "Rock-OS repo is up to date."
     else
         yellow "Could not update from GitHub. Continuing with local files."
