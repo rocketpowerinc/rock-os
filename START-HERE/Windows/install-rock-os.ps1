@@ -25,6 +25,13 @@ function Ensure-Repo {
     if (Test-Path (Join-Path $InstallDir '.git')) {
         Write-Green "Rock-OS repo found at $InstallDir"
         git -C $InstallDir pull --ff-only
+        if ($LASTEXITCODE -eq 0) {
+            Write-Green "Rock-OS repo is up to date."
+        }
+        else {
+            Write-Yellow "Could not update the repo. Continuing so launcher files can still be refreshed."
+            Write-Yellow "If you have local changes, commit them before pulling updates."
+        }
         return
     }
 

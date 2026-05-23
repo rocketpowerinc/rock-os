@@ -24,7 +24,12 @@ require_git() {
 ensure_repo() {
     if [ -d "$INSTALL_DIR/.git" ]; then
         green "Rock-OS repo found at $INSTALL_DIR"
-        git -C "$INSTALL_DIR" pull --ff-only
+        if git -C "$INSTALL_DIR" pull --ff-only; then
+            green "Rock-OS repo is up to date."
+        else
+            yellow "Could not update the repo. Continuing so launcher files can still be refreshed."
+            yellow "If you have local changes, commit them before pulling updates."
+        fi
         return
     fi
 
