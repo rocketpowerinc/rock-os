@@ -160,5 +160,35 @@ Write-Host "Release files list:" -ForegroundColor Gray
 Get-ChildItem $releaseDir | ForEach-Object {
     Write-Host " - $_" -ForegroundColor Cyan
 }
+
+Write-Host
+$publishAnswer = Read-Host "Do you want to push commits and publish this release to GitHub now? (y/n)"
+if ($publishAnswer -match "^[yY](es)?$") {
+    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+        Write-Host "[ERROR] gh command not found. Please install GitHub CLI to publish releases." -ForegroundColor Red
+        Exit 1
+    }
+
+    $currentBranch = git branch --show-current
+    Write-Host "Pushing current branch ($currentBranch) to origin..." -ForegroundColor Gray
+    git push origin $currentBranch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to push commits to GitHub." -ForegroundColor Red
+        Exit 1
+    }
+
+    Write-Host "Creating GitHub release $versionName and uploading assets..." -ForegroundColor Gray
+    $filesToUpload = (Get-ChildItem -Path (Join-Path $absoluteReleaseDir "*") -File).FullName
+    gh release create $versionName $filesToUpload --title "$versionName" --notes "Release $versionName"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to publish release to GitHub." -ForegroundColor Red
+        Exit 1
+    }
+
+    Write-Host "[OK] Release published successfully to GitHub!" -ForegroundColor Green
+} else {
+    Write-Host "Skipped publishing to GitHub. Binaries are prepared locally in $releaseDir." -ForegroundColor Yellow
+}
+
 Write-Host
 Write-Host "Done." -ForegroundColor Green
