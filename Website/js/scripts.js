@@ -286,7 +286,7 @@ function scriptButton(script) {
     pinButton.title =
         isScriptPinned(script.id) ? 'Unpin script' : 'Pin script';
     pinButton.textContent =
-        '⌖';
+        '★';
 
     pinButton.addEventListener('click', event => {
         event.preventDefault();
@@ -477,7 +477,7 @@ function renderPinnedScripts(scripts) {
     title.className =
         'pinned-scripts-title';
     title.textContent =
-        'Pinned';
+        'Favorites';
 
     section.appendChild(title);
 

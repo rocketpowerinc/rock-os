@@ -272,7 +272,7 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
     pinButton.title =
         isDocPinned(path) ? 'Unpin doc' : 'Pin doc';
     pinButton.innerText =
-        '⌖';
+        '★';
 
     pinButton.onclick = event => {
 
@@ -324,7 +324,7 @@ function renderPinnedDocs(container) {
         document.createElement('div');
 
     title.className = 'pinned-docs-title';
-    title.innerText = 'Pinned';
+    title.innerText = 'Favorites';
 
     section.appendChild(title);
 
