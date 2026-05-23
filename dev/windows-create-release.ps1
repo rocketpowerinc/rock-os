@@ -34,7 +34,74 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 }
 
 # 4. Ask for next version interactively
-$rawVersion = Read-Host "Enter the next version number (e.g., 1.1 or 2.0)"
+$currentVersion = "none"
+$suggestionPrompt = "e.g., 1.0 or 1.1"
+
+Write-Host "Fetching latest release version from GitHub..." -ForegroundColor Gray
+try {
+    $response = Invoke-RestMethod -Uri "https://api.github.com/repos/rocketpowerinc/rock-os/releases/latest" -TimeoutSec 5 -ErrorAction Stop
+    if ($response -and $response.tag_name) {
+        $tag = $response.tag_name.Trim()
+        $verStr = $tag
+        if ($verStr.StartsWith("v")) {
+            $verStr = $verStr.Substring(1)
+        }
+        if ($verStr -notmatch "\.") {
+            $verStr = "$verStr.0"
+        }
+        $verObj = [version]$verStr
+        $currentVersion = $tag
+
+        if ($verObj.Build -ge 0) {
+            $suggestPatch = "$($verObj.Major).$($verObj.Minor).$($verObj.Build + 1)"
+            $suggestMinor = "$($verObj.Major).$($verObj.Minor + 1)"
+            $suggestionPrompt = "Current GitHub: $currentVersion, suggest $suggestPatch or $suggestMinor"
+        } else {
+            $suggestPoint = "$($verObj.Major).$($verObj.Minor + 1)"
+            $suggestMajor = "$($verObj.Major + 1).0"
+            $suggestionPrompt = "Current GitHub: $currentVersion, suggest $suggestPoint or $suggestMajor"
+        }
+    }
+} catch {
+    Write-Host "Warning: Could not fetch latest release from GitHub ($($_.Exception.Message))." -ForegroundColor Yellow
+    # Fallback to local .release directory scanning
+    if (Test-Path ".release") {
+        $dirs = Get-ChildItem ".release" -Directory | Where-Object { $_.Name -match "^v\d+(\.\d+)*$" }
+        if ($dirs) {
+            $versions = @()
+            foreach ($dir in $dirs) {
+                $verStr = $dir.Name.Substring(1)
+                if ($verStr -notmatch "\.") {
+                    $verStr = "$verStr.0"
+                }
+                try {
+                    $verObj = [version]$verStr
+                    $versions += [PSCustomObject]@{
+                        OriginalName = $dir.Name
+                        VersionObj   = $verObj
+                    }
+                } catch {}
+            }
+            if ($versions) {
+                $latestEntry = $versions | Sort-Object VersionObj | Select-Object -Last 1
+                $currentVersion = $latestEntry.OriginalName
+                $latestVer = $latestEntry.VersionObj
+
+                if ($latestVer.Build -ge 0) {
+                    $suggestPatch = "$($latestVer.Major).$($latestVer.Minor).$($latestVer.Build + 1)"
+                    $suggestMinor = "$($latestVer.Major).$($latestVer.Minor + 1)"
+                    $suggestionPrompt = "Current local: $currentVersion, suggest $suggestPatch or $suggestMinor"
+                } else {
+                    $suggestPoint = "$($latestVer.Major).$($latestVer.Minor + 1)"
+                    $suggestMajor = "$($latestVer.Major + 1).0"
+                    $suggestionPrompt = "Current local: $currentVersion, suggest $suggestPoint or $suggestMajor"
+                }
+            }
+        }
+    }
+}
+
+$rawVersion = Read-Host "Enter the next version number ($suggestionPrompt)"
 if (-not $rawVersion) {
     Write-Host "[ERROR] Version number cannot be empty." -ForegroundColor Red
     Exit 1
