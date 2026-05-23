@@ -91,7 +91,7 @@ copy and prints a warning.
 - Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?doc=wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -139,7 +139,7 @@ managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
 build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/markdown/Private/`.
+markdown stored under `Website/wiki/Private/`.
 
 ### Windows
 
@@ -491,7 +491,7 @@ go run . --site-root ../../Website
 
 Use `--host 127.0.0.1` to serve only on the current computer. Use `--host local`
 or `--host lan` only when you intentionally want other devices on the trusted
-LAN to connect. Use `--build-index` to rebuild `markdown-index.json` without
+LAN to connect. Use `--build-index` to rebuild `wiki-index.json` without
 starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
@@ -500,7 +500,7 @@ starting the server. The server usually finds `Website` automatically, but
 This repo can use `git-crypt` for private markdown notes stored under:
 
 ```text
-Website/markdown/Private/
+Website/wiki/Private/
 ```
 
 Those files can be committed to the public repo, but their contents are stored
@@ -560,7 +560,7 @@ macOS or Linux:
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/markdown/Private/` should become readable, and the
+unlocking, files in `Website/wiki/Private/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -604,13 +604,13 @@ again.
 The Go server scans:
 
 ```text
-Website/markdown/
+Website/wiki/
 ```
 
 It writes:
 
 ```text
-Website/markdown-index.json
+Website/wiki-index.json
 ```
 
 The browser reads that JSON file and builds the sidebar tree. When you open a
@@ -618,7 +618,7 @@ document, it asks the Go server to render that markdown through the local
 `/api/wiki/doc` endpoint, then the browser adds wiki features such as code copy
 buttons, callouts, backlinks, and the table of contents.
 
-`markdown-index.json` is generated local state and is intentionally ignored by
+`wiki-index.json` is generated local state and is intentionally ignored by
 Git. That keeps local private or experimental markdown files from constantly
 dirtying the repo or leaking filenames into commits.
 
@@ -628,7 +628,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/markdown/
+Website/wiki/
   Linux/
     AnduinOS/
       Bootstrap.md
@@ -646,13 +646,13 @@ When rendered in the wiki, internal `.md` links are opened through `wiki.html`
 with a `doc` parameter instead of navigating to the raw file directly.
 
 If an internal `.md` link points to a file that is not in
-`Website/markdown-index.json`, the wiki marks it as missing so broken links are
+`Website/wiki-index.json`, the wiki marks it as missing so broken links are
 visible while editing.
 
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?doc=markdown/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?doc=wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

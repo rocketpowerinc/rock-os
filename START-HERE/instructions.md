@@ -155,7 +155,7 @@ This script does not commit, stash, or fix anything. It only reports.
 Private markdown lives here:
 
 ```text
-Website/markdown/Private/
+Website/wiki/Private/
 ```
 
 That folder is intended to be encrypted with `git-crypt`.

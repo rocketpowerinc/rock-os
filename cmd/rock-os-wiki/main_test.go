@@ -88,7 +88,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=markdown/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -102,7 +102,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "markdown/Test.md" {
+	if response.Path != "wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -127,7 +127,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=markdown/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -151,7 +151,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=markdown/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -202,7 +202,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "markdown/Linux/Booting.md" {
+	if response.Results[0].Path != "wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -320,7 +320,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/markdown-index.json", nil)
+	request := httptest.NewRequest(http.MethodGet, "/wiki-index.json", nil)
 	recorder := httptest.NewRecorder()
 
 	markdownIndexHandler(siteRoot).ServeHTTP(recorder, request)
@@ -338,7 +338,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "markdown/Fresh.md" {
+	if files[0].Path != "wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -459,8 +459,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status.GitCrypt != "missing" {
 		t.Errorf("expected gitCrypt to be 'missing', got %q", status.GitCrypt)
 	}
-	if status.MarkdownCount != 0 {
-		t.Errorf("expected markdownCount to be 0, got %d", status.MarkdownCount)
+	if status.WikiCount != 0 {
+		t.Errorf("expected wikiCount to be 0, got %d", status.WikiCount)
 	}
 	if status.ScriptsCount != 0 {
 		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
@@ -495,8 +495,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status2.GitCrypt != "unlocked" {
 		t.Errorf("expected gitCrypt to be 'unlocked', got %q", status2.GitCrypt)
 	}
-	if status2.MarkdownCount != 1 {
-		t.Errorf("expected markdownCount to be 1, got %d", status2.MarkdownCount)
+	if status2.WikiCount != 1 {
+		t.Errorf("expected wikiCount to be 1, got %d", status2.WikiCount)
 	}
 	if status2.ScriptsCount != 1 {
 		t.Errorf("expected scriptsCount to be 1, got %d", status2.ScriptsCount)
@@ -518,8 +518,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status3.GitCrypt != "locked" {
 		t.Errorf("expected gitCrypt to be 'locked', got %q", status3.GitCrypt)
 	}
-	if status3.MarkdownCount != 2 {
-		t.Errorf("expected markdownCount to be 2, got %d", status3.MarkdownCount)
+	if status3.WikiCount != 2 {
+		t.Errorf("expected wikiCount to be 2, got %d", status3.WikiCount)
 	}
 	if status3.ScriptsCount != 1 {
 		t.Errorf("expected scriptsCount to be 1, got %d", status3.ScriptsCount)

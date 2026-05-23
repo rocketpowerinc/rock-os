@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	indexFile           = "markdown-index.json"
-	markdownDir         = "markdown"
+	indexFile           = "wiki-index.json"
+	markdownDir         = "wiki"
 	scriptsDir          = "scripts"
 	bootstrapsDir       = "bootstraps"
 	bootstrapsIndexFile = "bootstraps-index.json"
@@ -83,7 +83,7 @@ type serverStatus struct {
 	Description   string   `json:"description"`
 	URLs          []string `json:"urls"`
 	GitCrypt      string   `json:"gitCrypt"`
-	MarkdownCount int      `json:"markdownCount"`
+	WikiCount     int      `json:"wikiCount"`
 	ScriptsCount  int      `json:"scriptsCount"`
 }
 
@@ -158,7 +158,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println("Wrote markdown-index.json")
+		fmt.Println("Wrote wiki-index.json")
 		return
 	}
 
@@ -176,7 +176,7 @@ func main() {
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
-	mux.HandleFunc("/markdown-index.json", markdownIndexHandler(siteRoot))
+	mux.HandleFunc("/wiki-index.json", markdownIndexHandler(siteRoot))
 	mux.HandleFunc("/api/bootstraps/doc", bootstrapsDocHandler(siteRoot))
 	mux.HandleFunc("/api/bootstraps/search", bootstrapsSearchHandler(siteRoot))
 	mux.HandleFunc("/bootstraps-index.json", bootstrapsIndexHandler(siteRoot))
@@ -397,7 +397,7 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 			Description:   description,
 			URLs:          urls,
 			GitCrypt:      gitCrypt,
-			MarkdownCount: markdownCount,
+			WikiCount:     markdownCount,
 			ScriptsCount:  scriptsCount,
 		})
 	}
@@ -456,7 +456,7 @@ func requestAcceptsGzip(r *http.Request) bool {
 }
 
 func shouldCompressPath(path string) bool {
-	if strings.HasPrefix(path, "/api/") || path == "/markdown-index.json" || path == "/bootstraps-index.json" {
+	if strings.HasPrefix(path, "/api/") || path == "/wiki-index.json" || path == "/bootstraps-index.json" {
 		return true
 	}
 

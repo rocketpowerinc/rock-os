@@ -25,7 +25,7 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (pathOnly.startsWith('markdown/')) {
+    if (pathOnly.startsWith('wiki/')) {
         return normalizeDocPath(pathOnly);
     }
 

@@ -115,7 +115,7 @@ else
     bad "git-crypt is not installed."
 fi
 
-private_files="$(git ls-files -- 'Website/markdown/Private' 2>/dev/null || true)"
+private_files="$(git ls-files -- 'Website/wiki/Private' 2>/dev/null || true)"
 private_found=""
 private_locked=""
 
@@ -139,11 +139,11 @@ if [ -f "${TMPDIR:-/tmp}/rock-os-private-locked-$$" ]; then
 fi
 
 if [ -z "$private_found" ]; then
-    info "No tracked Private markdown files found."
+    info "No tracked Private wiki files found."
 elif [ -n "$private_locked" ]; then
-    bad "Private Markdown Folder Locked."
+    bad "Private Wiki Folder Locked."
 else
-    ok "Private Markdown Folder Unlocked."
+    ok "Private Wiki Folder Unlocked."
 fi
 
 key_count="$(find . -maxdepth 1 -type f -name '*.key' | wc -l | tr -d ' ')"

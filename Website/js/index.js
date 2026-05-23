@@ -91,10 +91,10 @@ function renderServerMode(status) {
         }
     }
 
-    const countElement = document.getElementById('markdownFilesCount');
+    const countElement = document.getElementById('wikiFilesCount');
     if (countElement) {
         countElement.textContent =
-            typeof status?.markdownCount === 'number' ? `${status.markdownCount} Files` : '—';
+            typeof status?.wikiCount === 'number' ? `${status.wikiCount} Files` : '—';
     }
 
     const scriptsCountElement = document.getElementById('scriptsFilesCount');

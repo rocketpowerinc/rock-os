@@ -114,7 +114,7 @@ Markdown notes should be clear, practical, and a little human.
 Private markdown lives under:
 
 ```text
-Website/markdown/Private/
+Website/wiki/Private/
 ```
 
 This area is intended to be encrypted with `git-crypt`.

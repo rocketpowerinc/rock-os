@@ -63,7 +63,7 @@ coverage/
 # Project-specific local artifacts
 .gotest-cache/
 .release/
-Website/markdown-index.json
+Website/wiki-index.json
 Website/.rock-os-wiki-version
 Website/*.download
 Website/rock-os-wiki-*
