@@ -1,8 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
 $RepoUrl = 'https://github.com/rocketpowerinc/rock-os.git'
-$InstallDir = Join-Path $HOME 'rock-os'
-$BinDir = Join-Path $HOME 'Bin'
+$UserRoot = $env:USERPROFILE
+$InstallDir = Join-Path $UserRoot 'rock-os'
+$BinDir = Join-Path $UserRoot 'Bin'
 $RockCommand = Join-Path $BinDir 'rock-os.cmd'
 $DesktopShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Rock-OS.lnk'
 
@@ -71,6 +72,10 @@ function Create-DesktopShortcut {
         Join-Path $InstallDir 'START-HERE\Windows\start-rock-os.cmd'
     $iconPath =
         Join-Path $InstallDir 'Website\assets\favicon.ico'
+
+    if (Test-Path $DesktopShortcut) {
+        Remove-Item -Path $DesktopShortcut -Force
+    }
 
     $shell =
         New-Object -ComObject WScript.Shell
