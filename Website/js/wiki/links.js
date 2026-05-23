@@ -98,6 +98,42 @@ export function enhanceWikiLinks(
         });
 }
 
+export function enhanceExternalLinks(container) {
+
+    container.querySelectorAll('a[href]')
+        .forEach(link => {
+
+            const rawHref =
+                link.getAttribute('href');
+
+            if (!rawHref) {
+                return;
+            }
+
+            let url;
+
+            try {
+                url =
+                    new URL(rawHref, window.location.href);
+            }
+            catch {
+                return;
+            }
+
+            if (
+                (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+                url.host === window.location.host
+            ) {
+                return;
+            }
+
+            link.target =
+                '_blank';
+            link.rel =
+                'noopener noreferrer';
+        });
+}
+
 export function markdownLinksInText(
     text,
     sourceDocPath

@@ -1509,6 +1509,41 @@ scroll-behavior:smooth;
 	text-transform: uppercase;
 }
 
+.content table {
+	border-collapse:collapse;
+	display:block;
+	margin:22px 0;
+	max-width:100%;
+	overflow-x:auto;
+	width:max-content;
+}
+
+.content th,
+.content td {
+	border:1px solid rgba(var(--accent-rgb), .18);
+	padding:10px 12px;
+	text-align:left;
+	vertical-align:top;
+}
+
+.content th {
+	background:rgba(var(--accent-rgb), .12);
+	color:var(--heading-color);
+	font-size:.78rem;
+	font-weight:900;
+	letter-spacing:.8px;
+	text-transform:uppercase;
+}
+
+.content td {
+	background:rgba(var(--accent-rgb), .035);
+	color:var(--text-main);
+}
+
+.content tr:nth-child(even) td {
+	background:rgba(var(--accent-rgb), .065);
+}
+
 .wiki-breadcrumbs {
 	align-items:center;
 	display:flex;

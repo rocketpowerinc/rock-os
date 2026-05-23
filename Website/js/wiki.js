@@ -1,7 +1,7 @@
 import { renderBreadcrumbs } from './wiki/breadcrumbs.js';
 import { enhanceCallouts } from './wiki/callouts.js';
 import { enhanceCodeBlocks, enhanceInlineCode } from './wiki/code-blocks.js';
-import { enhanceWikiLinks, markdownLinksInText, wikiDocHref } from './wiki/links.js';
+import { enhanceExternalLinks, enhanceWikiLinks, markdownLinksInText, wikiDocHref } from './wiki/links.js';
 import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.js';
 import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
@@ -818,6 +818,7 @@ async function loadDoc(path, options = {}) {
     enhanceInlineCode(content);
     enhanceCallouts(content);
     enhanceWikiLinks(content, path, { allMarkdownFiles, loadDoc });
+    enhanceExternalLinks(content);
     highlightDocText(content, searchQuery);
     buildTableOfContents(content);
     enhanceBacklinks(content, path);

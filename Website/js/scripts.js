@@ -15,6 +15,7 @@ const scriptSearchInput =
 
 let selectedScript = null;
 let allScripts = [];
+let scriptRunInProgress = false;
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -380,10 +381,18 @@ async function selectScript(script) {
 }
 
 async function runSelectedScript() {
-    if (!selectedScript || !selectedScript.runnable) {
+    if (
+        scriptRunInProgress ||
+        !selectedScript ||
+        !selectedScript.runnable
+    ) {
         return;
     }
 
+    scriptRunInProgress =
+        true;
+    runScriptBtn.disabled =
+        true;
     setStatus('Opening script in your OS terminal...', 'info');
 
     try {
@@ -407,6 +416,15 @@ async function runSelectedScript() {
     }
     catch (err) {
         setStatus(err.message, 'error');
+    }
+    finally {
+        scriptRunInProgress =
+            false;
+
+        if (selectedScript) {
+            runScriptBtn.disabled =
+                !selectedScript.runnable;
+        }
     }
 }
 
