@@ -7,12 +7,13 @@ import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
 const stateStorageKey = 'rock-os-wiki-state';
+const pinnedDocsStorageKey = 'rock-os-wiki-pinned-docs';
 
 let lastIndexText = '';
 let activeDocPath = '';
 let indexLoadInProgress = false;
 let allMarkdownFiles = [];
-let markdownFileMeta = new Map();
+let pinnedDocPaths = new Set();
 let searchQuery = '';
 let searchResults = [];
 let searchLoading = false;
@@ -24,6 +25,7 @@ const markdownContentCache = new Map();
 const markdownContentLoads = new Map();
 
 loadSavedState();
+loadPinnedDocs();
 
 function getSidebar() {
 
@@ -51,10 +53,7 @@ function normalizeFiles(parsed) {
             .map(file => {
 
                 if (typeof file === 'string') {
-                    return {
-                        path: file.trim(),
-                        pinned: false
-                    };
+                    return file.trim();
                 }
 
                 if (
@@ -62,35 +61,21 @@ function normalizeFiles(parsed) {
                     typeof file === 'object' &&
                     typeof file.path === 'string'
                 ) {
-                    return {
-                        path: file.path.trim(),
-                        pinned: file.pinned === true
-                    };
+                    return file.path.trim();
                 }
 
                 return null;
             })
-            .filter(file =>
-                file &&
-                file.path.toLowerCase().endsWith('.md')
+            .filter(path =>
+                path &&
+                path.toLowerCase().endsWith('.md')
             )
             .sort((a, b) =>
-                a.path.toLowerCase()
-                    .localeCompare(b.path.toLowerCase())
+                a.toLowerCase()
+                    .localeCompare(b.toLowerCase())
             );
 
-    markdownFileMeta = new Map(
-        entries.map(file => [
-            file.path,
-            {
-                pinned: file.pinned
-            }
-        ])
-    );
-
-    return entries.map(file =>
-        file.path
-    );
+    return entries;
 }
 
 function getDocFromUrl() {
@@ -173,6 +158,61 @@ function clearExpandedFolders() {
     saveState();
 }
 
+function loadPinnedDocs() {
+
+    try {
+
+        const saved =
+            JSON.parse(
+                localStorage.getItem(pinnedDocsStorageKey) || '[]'
+            );
+
+        pinnedDocPaths = new Set(
+            Array.isArray(saved)
+                ? saved.filter(path => typeof path === 'string')
+                : []
+        );
+    }
+    catch (err) {
+
+        console.warn('Could not load pinned docs:', err);
+        pinnedDocPaths = new Set();
+    }
+}
+
+function savePinnedDocs() {
+
+    try {
+
+        localStorage.setItem(
+            pinnedDocsStorageKey,
+            JSON.stringify(Array.from(pinnedDocPaths))
+        );
+    }
+    catch (err) {
+
+        console.warn('Could not save pinned docs:', err);
+    }
+}
+
+function isDocPinned(path) {
+
+    return pinnedDocPaths.has(path);
+}
+
+function toggleDocPin(path) {
+
+    if (isDocPinned(path)) {
+        pinnedDocPaths.delete(path);
+    }
+    else {
+        pinnedDocPaths.add(path);
+    }
+
+    savePinnedDocs();
+    rerenderSidebar();
+}
+
 function renderEmptyState(container) {
 
     const empty =
@@ -189,7 +229,7 @@ function renderEmptyState(container) {
 function pinnedMarkdownFiles() {
 
     return allMarkdownFiles.filter(file =>
-        markdownFileMeta.get(file)?.pinned
+        isDocPinned(file)
     );
 }
 
@@ -206,7 +246,54 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
         link.classList.add('active');
     }
 
-    link.innerText = label;
+    const labelText =
+        document.createElement('span');
+    labelText.className =
+        'doc-link-label';
+    labelText.innerText =
+        label;
+
+    const pinButton =
+        document.createElement('span');
+    pinButton.className =
+        'pin-toggle';
+    pinButton.classList.toggle(
+        'active',
+        isDocPinned(path)
+    );
+    pinButton.setAttribute(
+        'role',
+        'button'
+    );
+    pinButton.setAttribute(
+        'aria-label',
+        isDocPinned(path) ? 'Unpin doc' : 'Pin doc'
+    );
+    pinButton.title =
+        isDocPinned(path) ? 'Unpin doc' : 'Pin doc';
+    pinButton.innerText =
+        '⌖';
+
+    pinButton.onclick = event => {
+
+        event.preventDefault();
+        event.stopPropagation();
+        toggleDocPin(path);
+    };
+    pinButton.onkeydown = event => {
+
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        toggleDocPin(path);
+    };
+    pinButton.tabIndex =
+        0;
+
+    link.append(labelText, pinButton);
 
     link.onclick = () => {
 
@@ -1206,24 +1293,21 @@ function renderSearchResults() {
     results.forEach(result => {
 
         const link =
-            document.createElement('a');
+            createSidebarDocLink(
+                result.path,
+                result.title
+            );
+        const meta =
+            document.createElement('span');
+        meta.className =
+            'search-result-meta';
+        meta.innerText =
+            result.path;
 
-        link.className = 'doc-link';
-        link.href = '#';
-        link.dataset.path = result.path;
-
-        if (result.path === activeDocPath) {
-            link.classList.add('active');
-        }
-
-        link.innerHTML =
-            `${escapeHtml(result.title)}<span class="search-result-meta">${escapeHtml(result.path)}</span>`;
-
-        link.onclick = () => {
-
-            loadDoc(result.path);
-            return false;
-        };
+        link.insertBefore(
+            meta,
+            link.querySelector('.pin-toggle')
+        );
 
         sidebar.appendChild(link);
 

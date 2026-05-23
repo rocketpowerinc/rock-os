@@ -47,8 +47,7 @@ const (
 )
 
 type markdownIndexEntry struct {
-	Path   string `json:"path"`
-	Pinned bool   `json:"pinned,omitempty"`
+	Path string `json:"path"`
 }
 
 type scriptEntry struct {
@@ -102,7 +101,6 @@ type wikiSearchResult struct {
 type markdownIndexCacheEntry struct {
 	modTime time.Time
 	size    int64
-	pinned  bool
 }
 
 type markdownIndexCache struct {
@@ -1482,10 +1480,10 @@ func collectMarkdownFilesWithCache(siteRoot string, cache *markdownIndexCache) (
 			return err
 		}
 		seen[absolutePath] = struct{}{}
+		cache.markSeen(absolutePath, info)
 
 		files = append(files, markdownIndexEntry{
-			Path:   filepath.ToSlash(relativePath),
-			Pinned: cache.markdownFilePinned(absolutePath, info),
+			Path: filepath.ToSlash(relativePath),
 		})
 		return nil
 	})
@@ -1502,34 +1500,26 @@ func collectMarkdownFilesWithCache(siteRoot string, cache *markdownIndexCache) (
 	return files, nil
 }
 
-func (cache *markdownIndexCache) markdownFilePinned(path string, info os.FileInfo) bool {
+func (cache *markdownIndexCache) markSeen(path string, info os.FileInfo) {
 	if cache == nil {
-		return markdownFilePinned(path)
+		return
 	}
-
 	cache.mu.Lock()
 	if entry, ok := cache.entries[path]; ok &&
 		entry.modTime.Equal(info.ModTime()) &&
 		entry.size == info.Size() {
 		cache.mu.Unlock()
-		return entry.pinned
+		return
 	}
-	cache.mu.Unlock()
 
-	pinned := markdownFilePinned(path)
-
-	cache.mu.Lock()
 	if cache.entries == nil {
 		cache.entries = map[string]markdownIndexCacheEntry{}
 	}
 	cache.entries[path] = markdownIndexCacheEntry{
 		modTime: info.ModTime(),
 		size:    info.Size(),
-		pinned:  pinned,
 	}
 	cache.mu.Unlock()
-
-	return pinned
 }
 
 func (cache *markdownIndexCache) prune(seen map[string]struct{}) {
@@ -1545,41 +1535,6 @@ func (cache *markdownIndexCache) prune(seen map[string]struct{}) {
 			delete(cache.entries, path)
 		}
 	}
-}
-
-func markdownFilePinned(path string) bool {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return false
-	}
-
-	text := strings.ReplaceAll(string(content), "\r\n", "\n")
-	lines := strings.Split(text, "\n")
-	if len(lines) == 0 || strings.TrimSpace(lines[0]) != "---" {
-		return false
-	}
-
-	for _, line := range lines[1:] {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "---" {
-			return false
-		}
-
-		key, value, found := strings.Cut(trimmed, ":")
-		if !found || !strings.EqualFold(strings.TrimSpace(key), "pinned") {
-			continue
-		}
-
-		normalizedValue := strings.ToLower(
-			strings.Trim(strings.TrimSpace(value), `"'`),
-		)
-
-		return normalizedValue == "true" ||
-			normalizedValue == "yes" ||
-			normalizedValue == "1"
-	}
-
-	return false
 }
 
 func openBrowser(url string) error {

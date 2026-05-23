@@ -435,11 +435,27 @@ position:absolute;
 .doc-link {
 	color: #d0ff00;
 	text-decoration: none;
-	display: block;
+	align-items:center;
+	display:flex;
+	gap:8px;
+	justify-content:space-between;
 	padding: 4px 8px;
 	border-radius: 4px;
 	transition: background 0.2s;
 	margin-bottom: 2px;
+}
+
+.doc-link-label {
+	flex:1 1 auto;
+	min-width:0;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+
+.doc-link .search-result-meta {
+	flex:1 0 100%;
+	order:3;
 }
 
 .doc-link:hover {
@@ -475,18 +491,6 @@ position:absolute;
 	position:relative;
 }
 
-.pinned-doc-link::before {
-	content:"";
-	display:inline-block;
-	width:7px;
-	height:7px;
-	border-radius:50%;
-	background:var(--accent);
-	box-shadow:0 0 9px rgba(var(--accent-rgb), .45);
-	margin-right:8px;
-	vertical-align:1px;
-}
-
 .folder-item {
 	margin-bottom: 5px;
 }
@@ -499,6 +503,7 @@ position:absolute;
 	color: rgba(255,255,255,.45);
 	display: block;
 	font-size: .72rem;
+	grid-column:1 / -1;
 	line-height: 1.35;
 	margin-top: 4px;
 	overflow-wrap: anywhere;
@@ -1295,6 +1300,25 @@ scroll-behavior:smooth;
 	gap:8px;
 }
 
+.pinned-scripts {
+	border-bottom:1px solid var(--border);
+	display:grid;
+	gap:7px;
+	padding-bottom:14px;
+}
+
+.pinned-scripts-title {
+	color:var(--muted);
+	font-size:.68rem;
+	font-weight:900;
+	letter-spacing:1.8px;
+	text-transform:uppercase;
+}
+
+.pinned-script-link::before {
+	display:none;
+}
+
 .script-tree-root {
 	display:grid;
 	gap:8px;
@@ -1346,8 +1370,10 @@ scroll-behavior:smooth;
 	border:1px solid rgba(var(--accent-rgb), .13);
 	color:var(--accent);
 	cursor:pointer;
+	align-items:center;
 	display:grid;
 	gap:6px;
+	grid-template-columns:minmax(0, 1fr) auto;
 	padding:12px;
 	text-align:left;
 	transition:background .2s, border-color .2s;
@@ -1362,6 +1388,37 @@ scroll-behavior:smooth;
 .script-tree-file strong {
 	color:var(--accent);
 	font-size:.9rem;
+	min-width:0;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+
+.pin-toggle {
+	align-items:center;
+	background:transparent;
+	border:1px solid rgba(var(--accent-rgb), .28);
+	color:var(--text-muted);
+	cursor:pointer;
+	display:inline-flex;
+	flex:0 0 auto;
+	font:inherit;
+	font-size:.78rem;
+	font-weight:900;
+	height:24px;
+	justify-content:center;
+	line-height:1;
+	padding:0;
+	transition:background .2s, border-color .2s, color .2s, box-shadow .2s;
+	width:24px;
+}
+
+.pin-toggle:hover,
+.pin-toggle.active {
+	background:rgba(var(--accent-rgb), .12);
+	border-color:rgba(var(--accent-rgb), .56);
+	color:var(--accent);
+	box-shadow:0 0 10px rgba(var(--accent-rgb), .18);
 }
 
 .script-tree-file small {

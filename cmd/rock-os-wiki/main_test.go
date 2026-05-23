@@ -314,7 +314,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 
 	if err := os.WriteFile(
 		filepath.Join(markdownRoot, "Fresh.md"),
-		[]byte("---\npinned: true\n---\n# Fresh\n"),
+		[]byte("# Fresh\n"),
 		0o644,
 	); err != nil {
 		t.Fatal(err)
@@ -338,12 +338,12 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "markdown/Fresh.md" || !files[0].Pinned {
+	if files[0].Path != "markdown/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
 
-func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
+func TestCollectMarkdownFilesCachesMetadata(t *testing.T) {
 	siteRoot := t.TempDir()
 	markdownRoot := filepath.Join(siteRoot, markdownDir)
 	if err := os.MkdirAll(markdownRoot, 0o755); err != nil {
@@ -351,7 +351,7 @@ func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
 	}
 
 	docPath := filepath.Join(markdownRoot, "Pinned.md")
-	if err := os.WriteFile(docPath, []byte("---\npinned: true\n---\n# Pinned\n"), 0o644); err != nil {
+	if err := os.WriteFile(docPath, []byte("# Pinned\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -361,8 +361,8 @@ func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 || !files[0].Pinned {
-		t.Fatalf("expected pinned file in index, got %#v", files)
+	if len(files) != 1 {
+		t.Fatalf("expected one file in index, got %#v", files)
 	}
 
 	updatedTime := time.Now().Add(2 * time.Second)
@@ -378,8 +378,8 @@ func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 || files[0].Pinned {
-		t.Fatalf("expected changed file to refresh pinned status, got %#v", files)
+	if len(files) != 1 {
+		t.Fatalf("expected changed file to refresh cache, got %#v", files)
 	}
 }
 
@@ -391,7 +391,7 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 	}
 
 	docPath := filepath.Join(markdownRoot, "DeleteMe.md")
-	if err := os.WriteFile(docPath, []byte("---\npinned: true\n---\n# Delete me\n"), 0o644); err != nil {
+	if err := os.WriteFile(docPath, []byte("# Delete me\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

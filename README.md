@@ -88,13 +88,13 @@ copy and prints a warning.
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
-- Local script dashboard with search, preview, guarded run buttons, and OS terminal launch
+- Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
-- Pinned docs from markdown frontmatter appear at the top of the sidebar
+- Personal wiki and script pins appear at the top of each sidebar
 - Auto-generated table of contents for longer markdown documents
 - Internal markdown links open through the wiki page route
 - Missing internal markdown links are visibly marked as broken
@@ -655,19 +655,15 @@ Direct wiki URLs look like this:
 wiki.html?doc=markdown/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
-## Pinned Docs
+## Personal Pins
 
-Add frontmatter to the top of any markdown file to pin it above the normal
-sidebar tree:
+The wiki and script dashboard both include small pin buttons beside each item.
+Pinned items appear above the normal sidebar tree while still remaining in their
+regular folder location.
 
-```markdown
----
-pinned: true
----
-```
-
-Pinned docs still appear in their normal folder location. The pin travels with
-the markdown file because it is stored in the file itself, not in browser state.
+Pins are personal browser settings stored in `localStorage`. They do not edit
+markdown files, do not edit scripts, do not create Git changes, and are not
+shared automatically with other browsers or devices on the LAN.
 
 ## Offline Assets
 

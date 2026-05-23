@@ -14,16 +14,21 @@ const scriptSearchInput =
     document.getElementById('scriptSearchInput');
 const scriptSearchStatus =
     document.getElementById('scriptSearchStatus');
+const pinnedScriptsStorageKey =
+    'rock-os-pinned-scripts';
 
 let selectedScript = null;
 let allScripts = [];
 let scriptRunInProgress = false;
 const launchedScriptIds = new Set();
+let pinnedScriptIds = new Set();
 let scriptSearchQuery = '';
 let scriptSearchResults = [];
 let scriptSearchLoading = false;
 let scriptSearchDebounceTimer = null;
 let scriptSearchRequestId = 0;
+
+loadPinnedScripts();
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -39,6 +44,55 @@ function escapeHTML(value) {
 
 function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function loadPinnedScripts() {
+    try {
+        const saved =
+            JSON.parse(
+                localStorage.getItem(pinnedScriptsStorageKey) || '[]'
+            );
+
+        pinnedScriptIds =
+            new Set(
+                Array.isArray(saved)
+                    ? saved.filter(id => typeof id === 'string')
+                    : []
+            );
+    }
+    catch (err) {
+        console.warn('Could not load pinned scripts:', err);
+        pinnedScriptIds =
+            new Set();
+    }
+}
+
+function savePinnedScripts() {
+    try {
+        localStorage.setItem(
+            pinnedScriptsStorageKey,
+            JSON.stringify(Array.from(pinnedScriptIds))
+        );
+    }
+    catch (err) {
+        console.warn('Could not save pinned scripts:', err);
+    }
+}
+
+function isScriptPinned(id) {
+    return pinnedScriptIds.has(id);
+}
+
+function toggleScriptPin(id) {
+    if (isScriptPinned(id)) {
+        pinnedScriptIds.delete(id);
+    }
+    else {
+        pinnedScriptIds.add(id);
+    }
+
+    savePinnedScripts();
+    renderCurrentScriptList();
 }
 
 function highlightSearchQuery(text, query) {
@@ -213,7 +267,45 @@ function scriptButton(script) {
         document.createElement('strong');
     name.textContent = script.name;
 
-    button.append(name);
+    const pinButton =
+        document.createElement('span');
+    pinButton.className =
+        'pin-toggle';
+    pinButton.classList.toggle(
+        'active',
+        isScriptPinned(script.id)
+    );
+    pinButton.setAttribute(
+        'role',
+        'button'
+    );
+    pinButton.setAttribute(
+        'aria-label',
+        isScriptPinned(script.id) ? 'Unpin script' : 'Pin script'
+    );
+    pinButton.title =
+        isScriptPinned(script.id) ? 'Unpin script' : 'Pin script';
+    pinButton.textContent =
+        '⌖';
+
+    pinButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleScriptPin(script.id);
+    });
+    pinButton.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        toggleScriptPin(script.id);
+    });
+    pinButton.tabIndex =
+        0;
+
+    button.append(name, pinButton);
     button.addEventListener('click', () => selectScript(script));
 
     return button;
@@ -305,6 +397,8 @@ function renderScriptTree(scripts) {
         return;
     }
 
+    renderPinnedScripts(scripts);
+
     const root =
         document.createElement('div');
     root.className = 'script-tree-root';
@@ -341,6 +435,67 @@ function renderScriptTree(scripts) {
 
     scriptList.appendChild(root);
     updateToggleAllScriptsButton();
+}
+
+function renderCurrentScriptList() {
+    if (scriptSearchQuery.trim()) {
+        if (scriptSearchResults.length || !scriptSearchLoading) {
+            renderScriptSearchResults();
+        }
+        return;
+    }
+
+    renderScriptTree(allScripts);
+}
+
+function pinnedScripts(scripts) {
+    return scripts
+        .filter(script => isScriptPinned(script.id))
+        .sort((first, second) =>
+            first.name.localeCompare(second.name, undefined, {
+                sensitivity: 'base'
+            })
+        );
+}
+
+function renderPinnedScripts(scripts) {
+    const pinned =
+        pinnedScripts(scripts);
+
+    if (!pinned.length) {
+        return;
+    }
+
+    const section =
+        document.createElement('section');
+    section.className =
+        'pinned-scripts';
+    section.setAttribute('aria-label', 'Pinned scripts');
+
+    const title =
+        document.createElement('div');
+    title.className =
+        'pinned-scripts-title';
+    title.textContent =
+        'Pinned';
+
+    section.appendChild(title);
+
+    pinned.forEach(script => {
+        const button =
+            scriptButton(script);
+
+        button.classList.add('pinned-script-link');
+        button.classList.toggle(
+            'active',
+            selectedScript &&
+            selectedScript.id === script.id
+        );
+
+        section.appendChild(button);
+    });
+
+    scriptList.appendChild(section);
 }
 
 function scheduleScriptSearch() {
@@ -486,8 +641,13 @@ function renderScriptSearchResults() {
             selectedScript &&
             selectedScript.id === script.id
         );
-        button.innerHTML =
-            `${escapeHTML(result.name)}<span class="search-result-meta">${escapeHTML(result.path)}</span>`;
+        const meta =
+            document.createElement('span');
+        meta.className =
+            'search-result-meta';
+        meta.textContent =
+            result.path;
+        button.appendChild(meta);
 
         scriptList.appendChild(button);
 
