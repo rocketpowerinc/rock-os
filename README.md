@@ -671,6 +671,8 @@ icons, favicons, Apple touch icons, and manifest icons are stored inside the
 repo under `Website/assets` or embedded directly in the local HTML/JS/CSS.
 
 The site does not need external icon CDNs or remote assets for the wiki UI.
+Wiki code highlighting is also local: Highlight.js and the Bash/PowerShell
+language files are vendored under `Website/js/vendor/`.
 
 ## Markdown And Media
 
