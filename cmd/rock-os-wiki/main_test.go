@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestScriptRunRequestAllowedRequiresRockOSHeader(t *testing.T) {
@@ -155,6 +156,85 @@ func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
 
 	if recorder.Code == http.StatusOK {
 		t.Fatal("path traversal request was allowed")
+	}
+}
+
+func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
+	siteRoot := t.TempDir()
+	markdownRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(markdownRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(markdownRoot, "Pinned.md")
+	if err := os.WriteFile(docPath, []byte("---\npinned: true\n---\n# Pinned\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := &markdownIndexCache{entries: map[string]markdownIndexCacheEntry{}}
+	files, err := collectMarkdownFilesWithCache(siteRoot, cache)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 1 || !files[0].Pinned {
+		t.Fatalf("expected pinned file in index, got %#v", files)
+	}
+
+	updatedTime := time.Now().Add(2 * time.Second)
+	if err := os.WriteFile(docPath, []byte("# Not pinned\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(docPath, updatedTime, updatedTime); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err = collectMarkdownFilesWithCache(siteRoot, cache)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 1 || files[0].Pinned {
+		t.Fatalf("expected changed file to refresh pinned status, got %#v", files)
+	}
+}
+
+func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
+	siteRoot := t.TempDir()
+	markdownRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(markdownRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(markdownRoot, "DeleteMe.md")
+	if err := os.WriteFile(docPath, []byte("---\npinned: true\n---\n# Delete me\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cache := &markdownIndexCache{entries: map[string]markdownIndexCacheEntry{}}
+	if _, err := collectMarkdownFilesWithCache(siteRoot, cache); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cache.entries) != 1 {
+		t.Fatalf("expected one cache entry, got %d", len(cache.entries))
+	}
+
+	if err := os.Remove(docPath); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := collectMarkdownFilesWithCache(siteRoot, cache)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 0 {
+		t.Fatalf("expected deleted file to leave index, got %#v", files)
+	}
+
+	if len(cache.entries) != 0 {
+		t.Fatalf("expected deleted file cache entry to be pruned, got %d", len(cache.entries))
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/yuin/goldmark"
@@ -57,6 +58,21 @@ type wikiDocResponse struct {
 	Path       string `json:"path"`
 	HTML       string `json:"html"`
 	LastEdited string `json:"lastEdited,omitempty"`
+}
+
+type markdownIndexCacheEntry struct {
+	modTime time.Time
+	size    int64
+	pinned  bool
+}
+
+type markdownIndexCache struct {
+	mu      sync.Mutex
+	entries map[string]markdownIndexCacheEntry
+}
+
+var globalMarkdownIndexCache = &markdownIndexCache{
+	entries: map[string]markdownIndexCacheEntry{},
 }
 
 var wikiMarkdown = goldmark.New(
@@ -957,10 +973,16 @@ func writeMarkdownIndex(siteRoot string) (bool, error) {
 }
 
 func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectMarkdownFilesWithCache(siteRoot, globalMarkdownIndexCache)
+}
+
+func collectMarkdownFilesWithCache(siteRoot string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {
 	root := filepath.Join(siteRoot, markdownDir)
 	files := []markdownIndexEntry{}
+	seen := map[string]struct{}{}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
+		cache.prune(seen)
 		return files, nil
 	}
 
@@ -977,14 +999,25 @@ func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
 			return nil
 		}
 
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+
 		relativePath, err := filepath.Rel(siteRoot, path)
 		if err != nil {
 			return err
 		}
 
+		absolutePath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		seen[absolutePath] = struct{}{}
+
 		files = append(files, markdownIndexEntry{
 			Path:   filepath.ToSlash(relativePath),
-			Pinned: markdownFilePinned(path),
+			Pinned: cache.markdownFilePinned(absolutePath, info),
 		})
 		return nil
 	})
@@ -992,11 +1025,58 @@ func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
 		return nil, err
 	}
 
+	cache.prune(seen)
+
 	sort.Slice(files, func(i, j int) bool {
 		return strings.ToLower(files[i].Path) < strings.ToLower(files[j].Path)
 	})
 
 	return files, nil
+}
+
+func (cache *markdownIndexCache) markdownFilePinned(path string, info os.FileInfo) bool {
+	if cache == nil {
+		return markdownFilePinned(path)
+	}
+
+	cache.mu.Lock()
+	if entry, ok := cache.entries[path]; ok &&
+		entry.modTime.Equal(info.ModTime()) &&
+		entry.size == info.Size() {
+		cache.mu.Unlock()
+		return entry.pinned
+	}
+	cache.mu.Unlock()
+
+	pinned := markdownFilePinned(path)
+
+	cache.mu.Lock()
+	if cache.entries == nil {
+		cache.entries = map[string]markdownIndexCacheEntry{}
+	}
+	cache.entries[path] = markdownIndexCacheEntry{
+		modTime: info.ModTime(),
+		size:    info.Size(),
+		pinned:  pinned,
+	}
+	cache.mu.Unlock()
+
+	return pinned
+}
+
+func (cache *markdownIndexCache) prune(seen map[string]struct{}) {
+	if cache == nil {
+		return
+	}
+
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	for path := range cache.entries {
+		if _, ok := seen[path]; !ok {
+			delete(cache.entries, path)
+		}
+	}
 }
 
 func markdownFilePinned(path string) bool {
