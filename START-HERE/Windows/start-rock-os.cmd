@@ -1,8 +1,90 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 
+goto :main
+
+:green
+set "ROCK_OS_MSG=%~1"
+powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Green" 2>nul
+if errorlevel 1 echo %~1
+exit /b 0
+
+:yellow
+set "ROCK_OS_MSG=%~1"
+powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Yellow" 2>nul
+if errorlevel 1 echo %~1
+exit /b 0
+
+:red
+set "ROCK_OS_MSG=%~1"
+powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Red" 2>nul
+if errorlevel 1 echo %~1
+exit /b 0
+
+:pull_updates
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    call :yellow "Git is not installed. Skipping repo update and using local files."
+    exit /b 0
+)
+call :green "Checking for Rock-OS repo updates..."
+git -C "%ROCK_OS_ROOT%" pull --ff-only >nul 2>nul
+if errorlevel 1 (
+    call :yellow "Could not update from GitHub. Continuing with local files."
+    call :yellow "If you have local changes, commit them before pulling updates."
+    exit /b 0
+)
+call :green "Rock-OS repo is up to date."
+exit /b 0
+
+:check_release_binary
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $repo=$env:ROCK_OS_REPO; $stableAsset=$env:ROCK_OS_STABLE_ASSET; $versionFile=$env:ROCK_OS_VERSION_FILE; $arch=$env:ROCK_OS_ARCH; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $release=Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/releases/latest' -f $repo) -Headers @{'User-Agent'='rock-os-start-script'}; $tag=$release.tag_name; $versionedAsset=('rock-os-wiki-{0}-windows-{1}.exe' -f $tag,$arch); $local=''; if (Test-Path $versionFile) { $local=(Get-Content $versionFile -Raw).Trim() }; if ((-not (Test-Path $stableAsset)) -or ($local -ne $tag)) { Write-Host ('Downloading Rock-OS {0} for Windows {1}...' -f $tag,$arch) -ForegroundColor Yellow; $downloaded=$false; foreach ($asset in @($stableAsset,$versionedAsset)) { $tempFile=('{0}.download' -f $asset); if (Test-Path $tempFile) { Remove-Item $tempFile -Force }; try { Invoke-WebRequest -Uri ('https://github.com/{0}/releases/latest/download/{1}' -f $repo,$asset) -OutFile $tempFile -Headers @{'User-Agent'='rock-os-start-script'}; if ((Test-Path $tempFile) -and ((Get-Item $tempFile).Length -gt 0)) { Move-Item $tempFile $stableAsset -Force; Set-Content -Path $versionFile -Value $tag -NoNewline; Write-Host ('Downloaded Rock-OS {0}.' -f $tag) -ForegroundColor Green; $downloaded=$true; break } } catch { if (Test-Path $tempFile) { Remove-Item $tempFile -Force } } }; if (-not $downloaded) { exit 1 } } else { Write-Host ('Rock-OS binary is current ({0}).' -f $tag) -ForegroundColor Green }" 2>nul
+exit /b %ERRORLEVEL%
+
+:check_git_crypt
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git-crypt -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    call :red "git-crypt is not installed. Install git-crypt before unlocking Private markdown."
+    exit /b 0
+)
+call :green "git-crypt is installed."
+exit /b 0
+
+:check_private
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git -C .. ls-files -- 'Website/markdown/Private' 2>$null; if (-not $files) { exit 0 }; foreach ($file in $files) { $path=Join-Path '..' $file; if (Test-Path $path) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $path)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
+if errorlevel 2 (
+    call :red "Private Markdown Folder Locked."
+    exit /b 0
+)
+if errorlevel 1 (
+    call :yellow "Could not verify private markdown unlock status."
+    exit /b 0
+)
+call :green "Private Markdown Folder Unlocked."
+exit /b 0
+
+:check_go
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    if defined ROCK_OS_BINARY (
+        call :yellow "Go is not installed. Not needed while using a release binary."
+    ) else (
+        call :red "Go is not installed. Install Go from https://go.dev/dl/ before using source fallback."
+    )
+    exit /b 0
+)
+call :green "Go is installed."
+exit /b 0
+
+:wait
+echo.
+pause
+exit /b 0
+
+:main
 for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
 
+set "ROCK_OS_EXIT=0"
 set "ROCK_OS_HOST=127.0.0.1"
 if /I "%~1"=="lan" set "ROCK_OS_HOST=local"
 if /I "%~1"=="local" set "ROCK_OS_HOST=local"
@@ -24,6 +106,11 @@ if not exist "%ROCK_OS_ROOT%\.git" (
 call :pull_updates
 
 cd /d "%ROCK_OS_ROOT%\Website"
+if errorlevel 1 (
+    call :red "Could not enter the Website folder."
+    call :wait
+    exit /b 1
+)
 
 set "ROCK_OS_REPO=rocketpowerinc/rock-os"
 set "ROCK_OS_VERSION_FILE=.rock-os-wiki-version"
@@ -48,7 +135,7 @@ if /I "%ROCK_OS_ARCH%"=="ARM64" (
 set "ROCK_OS_STABLE_ASSET=rock-os-wiki-windows-%ROCK_OS_ARCH%.exe"
 call :green "Detected Windows %ROCK_OS_ARCH%."
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $repo=$env:ROCK_OS_REPO; $stableAsset=$env:ROCK_OS_STABLE_ASSET; $versionFile=$env:ROCK_OS_VERSION_FILE; $arch=$env:ROCK_OS_ARCH; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $release=Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/releases/latest' -f $repo) -Headers @{'User-Agent'='rock-os-start-script'}; $tag=$release.tag_name; $versionedAsset=('rock-os-wiki-{0}-windows-{1}.exe' -f $tag,$arch); $local=''; if (Test-Path $versionFile) { $local=(Get-Content $versionFile -Raw).Trim() }; if ((-not (Test-Path $stableAsset)) -or ($local -ne $tag)) { Write-Host ('Downloading Rock-OS {0} for Windows {1}...' -f $tag,$arch) -ForegroundColor Yellow; $downloaded=$false; foreach ($asset in @($stableAsset,$versionedAsset)) { $tempFile=('{0}.download' -f $asset); if (Test-Path $tempFile) { Remove-Item $tempFile -Force }; try { Invoke-WebRequest -Uri ('https://github.com/{0}/releases/latest/download/{1}' -f $repo,$asset) -OutFile $tempFile -Headers @{'User-Agent'='rock-os-start-script'}; if ((Test-Path $tempFile) -and ((Get-Item $tempFile).Length -gt 0)) { Move-Item $tempFile $stableAsset -Force; Set-Content -Path $versionFile -Value $tag -NoNewline; Write-Host ('Downloaded Rock-OS {0}.' -f $tag) -ForegroundColor Green; $downloaded=$true; break } } catch { if (Test-Path $tempFile) { Remove-Item $tempFile -Force } } }; if (-not $downloaded) { exit 1 } } else { Write-Host ('Rock-OS binary is current ({0}).' -f $tag) -ForegroundColor Green }" 2>nul
+call :check_release_binary
 if errorlevel 1 (
     call :yellow "Could not check or download the latest Rock-OS binary. Continuing with local files..."
 )
@@ -96,77 +183,3 @@ if defined ROCK_OS_BINARY (
 
 call :wait
 exit /b %ROCK_OS_EXIT%
-
-:green
-set "ROCK_OS_MSG=%~1"
-powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Green" 2>nul
-if errorlevel 1 echo %~1
-exit /b 0
-
-:yellow
-set "ROCK_OS_MSG=%~1"
-powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Yellow" 2>nul
-if errorlevel 1 echo %~1
-exit /b 0
-
-:red
-set "ROCK_OS_MSG=%~1"
-powershell -NoProfile -Command "Write-Host $env:ROCK_OS_MSG -ForegroundColor Red" 2>nul
-if errorlevel 1 echo %~1
-exit /b 0
-
-:pull_updates
-powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
-if errorlevel 1 (
-    call :yellow "Git is not installed. Skipping repo update and using local files."
-    exit /b 0
-)
-call :green "Checking for Rock-OS repo updates..."
-git -C "%ROCK_OS_ROOT%" pull --ff-only >nul
-if errorlevel 1 (
-    call :yellow "Could not update from GitHub. Continuing with local files."
-    call :yellow "If you have local changes, commit them before pulling updates."
-    exit /b 0
-)
-call :green "Rock-OS repo is up to date."
-exit /b 0
-
-:check_git_crypt
-powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git-crypt -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
-if errorlevel 1 (
-    call :red "git-crypt is not installed. Install git-crypt before unlocking Private markdown."
-    exit /b 0
-)
-call :green "git-crypt is installed."
-exit /b 0
-
-:check_go
-powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
-if errorlevel 1 (
-    if defined ROCK_OS_BINARY (
-        call :yellow "Go is not installed. Not needed while using a release binary."
-    ) else (
-        call :red "Go is not installed. Install Go from https://go.dev/dl/ before using source fallback."
-    )
-    exit /b 0
-)
-call :green "Go is installed."
-exit /b 0
-
-:check_private
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git -C .. ls-files -- 'Website/markdown/Private' 2>$null; if (-not $files) { exit 0 }; foreach ($file in $files) { $path=Join-Path '..' $file; if (Test-Path $path) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $path)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
-if errorlevel 2 (
-    call :red "Private Markdown Folder Locked."
-    exit /b 0
-)
-if errorlevel 1 (
-    call :yellow "Could not verify private markdown unlock status."
-    exit /b 0
-)
-call :green "Private Markdown Folder Unlocked."
-exit /b 0
-
-:wait
-echo.
-pause
-exit /b 0
