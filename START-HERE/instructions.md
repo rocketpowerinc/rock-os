@@ -16,16 +16,16 @@ same jobs, but use the correct file type and terminal behavior for that system.
 
 ## Quick Picks
 
-| What you want to do | Windows | Linux | Mac |
-| --- | --- | --- | --- |
-| Install Rock-OS and create the `rock-os` command | `Windows/install-rock-os.ps1` | `Linux/install-rock-os.sh` | `Mac/install-rock-os.sh` |
-| Start Rock-OS normally | `Windows/start-rock-os.cmd` | `Linux/start-rock-os.sh` | `Mac/start-rock-os.sh` |
-| Start Rock-OS from Go source | `Windows/start-rock-os-from-source.cmd` | `Linux/start-rock-os-from-source.sh` | `Mac/start-rock-os-from-source.sh` |
-| Start from Go source in LAN mode | `Windows/start-rock-os-from-source-lan.cmd` | `Linux/start-rock-os-from-source-lan.sh` | `Mac/start-rock-os-from-source-lan.sh` |
-| Stop Rock-OS on port 8000 | `Windows/stop-rock-os.cmd` | `Linux/stop-rock-os.sh` | `Mac/stop-rock-os.sh` |
-| Check repo and private markdown status | `Windows/repo-status.cmd` | `Linux/repo-status.sh` | `Mac/repo-status.sh` |
-| Unlock private markdown | `Windows/unlock-git-crypt.cmd` | `Linux/unlock-git-crypt.sh` | `Mac/unlock-git-crypt.sh` |
-| Re-lock private markdown | `Windows/lock-git-crypt.cmd` | `Linux/lock-git-crypt.sh` | `Mac/lock-git-crypt.sh` |
+| What you want to do                                             | Windows                                     | Linux                                    | Mac                                    |
+| --------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | -------------------------------------- |
+| Install Rock-OS and create the `rock-os` command + Desktop Icon | `Windows/install-rock-os.ps1`               | `Linux/install-rock-os.sh`               | `Mac/install-rock-os.sh`               |
+| Start Rock-OS normally                                          | `Windows/start-rock-os.cmd`                 | `Linux/start-rock-os.sh`                 | `Mac/start-rock-os.sh`                 |
+| Start Rock-OS from Go source                                    | `Windows/start-rock-os-from-source.cmd`     | `Linux/start-rock-os-from-source.sh`     | `Mac/start-rock-os-from-source.sh`     |
+| Start from Go source in LAN mode                                | `Windows/start-rock-os-from-source-lan.cmd` | `Linux/start-rock-os-from-source-lan.sh` | `Mac/start-rock-os-from-source-lan.sh` |
+| Stop Rock-OS on port 8000                                       | `Windows/stop-rock-os.cmd`                  | `Linux/stop-rock-os.sh`                  | `Mac/stop-rock-os.sh`                  |
+| Check repo and private markdown status                          | `Windows/repo-status.cmd`                   | `Linux/repo-status.sh`                   | `Mac/repo-status.sh`                   |
+| Unlock private markdown                                         | `Windows/unlock-git-crypt.cmd`              | `Linux/unlock-git-crypt.sh`              | `Mac/unlock-git-crypt.sh`              |
+| Re-lock private markdown                                        | `Windows/lock-git-crypt.cmd`                | `Linux/lock-git-crypt.sh`                | `Mac/lock-git-crypt.sh`                |
 
 ## Install Scripts
 
@@ -39,7 +39,7 @@ What it does:
 - Clones the Rock-OS repo into your home folder if it is not already there.
 - If the repo already exists, updates it with a safe fast-forward pull.
 - Creates a `rock-os` terminal command.
-- Creates a desktop launcher where the operating system supports it.
+- Creates a desktop launcher icon where the operating system supports it.
 - Starts Rock-OS when the install finishes.
 
 Run it from the internet with the one-liners in the main README, or run the

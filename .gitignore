@@ -61,6 +61,8 @@ coverage/
 .vite/
 
 # Project-specific local artifacts
+.gotest-cache/
+.release/
 Website/markdown-index.json
 Website/.rock-os-wiki-version
 Website/*.download

@@ -8,20 +8,23 @@ cd "$REPO_ROOT"
 if ! command -v git-crypt >/dev/null 2>&1; then
     echo "git-crypt was not found."
     echo "Install git-crypt, then run this script again."
+    echo "Repo root: $REPO_ROOT"
     exit 1
 fi
 
 set -- ./*.key
 
 if [ "$1" = "./*.key" ]; then
-    echo "No .key file was found in the repo root."
-    echo "Copy your exported git-crypt key here, then run this script again."
+    echo "No .key file was found in the repo root:"
+    echo "$REPO_ROOT"
+    echo "Copy your exported git-crypt key to the repo root folder, then run this script again."
     exit 1
 fi
 
 if [ "$#" -gt 1 ]; then
-    echo "More than one .key file was found in the repo root."
-    echo "Keep only the git-crypt key here, then run this script again."
+    echo "More than one .key file was found in the repo root:"
+    echo "$REPO_ROOT"
+    echo "Keep only the git-crypt key in that folder, then run this script again."
     exit 1
 fi
 
@@ -46,4 +49,4 @@ if [ "$unlock_result" -ne 0 ]; then
 fi
 
 echo "Repository unlocked."
-echo "Key restored to ./$key_name."
+echo "Key restored to $REPO_ROOT/$key_name."

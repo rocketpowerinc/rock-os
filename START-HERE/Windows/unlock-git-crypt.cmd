@@ -12,6 +12,7 @@ if errorlevel 1 (
     ) else (
     echo git-crypt was not found.
     echo Install git-crypt, then run this script again.
+    echo Repo root: "%ROCK_OS_ROOT%"
     call :wait
     exit /b 1
     )
@@ -24,16 +25,18 @@ for %%F in (*.key) do (
         set "KEY_FILE=%%~fF"
         set "KEY_NAME=%%~nxF"
     ) else (
-        echo More than one .key file was found in the repo root.
-        echo Keep only the git-crypt key here, then run this script again.
+        echo More than one .key file was found in the repo root:
+        echo "%ROCK_OS_ROOT%"
+        echo Keep only the git-crypt key in that folder, then run this script again.
         call :wait
         exit /b 1
     )
 )
 
 if not defined KEY_FILE (
-    echo No .key file was found in the repo root.
-    echo Copy your exported git-crypt key here, then run this script again.
+    echo No .key file was found in the repo root:
+    echo "%ROCK_OS_ROOT%"
+    echo Copy your exported git-crypt key to the repo root folder, then run this script again.
     call :wait
     exit /b 1
 )
@@ -78,6 +81,7 @@ if not "%UNLOCK_RESULT%"=="0" (
 echo Repository unlocked.
 echo Key restored to "%ROCK_OS_ROOT%\%KEY_NAME%".
 call :wait
+exit /b 0
 
 :wait
 echo.

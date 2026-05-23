@@ -18,7 +18,9 @@ if errorlevel 1 (
 )
 
 if not exist ".git" (
-    echo This script must be run from the Rock-OS repo root.
+    echo This script must be run from inside a cloned Rock-OS repo.
+    echo Expected repo root:
+    echo "%ROCK_OS_ROOT%"
     call :wait
     exit /b 1
 )
@@ -36,6 +38,7 @@ if not "%LOCK_RESULT%"=="0" (
 
 echo Repository locked.
 call :wait
+exit /b 0
 
 :wait
 echo.
