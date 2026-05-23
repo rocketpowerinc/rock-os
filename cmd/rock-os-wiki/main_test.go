@@ -525,3 +525,74 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected scriptsCount to be 1, got %d", status3.ScriptsCount)
 	}
 }
+
+func TestResolveBootstrapDoc(t *testing.T) {
+	siteRoot := t.TempDir()
+	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
+	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(bootstrapsRoot, "Setup.md")
+	if err := os.WriteFile(docPath, []byte("# Setup"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Normal resolve
+	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "bootstraps/Setup.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resolvedPath != "bootstraps/Setup.md" {
+		t.Errorf("expected bootstraps/Setup.md, got %q", resolvedPath)
+	}
+	if !strings.HasSuffix(fullPath, "Setup.md") {
+		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
+	}
+
+	// Path traversal check
+	_, _, err = resolveBootstrapDoc(siteRoot, "bootstraps/../secret.md")
+	if err == nil {
+		t.Error("expected error for path traversal attempt")
+	}
+
+	// Non-markdown file check
+	_, _, err = resolveBootstrapDoc(siteRoot, "bootstraps/Setup.txt")
+	if err == nil {
+		t.Error("expected error for non-markdown extension")
+	}
+}
+
+func TestBootstrapsIndexHandler(t *testing.T) {
+	siteRoot := t.TempDir()
+	createTestWebsiteRoot(t, siteRoot)
+	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
+	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(bootstrapsRoot, "Install.md")
+	if err := os.WriteFile(docPath, []byte("# Install"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/bootstraps-index.json", nil)
+	rec := httptest.NewRecorder()
+	bootstrapsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 index entry, got %d", len(index))
+	}
+	if index[0].Path != "bootstraps/Install.md" {
+		t.Errorf("expected bootstraps/Install.md, got %q", index[0].Path)
+	}
+}

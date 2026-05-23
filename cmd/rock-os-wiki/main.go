@@ -30,9 +30,11 @@ import (
 )
 
 const (
-	indexFile   = "markdown-index.json"
-	markdownDir = "markdown"
-	scriptsDir  = "scripts"
+	indexFile           = "markdown-index.json"
+	markdownDir         = "markdown"
+	scriptsDir          = "scripts"
+	bootstrapsDir       = "bootstraps"
+	bootstrapsIndexFile = "bootstraps-index.json"
 )
 
 const (
@@ -115,6 +117,10 @@ var globalMarkdownIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
+var globalBootstrapsIndexCache = &markdownIndexCache{
+	entries: map[string]markdownIndexCacheEntry{},
+}
+
 var wikiMarkdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
@@ -171,6 +177,9 @@ func main() {
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
 	mux.HandleFunc("/markdown-index.json", markdownIndexHandler(siteRoot))
+	mux.HandleFunc("/api/bootstraps/doc", bootstrapsDocHandler(siteRoot))
+	mux.HandleFunc("/api/bootstraps/search", bootstrapsSearchHandler(siteRoot))
+	mux.HandleFunc("/bootstraps-index.json", bootstrapsIndexHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -447,7 +456,7 @@ func requestAcceptsGzip(r *http.Request) bool {
 }
 
 func shouldCompressPath(path string) bool {
-	if strings.HasPrefix(path, "/api/") || path == "/markdown-index.json" {
+	if strings.HasPrefix(path, "/api/") || path == "/markdown-index.json" || path == "/bootstraps-index.json" {
 		return true
 	}
 
@@ -1572,4 +1581,268 @@ func openBrowser(url string) error {
 	}
 
 	return exec.Command(command, args...).Start()
+}
+
+func collectBootstrapFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectBootstrapFilesWithCache(siteRoot, globalBootstrapsIndexCache)
+}
+
+func collectBootstrapFilesWithCache(siteRoot string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {
+	root := filepath.Join(siteRoot, bootstrapsDir)
+	files := []markdownIndexEntry{}
+	seen := map[string]struct{}{}
+
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		cache.prune(seen)
+		return files, nil
+	}
+
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if entry.IsDir() {
+			return nil
+		}
+
+		if !strings.EqualFold(filepath.Ext(entry.Name()), ".md") {
+			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+
+		relativePath, err := filepath.Rel(siteRoot, path)
+		if err != nil {
+			return err
+		}
+
+		absolutePath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		seen[absolutePath] = struct{}{}
+		cache.markSeen(absolutePath, info)
+
+		files = append(files, markdownIndexEntry{
+			Path: filepath.ToSlash(relativePath),
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cache.prune(seen)
+
+	sort.Slice(files, func(i, j int) bool {
+		return strings.ToLower(files[i].Path) < strings.ToLower(files[j].Path)
+	})
+
+	return files, nil
+}
+
+func writeBootstrapsIndex(siteRoot string) (bool, error) {
+	files, err := collectBootstrapFiles(siteRoot)
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON = append(nextJSON, '\n')
+
+	indexPath := filepath.Join(siteRoot, bootstrapsIndexFile)
+	previousJSON, err := os.ReadFile(indexPath)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	if bytes.Equal(previousJSON, nextJSON) {
+		return false, nil
+	}
+
+	return true, os.WriteFile(indexPath, nextJSON, 0o644)
+}
+
+func bootstrapsIndexHandler(siteRoot string) http.HandlerFunc {
+	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if _, err := writeBootstrapsIndex(siteRoot); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
+	}
+}
+
+func bootstrapsDocHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		docPath, path, err := resolveBootstrapDoc(siteRoot, r.URL.Query().Get("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "bootstrap document not found", http.StatusNotFound)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rendered bytes.Buffer
+		if err := wikiMarkdown.Convert(content, &rendered); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := wikiDocResponse{
+			Path: docPath,
+			HTML: rendered.String(),
+		}
+
+		if info, err := os.Stat(path); err == nil {
+			response.LastEdited = info.ModTime().Format(time.RFC3339)
+		}
+
+		writeJSON(w, response)
+	}
+}
+
+func resolveBootstrapDoc(siteRoot string, docPath string) (string, string, error) {
+	normalized := filepath.ToSlash(
+		filepath.Clean(
+			strings.ReplaceAll(docPath, "\\", "/"),
+		),
+	)
+	normalized = strings.TrimPrefix(normalized, "/")
+
+	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
+		return "", "", fmt.Errorf("bootstrap document path is required")
+	}
+
+	if !strings.HasPrefix(normalized, bootstrapsDir+"/") {
+		return "", "", fmt.Errorf("bootstrap document path must start with %s/", bootstrapsDir)
+	}
+
+	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
+		return "", "", fmt.Errorf("bootstrap document must be a .md file")
+	}
+
+	bootstrapsRoot, err := filepath.Abs(filepath.Join(siteRoot, bootstrapsDir))
+	if err != nil {
+		return "", "", err
+	}
+
+	target, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(normalized)))
+	if err != nil {
+		return "", "", err
+	}
+
+	relativeTarget, err := filepath.Rel(bootstrapsRoot, target)
+	if err != nil {
+		return "", "", err
+	}
+
+	if strings.HasPrefix(relativeTarget, "..") || relativeTarget == "." {
+		return "", "", fmt.Errorf("bootstrap document must stay inside %s", bootstrapsDir)
+	}
+
+	return normalized, target, nil
+}
+
+func bootstrapsSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := strings.TrimSpace(r.URL.Query().Get("q"))
+		if query == "" {
+			writeJSON(w, wikiSearchResponse{
+				Results: []wikiSearchResult{},
+			})
+			return
+		}
+
+		results, err := searchBootstraps(siteRoot, query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, wikiSearchResponse{
+			Results: results,
+		})
+	}
+}
+
+func searchBootstraps(siteRoot string, query string) ([]wikiSearchResult, error) {
+	files, err := collectBootstrapFiles(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedQuery := strings.ToLower(query)
+	results := []wikiSearchResult{}
+
+	for _, file := range files {
+		title := fileTitle(file.Path)
+		searchablePath := strings.ToLower(file.Path)
+		searchableTitle := strings.ToLower(title)
+
+		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
+			strings.Contains(searchableTitle, normalizedQuery)
+
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
+		}
+
+		text := string(content)
+		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
+		if !pathMatch && !contentMatch {
+			continue
+		}
+
+		result := wikiSearchResult{
+			Path:  file.Path,
+			Title: title,
+		}
+		if contentMatch {
+			result.Snippet = searchSnippet(text, normalizedQuery)
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
 }
