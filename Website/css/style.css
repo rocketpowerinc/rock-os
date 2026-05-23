@@ -1391,6 +1391,15 @@ scroll-behavior:smooth;
 	margin:0;
 }
 
+.script-run-used,
+.script-run-used:disabled {
+	background:rgba(120, 128, 136, .18);
+	border-color:rgba(120, 128, 136, .35);
+	color:rgba(170, 178, 186, .78);
+	cursor:not-allowed;
+	box-shadow:none;
+}
+
 .script-status {
 	background:rgba(var(--accent-rgb), .06);
 	border:1px solid rgba(var(--accent-rgb), .16);

@@ -63,6 +63,19 @@ type scriptRunRequest struct {
 	ID string `json:"id"`
 }
 
+type scriptSearchResponse struct {
+	Results []scriptSearchResult `json:"results"`
+}
+
+type scriptSearchResult struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	Runnable bool   `json:"runnable"`
+	Platform string `json:"platform"`
+	Snippet  string `json:"snippet,omitempty"`
+}
+
 type serverStatus struct {
 	Mode        string   `json:"mode"`
 	Host        string   `json:"host"`
@@ -151,6 +164,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/scripts", scriptsListHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
+	mux.HandleFunc("/api/scripts/search", scriptsSearchHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
@@ -172,7 +186,7 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println()
-	fmt.Println(colorize(ansiBold+ansiCyan, "[Rock-OS Wiki]"))
+	fmt.Println(colorize(ansiBold+ansiCyan, "[Rock-OS]"))
 	printStartupStatus(siteRoot, bindHost, address)
 	printStatus("OK", ansiGreen, "Open %s", url)
 	if len(displayHosts) > 1 {
@@ -260,19 +274,19 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Private markdown.")
 	}
 
+	if gitCryptKeyPresent(siteRoot) {
+		printStatus("WARN", ansiYellow, "git-crypt .key file present in repo root. Keep it private and never commit it.")
+	} else {
+		printStatus("INFO", ansiCyan, "git-crypt .key file in repo root is not present.")
+	}
+
 	switch privateMarkdownStatus(siteRoot) {
 	case "locked":
-		printStatus("WARN", ansiYellow, "Private Markdown Folder Locked.")
+		printStatus("INFO", ansiCyan, "Private Markdown Folder Locked.")
 	case "unlocked":
 		printStatus("OK", ansiGreen, "Private Markdown Folder Unlocked.")
 	default:
 		printStatus("INFO", ansiCyan, "Private Markdown Folder not found.")
-	}
-
-	if _, err := exec.LookPath("go"); err == nil {
-		printStatus("OK", ansiGreen, "Go installed. Source fallback available.")
-	} else {
-		printStatus("INFO", ansiCyan, "Go not found. Not needed when using a release binary.")
 	}
 
 	printStatus("OK", ansiGreen, "Request logging enabled.")
@@ -326,6 +340,16 @@ func privateMarkdownStatus(siteRoot string) string {
 	}
 
 	return "unlocked"
+}
+
+func gitCryptKeyPresent(siteRoot string) bool {
+	repoRoot := filepath.Dir(siteRoot)
+	matches, err := filepath.Glob(filepath.Join(repoRoot, "*.key"))
+	if err != nil {
+		return false
+	}
+
+	return len(matches) > 0
 }
 
 func serverStatusHandler(bindHost string, displayHosts []string, port int) http.HandlerFunc {
@@ -723,6 +747,23 @@ func scriptContentHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
+func scriptsSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		results, err := searchScripts(siteRoot, r.URL.Query().Get("q"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, scriptSearchResponse{Results: results})
+	}
+}
+
 func scriptRunHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -830,6 +871,53 @@ func collectScripts(siteRoot string) ([]scriptEntry, error) {
 	})
 
 	return scripts, nil
+}
+
+func searchScripts(siteRoot string, query string) ([]scriptSearchResult, error) {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return []scriptSearchResult{}, nil
+	}
+
+	normalizedQuery := strings.ToLower(query)
+	scripts, err := collectScripts(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	results := []scriptSearchResult{}
+	for _, script := range scripts {
+		_, path, err := resolveScript(siteRoot, script.ID)
+		if err != nil {
+			continue
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+
+		contentText := string(content)
+		nameMatch := strings.Contains(strings.ToLower(script.Name), normalizedQuery)
+		pathMatch := strings.Contains(strings.ToLower(script.ID), normalizedQuery) ||
+			strings.Contains(strings.ToLower(script.Path), normalizedQuery)
+		contentMatch := strings.Contains(strings.ToLower(contentText), normalizedQuery)
+
+		if !nameMatch && !pathMatch && !contentMatch {
+			continue
+		}
+
+		results = append(results, scriptSearchResult{
+			ID:       script.ID,
+			Name:     script.Name,
+			Path:     script.Path,
+			Runnable: script.Runnable,
+			Platform: script.Platform,
+			Snippet:  searchSnippet(contentText, normalizedQuery),
+		})
+	}
+
+	return results, nil
 }
 
 func resolveScript(siteRoot string, id string) (scriptEntry, string, error) {
@@ -1313,7 +1401,7 @@ func isAddressInUse(err error) bool {
 
 func printPortInUseMessage(address string, displayHosts []string, port int) {
 	fmt.Println()
-	fmt.Println("[Rock-OS Wiki]")
+	fmt.Println("[Rock-OS]")
 	fmt.Printf("Could not listen on %s because port %d is already in use.\n", address, port)
 	fmt.Println()
 	fmt.Println("Rock-OS may already be running. Try opening:")

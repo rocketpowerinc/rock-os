@@ -57,6 +57,7 @@ What it does:
 - Pulls safe repo updates with `git pull --ff-only` and shows the real Git
   output so you can see what changed.
 - Detects your operating system and CPU architecture.
+- Reports whether Go is available for source fallback.
 - Downloads the latest matching release binary into `Website/` when internet is
   available.
 - Starts the release binary when it exists.

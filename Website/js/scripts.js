@@ -12,10 +12,18 @@ const toggleAllScriptsBtn =
     document.getElementById('toggleAllScriptsBtn');
 const scriptSearchInput =
     document.getElementById('scriptSearchInput');
+const scriptSearchStatus =
+    document.getElementById('scriptSearchStatus');
 
 let selectedScript = null;
 let allScripts = [];
 let scriptRunInProgress = false;
+const launchedScriptIds = new Set();
+let scriptSearchQuery = '';
+let scriptSearchResults = [];
+let scriptSearchLoading = false;
+let scriptSearchDebounceTimer = null;
+let scriptSearchRequestId = 0;
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -27,6 +35,44 @@ function escapeHTML(value) {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightSearchQuery(text, query) {
+    const trimmedQuery =
+        query.trim();
+
+    if (!trimmedQuery) {
+        return escapeHTML(text);
+    }
+
+    const matcher =
+        new RegExp(escapeRegExp(trimmedQuery), 'gi');
+
+    let html =
+        '';
+    let lastIndex =
+        0;
+
+    text.replace(matcher, (match, offset) => {
+        html += escapeHTML(
+            text.slice(lastIndex, offset)
+        );
+        html += `<mark class="search-match">${escapeHTML(match)}</mark>`;
+        lastIndex =
+            offset + match.length;
+
+        return match;
+    });
+
+    html += escapeHTML(
+        text.slice(lastIndex)
+    );
+
+    return html;
 }
 
 function scriptLanguage(script) {
@@ -173,6 +219,16 @@ function scriptButton(script) {
     return button;
 }
 
+function scriptFromSearchResult(result) {
+    return {
+        id: result.id,
+        name: result.name,
+        path: result.path,
+        runnable: result.runnable,
+        platform: result.platform
+    };
+}
+
 function folderNode(name) {
     const details =
         document.createElement('details');
@@ -287,24 +343,171 @@ function renderScriptTree(scripts) {
     updateToggleAllScriptsButton();
 }
 
-function filterScripts() {
+function scheduleScriptSearch() {
     const query =
         scriptSearchInput ?
-            scriptSearchInput.value.trim().toLowerCase() :
+            scriptSearchInput.value.trim() :
             '';
+
+    scriptSearchQuery =
+        query;
+
+    if (!query) {
+        scriptSearchLoading =
+            false;
+        scriptSearchResults =
+            [];
+        if (scriptSearchStatus) {
+            scriptSearchStatus.textContent =
+                '';
+        }
+        renderScriptTree(allScripts);
+        return;
+    }
+
+    scriptSearchLoading =
+        true;
+    scriptSearchResults =
+        [];
+    renderScriptSearchResults();
+
+    const requestId =
+        ++scriptSearchRequestId;
+
+    clearTimeout(scriptSearchDebounceTimer);
+    scriptSearchDebounceTimer =
+        setTimeout(() => {
+            runScriptSearch(query, requestId);
+        }, 250);
+}
+
+async function runScriptSearch(query, requestId) {
+    try {
+        const response =
+            await fetch(
+                `/api/scripts/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                `Search failed with HTTP ${response.status}`
+            );
+        }
+
+        const payload =
+            await response.json();
+
+        if (
+            requestId !== scriptSearchRequestId ||
+            query !== scriptSearchQuery
+        ) {
+            return;
+        }
+
+        scriptSearchResults =
+            Array.isArray(payload.results)
+                ? payload.results.filter(result =>
+                    result &&
+                    typeof result.id === 'string'
+                )
+                : [];
+        scriptSearchLoading =
+            false;
+        renderScriptSearchResults();
+    }
+    catch (err) {
+        console.warn('Server script search failed:', err);
+
+        if (
+            requestId !== scriptSearchRequestId ||
+            query !== scriptSearchQuery
+        ) {
+            return;
+        }
+
+        scriptSearchResults =
+            fallbackScriptSearch(query);
+        scriptSearchLoading =
+            false;
+        renderScriptSearchResults();
+    }
+}
+
+function fallbackScriptSearch(query) {
+    const normalizedQuery =
+        query.toLowerCase();
+
+    return allScripts
+        .filter(script =>
+            script.id.toLowerCase().includes(normalizedQuery) ||
+            script.name.toLowerCase().includes(normalizedQuery) ||
+            script.path.toLowerCase().includes(normalizedQuery)
+        )
+        .map(script => ({
+            ...script,
+            snippet: ''
+        }));
+}
+
+function renderScriptSearchResults() {
+    scriptList.textContent =
+        '';
+
+    const query =
+        scriptSearchQuery.trim();
 
     if (!query) {
         renderScriptTree(allScripts);
         return;
     }
 
-    renderScriptTree(
-        allScripts.filter(script =>
-            script.id.toLowerCase().includes(query) ||
-            script.name.toLowerCase().includes(query) ||
-            script.path.toLowerCase().includes(query)
-        )
-    );
+    if (scriptSearchStatus) {
+        scriptSearchStatus.textContent =
+            scriptSearchLoading
+                ? 'Searching...'
+                : `${scriptSearchResults.length} result${scriptSearchResults.length === 1 ? '' : 's'}`;
+    }
+
+    if (!scriptSearchResults.length && !scriptSearchLoading) {
+        scriptList.textContent =
+            'No scripts match your search.';
+        updateToggleAllScriptsButton();
+        return;
+    }
+
+    scriptSearchResults.forEach(result => {
+        const script =
+            scriptFromSearchResult(result);
+        const button =
+            scriptButton(script);
+
+        button.classList.toggle(
+            'active',
+            selectedScript &&
+            selectedScript.id === script.id
+        );
+        button.innerHTML =
+            `${escapeHTML(result.name)}<span class="search-result-meta">${escapeHTML(result.path)}</span>`;
+
+        scriptList.appendChild(button);
+
+        if (result.snippet) {
+            const snippet =
+                document.createElement('div');
+
+            snippet.className =
+                'search-result-snippet';
+            snippet.innerHTML =
+                highlightSearchQuery(
+                    result.snippet,
+                    query
+                );
+
+            scriptList.appendChild(snippet);
+        }
+    });
+
+    updateToggleAllScriptsButton();
 }
 
 async function loadScripts() {
@@ -328,7 +531,7 @@ async function loadScripts() {
         allScripts =
             scripts;
 
-        filterScripts();
+        scheduleScriptSearch();
     }
     catch (err) {
         setStatus(err.message, 'error');
@@ -337,7 +540,13 @@ async function loadScripts() {
 
 async function selectScript(script) {
     selectedScript = script;
-    runScriptBtn.disabled = !script.runnable;
+    runScriptBtn.disabled =
+        !script.runnable ||
+        launchedScriptIds.has(script.id);
+    runScriptBtn.classList.toggle(
+        'script-run-used',
+        launchedScriptIds.has(script.id)
+    );
 
     document.querySelectorAll('.script-tree-file')
         .forEach(item => {
@@ -349,6 +558,12 @@ async function selectScript(script) {
 
     if (warning) {
         setStatus(warning, 'warn');
+    }
+    else if (launchedScriptIds.has(script.id)) {
+        setStatus(
+            'This script has already been launched from this page session.',
+            'success'
+        );
     }
     else {
         setStatus(
@@ -412,7 +627,12 @@ async function runSelectedScript() {
             throw new Error(await response.text());
         }
 
-        setStatus('Script opened in your OS terminal.', 'success');
+        launchedScriptIds.add(selectedScript.id);
+        runScriptBtn.classList.add('script-run-used');
+        setStatus(
+            'Script opened in your OS terminal. Reload this page to run another copy of this script.',
+            'warn'
+        );
     }
     catch (err) {
         setStatus(err.message, 'error');
@@ -423,7 +643,12 @@ async function runSelectedScript() {
 
         if (selectedScript) {
             runScriptBtn.disabled =
-                !selectedScript.runnable;
+                !selectedScript.runnable ||
+                launchedScriptIds.has(selectedScript.id);
+            runScriptBtn.classList.toggle(
+                'script-run-used',
+                launchedScriptIds.has(selectedScript.id)
+            );
         }
     }
 }
@@ -434,7 +659,7 @@ toggleAllScriptsBtn.addEventListener('click', () => {
 });
 
 if (scriptSearchInput) {
-    scriptSearchInput.addEventListener('input', filterScripts);
+    scriptSearchInput.addEventListener('input', scheduleScriptSearch);
 }
 
 loadScripts();

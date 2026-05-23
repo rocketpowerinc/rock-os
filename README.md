@@ -414,10 +414,11 @@ git clone https://github.com/rocketpowerinc/rock-os.git
 cd rock-os
 ```
 
-The start scripts only show update and launch activity. The repo update step
-prints the real `git pull --ff-only` output so you can see whether the clone
-updated or was already current. If a newer release binary is needed, the scripts
-also print the download attempt and whether it succeeded.
+The start scripts show only launcher-side activity: the real `git pull
+--ff-only` output, whether Go is available for source fallback, release binary
+download/current messages, and the final launch handoff. If a newer release
+binary is needed, the scripts also print the download attempt and whether it
+succeeded.
 
 Once the server starts, the Go binary prints the single colored status sanity
 check and request log. That keeps startup output focused: scripts update and

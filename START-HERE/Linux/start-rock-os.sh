@@ -56,6 +56,14 @@ pull_updates() {
     fi
 }
 
+check_go() {
+    if command -v go >/dev/null 2>&1; then
+        green "Go installed. Source fallback available."
+    else
+        yellow "Go is not installed. Not needed while using a release binary."
+    fi
+}
+
 pull_updates
 
 cd "$REPO_ROOT/Website"
@@ -86,6 +94,8 @@ case "$(uname -m)" in
 esac
 
 STABLE_ASSET="rock-os-wiki-$PLATFORM-$ARCH"
+
+check_go
 
 latest_tag=""
 if command -v curl >/dev/null 2>&1; then

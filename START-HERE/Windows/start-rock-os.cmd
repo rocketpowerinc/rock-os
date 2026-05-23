@@ -41,6 +41,15 @@ exit /b 0
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $repo=$env:ROCK_OS_REPO; $stableAsset=$env:ROCK_OS_STABLE_ASSET; $versionFile=$env:ROCK_OS_VERSION_FILE; $arch=$env:ROCK_OS_ARCH; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $release=Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/releases/latest' -f $repo) -Headers @{'User-Agent'='rock-os-start-script'}; $tag=$release.tag_name; $versionedAsset=('rock-os-wiki-{0}-windows-{1}.exe' -f $tag,$arch); $local=''; if (Test-Path $versionFile) { $local=(Get-Content $versionFile -Raw).Trim() }; if ((-not (Test-Path $stableAsset)) -or ($local -ne $tag)) { Write-Host ('Downloading Rock-OS {0} for Windows {1}...' -f $tag,$arch) -ForegroundColor Yellow; $downloaded=$false; foreach ($asset in @($stableAsset,$versionedAsset)) { $tempFile=('{0}.download' -f $asset); if (Test-Path $tempFile) { Remove-Item $tempFile -Force }; try { Invoke-WebRequest -Uri ('https://github.com/{0}/releases/latest/download/{1}' -f $repo,$asset) -OutFile $tempFile -Headers @{'User-Agent'='rock-os-start-script'}; if ((Test-Path $tempFile) -and ((Get-Item $tempFile).Length -gt 0)) { Move-Item $tempFile $stableAsset -Force; Set-Content -Path $versionFile -Value $tag -NoNewline; Write-Host ('Downloaded Rock-OS {0}.' -f $tag) -ForegroundColor Green; $downloaded=$true; break } } catch { if (Test-Path $tempFile) { Remove-Item $tempFile -Force } } }; if (-not $downloaded) { exit 1 } } else { Write-Host ('Rock-OS binary is current ({0}).' -f $tag) -ForegroundColor Green }" 2>nul
 exit /b %ERRORLEVEL%
 
+:check_go
+powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command go -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
+if errorlevel 1 (
+    call :yellow "Go is not installed. Not needed while using a release binary."
+    exit /b 0
+)
+call :green "Go installed. Source fallback available."
+exit /b 0
+
 :wait
 echo.
 pause
@@ -91,6 +100,7 @@ if /I "%ROCK_OS_ARCH%"=="ARM64" (
 
 set "ROCK_OS_STABLE_ASSET=rock-os-wiki-windows-%ROCK_OS_ARCH%.exe"
 
+call :check_go
 call :check_release_binary
 if errorlevel 1 (
     call :yellow "Could not check or download the latest Rock-OS binary. Continuing with local files..."

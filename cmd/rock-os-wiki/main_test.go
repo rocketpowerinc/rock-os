@@ -231,6 +231,48 @@ func TestWikiSearchHandlerReturnsEmptyResultsForBlankQuery(t *testing.T) {
 	}
 }
 
+func TestScriptsSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
+	siteRoot := t.TempDir()
+	scriptsRoot := filepath.Join(siteRoot, scriptsDir, "Linux")
+	if err := os.MkdirAll(scriptsRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(
+		filepath.Join(scriptsRoot, "firefox-setup.sh"),
+		[]byte("#!/usr/bin/env sh\n# Install uBlock Origin policy\n"),
+		0o755,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/api/scripts/search?q=ublock", nil)
+	recorder := httptest.NewRecorder()
+
+	scriptsSearchHandler(siteRoot).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var response scriptSearchResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(response.Results) != 1 {
+		t.Fatalf("expected one search result, got %#v", response.Results)
+	}
+
+	if response.Results[0].ID != "Linux/firefox-setup.sh" {
+		t.Fatalf("unexpected result: %#v", response.Results[0])
+	}
+
+	if !strings.Contains(response.Results[0].Snippet, "uBlock") {
+		t.Fatalf("expected snippet to include match, got %#v", response.Results[0])
+	}
+}
+
 func TestCompressResponsesUsesGzipForTextResponses(t *testing.T) {
 	handler := compressResponses(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
