@@ -56,61 +56,6 @@ pull_updates() {
     fi
 }
 
-check_git_crypt() {
-    if command -v git-crypt >/dev/null 2>&1; then
-        green "git-crypt is installed."
-    else
-        red "git-crypt is not installed. Install git-crypt before unlocking Private markdown."
-    fi
-}
-
-check_go() {
-    if command -v go >/dev/null 2>&1; then
-        green "Go is installed."
-    elif [ -n "$BINARY" ]; then
-        yellow "Go is not installed. Not needed while using a release binary."
-    else
-        red "Go is not installed. Install Go from https://go.dev/dl/ before using source fallback."
-    fi
-}
-
-check_private() {
-    locked_marker="${TMPDIR:-/tmp}/rock-os-private-locked-$$"
-    found_marker="${TMPDIR:-/tmp}/rock-os-private-found-$$"
-    rm -f "$locked_marker"
-    rm -f "$found_marker"
-
-    if [ -d "markdown/Private" ]; then
-        find "markdown/Private" -type f | while IFS= read -r file; do
-            printf 'found' > "$found_marker"
-
-            if dd if="$file" bs=16 count=1 2>/dev/null | grep -a -q 'GITCRYPT'; then
-                printf 'locked' > "$locked_marker"
-            fi
-        done
-    fi
-
-    private_files="$(git -C .. ls-files -- 'Website/markdown/Private' 2>/dev/null || true)"
-    printf '%s\n' "$private_files" | while IFS= read -r file; do
-        [ -n "$file" ] || continue
-        [ -f "../$file" ] || continue
-        printf 'found' > "$found_marker"
-
-        if dd if="../$file" bs=16 count=1 2>/dev/null | grep -a -q 'GITCRYPT'; then
-            printf 'locked' > "$locked_marker"
-        fi
-    done
-
-    if [ -f "$locked_marker" ]; then
-        rm -f "$locked_marker"
-        rm -f "$found_marker"
-        red "Private Markdown Folder Locked."
-    else
-        rm -f "$found_marker"
-        green "Private Markdown Folder Unlocked."
-    fi
-}
-
 pull_updates
 
 cd "$REPO_ROOT/Website"
@@ -118,14 +63,6 @@ cd "$REPO_ROOT/Website"
 REPO="rocketpowerinc/rock-os"
 VERSION_FILE=".rock-os-wiki-version"
 BINARY=""
-BINARY_SOURCE=""
-
-green "[Rock-OS] Launcher online."
-if [ "$ROCK_OS_HOST" = "127.0.0.1" ]; then
-    green "Host mode: local-only. Other computers cannot connect."
-else
-    yellow "Host mode: LAN. Use only on a trusted network."
-fi
 
 case "$(uname -s)" in
     Darwin)
@@ -149,7 +86,6 @@ case "$(uname -m)" in
 esac
 
 STABLE_ASSET="rock-os-wiki-$PLATFORM-$ARCH"
-green "Detected $PLATFORM $ARCH."
 
 latest_tag=""
 if command -v curl >/dev/null 2>&1; then
@@ -203,26 +139,14 @@ fi
 
 if [ -f "./$STABLE_ASSET" ]; then
     BINARY="./$STABLE_ASSET"
-    BINARY_SOURCE="stable"
 else
     for FILE in $(find . -maxdepth 1 -type f -name "rock-os-wiki-v*-$PLATFORM-$ARCH" | sort -r); do
         BINARY="$FILE"
-        BINARY_SOURCE="versioned"
         break
     done
 fi
 
-check_git_crypt
-check_private
-check_go
-
 if [ -n "$BINARY" ] && [ -x "$BINARY" ]; then
-    if [ "$BINARY_SOURCE" = "stable" ]; then
-        green "Release binary found: $BINARY"
-    else
-        yellow "Using versioned fallback binary: $BINARY"
-    fi
-
     green "Starting Rock-OS..."
     "$BINARY" --host "$ROCK_OS_HOST"
 elif [ -n "$BINARY" ] && [ -f "$BINARY" ]; then

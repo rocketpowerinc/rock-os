@@ -61,11 +61,10 @@ What it does:
   available.
 - Starts the release binary when it exists.
 - Falls back to Go source only if no release binary is available.
-- Checks whether `git-crypt` is installed.
-- Reports whether the Private markdown folder appears locked or unlocked.
 
-After launch, the Go server prints a colored startup checklist and request log
-in the terminal window. That output is normal and useful when checking LAN
+The start script intentionally does not print the full sanity report. After
+launch, the Go server prints the single colored status sanity check and request
+log in the terminal window. That output is normal and useful when checking LAN
 access or debugging a page.
 
 Default mode is local-only. Other computers cannot connect unless you start LAN

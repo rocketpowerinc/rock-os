@@ -414,17 +414,15 @@ git clone https://github.com/rocketpowerinc/rock-os.git
 cd rock-os
 ```
 
-The scripts print green status lines for healthy checks, yellow lines when they
-fall back to local files or Go source, and red warnings for blocking or security
-related checks. The repo update step shows the real `git pull --ff-only` output
-so you can see whether the clone updated or was already current. The scripts
-also report whether `git-crypt` is installed before checking the Private
-markdown folder, and whether Go is installed. Go is only required when the
-script has to fall back to running from source instead of a release binary.
+The start scripts only show update and launch activity. The repo update step
+prints the real `git pull --ff-only` output so you can see whether the clone
+updated or was already current. If a newer release binary is needed, the scripts
+also print the download attempt and whether it succeeded.
 
-Once the server starts, the Go binary prints its own colored startup checklist
-and request log. That makes direct binary/source launches easier to debug, and
-helps LAN users see which pages and API calls are being served.
+Once the server starts, the Go binary prints the single colored status sanity
+check and request log. That keeps startup output focused: scripts update and
+launch, while Go reports the actual server status, private markdown state,
+folders, host mode, and request activity.
 
 After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-windows-amd64.exe`, `rock-os-wiki-windows-arm64.exe`,
