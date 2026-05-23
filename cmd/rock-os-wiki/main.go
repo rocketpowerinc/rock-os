@@ -34,6 +34,17 @@ const (
 	scriptsDir  = "scripts"
 )
 
+const (
+	ansiReset  = "\033[0m"
+	ansiBold   = "\033[1m"
+	ansiDim    = "\033[2m"
+	ansiRed    = "\033[31m"
+	ansiGreen  = "\033[32m"
+	ansiYellow = "\033[33m"
+	ansiBlue   = "\033[34m"
+	ansiCyan   = "\033[36m"
+)
+
 type markdownIndexEntry struct {
 	Path   string `json:"path"`
 	Pinned bool   `json:"pinned,omitempty"`
@@ -160,14 +171,13 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println()
-	fmt.Println("[Rock-OS Wiki]")
-	fmt.Printf("Serving %s\n", siteRoot)
-	fmt.Printf("Listening on %s\n", address)
-	fmt.Printf("Open %s\n", url)
+	fmt.Println(colorize(ansiBold+ansiCyan, "[Rock-OS Wiki]"))
+	printStartupStatus(siteRoot, bindHost, address)
+	printStatus("OK", ansiGreen, "Open %s", url)
 	if len(displayHosts) > 1 {
 		fmt.Println("Other local URLs:")
 		for _, displayHost := range displayHosts[1:] {
-			fmt.Printf("  http://%s:%d/\n", displayHost, *port)
+			fmt.Printf("  %s\n", colorize(ansiCyan, fmt.Sprintf("http://%s:%d/", displayHost, *port)))
 		}
 	}
 	fmt.Println()
@@ -209,6 +219,112 @@ func main() {
 		}
 	default:
 	}
+}
+
+func printStartupStatus(siteRoot string, bindHost string, address string) {
+	printStatus("OK", ansiGreen, "Serving %s", siteRoot)
+	printStatus("OK", ansiGreen, "Listening on %s", address)
+
+	if bindHost == "127.0.0.1" || bindHost == "localhost" {
+		printStatus("OK", ansiGreen, "Server Mode: Host")
+	} else {
+		printStatus("WARN", ansiYellow, "Server Mode: LAN")
+	}
+
+	if _, err := os.Stat(filepath.Join(siteRoot, markdownDir)); err == nil {
+		if files, err := collectMarkdownFiles(siteRoot); err == nil {
+			printStatus("OK", ansiGreen, "Markdown docs indexed on demand: %d", len(files))
+		} else {
+			printStatus("WARN", ansiYellow, "Markdown docs could not be scanned: %v", err)
+		}
+	} else {
+		printStatus("WARN", ansiYellow, "Markdown folder not found.")
+	}
+
+	if _, err := os.Stat(filepath.Join(siteRoot, scriptsDir)); err == nil {
+		printStatus("OK", ansiGreen, "Scripts folder mounted.")
+	} else {
+		printStatus("WARN", ansiYellow, "Scripts folder not found.")
+	}
+
+	if _, err := os.Stat(filepath.Join(siteRoot, "media")); err == nil {
+		printStatus("OK", ansiGreen, "Media folder mounted.")
+	} else {
+		printStatus("WARN", ansiYellow, "Media folder not found.")
+	}
+
+	if _, err := exec.LookPath("git-crypt"); err == nil {
+		printStatus("OK", ansiGreen, "git-crypt installed.")
+	} else {
+		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Private markdown.")
+	}
+
+	switch privateMarkdownStatus(siteRoot) {
+	case "locked":
+		printStatus("WARN", ansiYellow, "Private Markdown Folder Locked.")
+	case "unlocked":
+		printStatus("OK", ansiGreen, "Private Markdown Folder Unlocked.")
+	default:
+		printStatus("INFO", ansiCyan, "Private Markdown Folder not found.")
+	}
+
+	if _, err := exec.LookPath("go"); err == nil {
+		printStatus("OK", ansiGreen, "Go installed. Source fallback available.")
+	} else {
+		printStatus("INFO", ansiCyan, "Go not found. Not needed when using a release binary.")
+	}
+
+	printStatus("OK", ansiGreen, "Request logging enabled.")
+}
+
+func printStatus(level string, color string, format string, args ...any) {
+	fmt.Printf("%s %s\n", colorize(color, "["+level+"]"), fmt.Sprintf(format, args...))
+}
+
+func colorize(color string, value string) string {
+	if os.Getenv("NO_COLOR") != "" {
+		return value
+	}
+
+	return color + value + ansiReset
+}
+
+func privateMarkdownStatus(siteRoot string) string {
+	privateRoot := filepath.Join(siteRoot, markdownDir, "Private")
+	if info, err := os.Stat(privateRoot); err != nil || !info.IsDir() {
+		return "missing"
+	}
+
+	locked := false
+	err := filepath.WalkDir(privateRoot, func(path string, entry os.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return nil
+		}
+		defer file.Close()
+
+		header := make([]byte, 32)
+		count, _ := file.Read(header)
+		if strings.Contains(string(header[:count]), "GITCRYPT") {
+			locked = true
+			return filepath.SkipAll
+		}
+
+		return nil
+	})
+	if err != nil {
+		return "missing"
+	}
+
+	if locked {
+		return "locked"
+	}
+
+	return "unlocked"
 }
 
 func serverStatusHandler(bindHost string, displayHosts []string, port int) http.HandlerFunc {
@@ -267,14 +383,40 @@ func logRequests(next http.Handler) http.Handler {
 
 		next.ServeHTTP(writer, r)
 
-		log.Printf(
-			"%s %s %d %s",
-			r.Method,
-			r.URL.Path,
-			writer.status,
-			time.Since(start).Round(time.Microsecond),
-		)
+		requestTime := colorize(ansiDim, time.Now().Format("15:04:05"))
+		method := colorize(methodLogColor(r.Method), r.Method)
+		path := colorize(ansiCyan, r.URL.Path)
+		status := colorize(statusLogColor(writer.status), fmt.Sprintf("%d", writer.status))
+		duration := colorize(ansiDim, time.Since(start).Round(time.Microsecond).String())
+
+		fmt.Printf("%s %s %s %s %s\n", requestTime, method, path, status, duration)
 	})
+}
+
+func methodLogColor(method string) string {
+	switch method {
+	case http.MethodGet, http.MethodHead:
+		return ansiGreen
+	case http.MethodPost, http.MethodPut, http.MethodPatch:
+		return ansiBlue
+	case http.MethodDelete:
+		return ansiRed
+	default:
+		return ansiCyan
+	}
+}
+
+func statusLogColor(status int) string {
+	switch {
+	case status >= 500:
+		return ansiRed
+	case status >= 400:
+		return ansiYellow
+	case status >= 300:
+		return ansiCyan
+	default:
+		return ansiGreen
+	}
 }
 
 func wikiDocHandler(siteRoot string) http.HandlerFunc {
