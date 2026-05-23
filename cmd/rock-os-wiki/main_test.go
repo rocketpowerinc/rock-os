@@ -1,7 +1,9 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -226,6 +228,38 @@ func TestWikiSearchHandlerReturnsEmptyResultsForBlankQuery(t *testing.T) {
 
 	if len(response.Results) != 0 {
 		t.Fatalf("expected no search results, got %#v", response.Results)
+	}
+}
+
+func TestCompressResponsesUsesGzipForTextResponses(t *testing.T) {
+	handler := compressResponses(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+
+	request := httptest.NewRequest(http.MethodGet, "/api/server/status", nil)
+	request.Header.Set("Accept-Encoding", "gzip")
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Header().Get("Content-Encoding") != "gzip" {
+		t.Fatalf("expected gzip response, got headers %#v", recorder.Header())
+	}
+
+	reader, err := gzip.NewReader(recorder.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close()
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(body) != `{"ok":true}` {
+		t.Fatalf("unexpected decompressed body: %s", body)
 	}
 }
 

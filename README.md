@@ -88,9 +88,9 @@ copy and prints a warning.
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
 - Automatic sidebar tree from nested markdown folders
-- Local script dashboard with preview, guarded run buttons, and OS terminal launch
+- Local script dashboard with search, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
-- Instant search across file names and markdown contents
+- Instant search across file names and markdown contents, with highlights in results and opened documents
 - URL-based pages, such as `wiki.html?doc=markdown/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
@@ -103,6 +103,7 @@ copy and prints a warning.
 - Markdown callouts for notes, warnings, tips, errors, and related blocks
 - Theme presets: Steel, Rugged, Cyberpunk, and Blue-Grass
 - Local offline icons, favicons, and bookmark assets
+- Gzip compression for text/API responses on slower local networks
 - Local media support for images and videos kept out of Git
 - Helper scripts for unlocking and re-locking private markdown
 - Cross-platform Go server for Windows, Linux, and macOS
@@ -391,7 +392,7 @@ permissions are missing because of a ZIP extraction, file copy, or unusual
 filesystem, run:
 
 ```bash
-chmod +x ./START-HERE/*.sh ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh
+chmod +x ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh
 ```
 
 This keeps fresh clones ready to run without needing manual `chmod` commands.
@@ -415,10 +416,15 @@ cd rock-os
 
 The scripts print green status lines for healthy checks, yellow lines when they
 fall back to local files or Go source, and red warnings for blocking or security
-related checks. They also report whether `git-crypt` is installed before
-checking the Private markdown folder, and whether Go is installed. Go is only
-required when the script has to fall back to running from source instead of a
-release binary.
+related checks. The repo update step shows the real `git pull --ff-only` output
+so you can see whether the clone updated or was already current. The scripts
+also report whether `git-crypt` is installed before checking the Private
+markdown folder, and whether Go is installed. Go is only required when the
+script has to fall back to running from source instead of a release binary.
+
+Once the server starts, the Go binary prints its own colored startup checklist
+and request log. That makes direct binary/source launches easier to debug, and
+helps LAN users see which pages and API calls are being served.
 
 After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-windows-amd64.exe`, `rock-os-wiki-windows-arm64.exe`,

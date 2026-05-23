@@ -10,8 +10,11 @@ const runScriptBtn =
     document.getElementById('runScriptBtn');
 const toggleAllScriptsBtn =
     document.getElementById('toggleAllScriptsBtn');
+const scriptSearchInput =
+    document.getElementById('scriptSearchInput');
 
 let selectedScript = null;
+let allScripts = [];
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -236,6 +239,15 @@ function setAllScriptFoldersExpanded(expanded) {
 function renderScriptTree(scripts) {
     scriptList.textContent = '';
 
+    if (!scripts.length) {
+        scriptList.textContent =
+            allScripts.length
+                ? 'No scripts match your search.'
+                : 'No scripts found in Website/scripts.';
+        updateToggleAllScriptsButton();
+        return;
+    }
+
     const root =
         document.createElement('div');
     root.className = 'script-tree-root';
@@ -274,6 +286,26 @@ function renderScriptTree(scripts) {
     updateToggleAllScriptsButton();
 }
 
+function filterScripts() {
+    const query =
+        scriptSearchInput ?
+            scriptSearchInput.value.trim().toLowerCase() :
+            '';
+
+    if (!query) {
+        renderScriptTree(allScripts);
+        return;
+    }
+
+    renderScriptTree(
+        allScripts.filter(script =>
+            script.id.toLowerCase().includes(query) ||
+            script.name.toLowerCase().includes(query) ||
+            script.path.toLowerCase().includes(query)
+        )
+    );
+}
+
 async function loadScripts() {
     try {
         const response =
@@ -292,12 +324,10 @@ async function loadScripts() {
         const scripts =
             await response.json();
 
-        if (scripts.length === 0) {
-            scriptList.textContent = 'No scripts found in Website/scripts.';
-            return;
-        }
+        allScripts =
+            scripts;
 
-        renderScriptTree(scripts);
+        filterScripts();
     }
     catch (err) {
         setStatus(err.message, 'error');
@@ -384,4 +414,9 @@ runScriptBtn.addEventListener('click', runSelectedScript);
 toggleAllScriptsBtn.addEventListener('click', () => {
     setAllScriptFoldersExpanded(!allScriptFoldersExpanded());
 });
+
+if (scriptSearchInput) {
+    scriptSearchInput.addEventListener('input', filterScripts);
+}
+
 loadScripts();

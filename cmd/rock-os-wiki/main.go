@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -189,7 +190,7 @@ func main() {
 	}
 
 	server := &http.Server{
-		Handler: logRequests(mux),
+		Handler: logRequests(compressResponses(mux)),
 	}
 
 	shutdownErrors := make(chan error, 1)
@@ -360,6 +361,11 @@ type loggingResponseWriter struct {
 	status int
 }
 
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	writer *gzip.Writer
+}
+
 func (writer *loggingResponseWriter) WriteHeader(status int) {
 	writer.status = status
 	writer.ResponseWriter.WriteHeader(status)
@@ -371,6 +377,48 @@ func (writer *loggingResponseWriter) Write(data []byte) (int, error) {
 	}
 
 	return writer.ResponseWriter.Write(data)
+}
+
+func (writer *gzipResponseWriter) Write(data []byte) (int, error) {
+	return writer.writer.Write(data)
+}
+
+func compressResponses(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !requestAcceptsGzip(r) || !shouldCompressPath(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Add("Vary", "Accept-Encoding")
+		w.Header().Del("Content-Length")
+		w.Header().Set("Content-Encoding", "gzip")
+
+		gzipWriter := gzip.NewWriter(w)
+		defer gzipWriter.Close()
+
+		next.ServeHTTP(&gzipResponseWriter{
+			ResponseWriter: w,
+			writer:         gzipWriter,
+		}, r)
+	})
+}
+
+func requestAcceptsGzip(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+}
+
+func shouldCompressPath(path string) bool {
+	if strings.HasPrefix(path, "/api/") || path == "/markdown-index.json" {
+		return true
+	}
+
+	switch strings.ToLower(filepath.Ext(path)) {
+	case "", ".html", ".css", ".js", ".json", ".md", ".svg", ".txt", ".xml", ".webmanifest":
+		return true
+	default:
+		return false
+	}
 }
 
 func logRequests(next http.Handler) http.Handler {

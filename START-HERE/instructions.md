@@ -54,7 +54,8 @@ Use this for normal everyday startup.
 What it does:
 
 - Checks that you are in a real Git clone, not a GitHub ZIP download.
-- Pulls safe repo updates with `git pull --ff-only`.
+- Pulls safe repo updates with `git pull --ff-only` and shows the real Git
+  output so you can see what changed.
 - Detects your operating system and CPU architecture.
 - Downloads the latest matching release binary into `Website/` when internet is
   available.
@@ -62,6 +63,10 @@ What it does:
 - Falls back to Go source only if no release binary is available.
 - Checks whether `git-crypt` is installed.
 - Reports whether the Private markdown folder appears locked or unlocked.
+
+After launch, the Go server prints a colored startup checklist and request log
+in the terminal window. That output is normal and useful when checking LAN
+access or debugging a page.
 
 Default mode is local-only. Other computers cannot connect unless you start LAN
 mode.
@@ -200,7 +205,7 @@ Shell scripts should be executable in normal Git clones. If they are not,
 repair permissions with:
 
 ```bash
-chmod +x ./START-HERE/*.sh ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh
+chmod +x ./START-HERE/Linux/*.sh ./START-HERE/Mac/*.sh
 ```
 
 This avoids chmod-only Git changes that can dirty the repo and get in the way of

@@ -520,6 +520,14 @@ position:absolute;
 	padding:0 2px;
 }
 
+.wiki-content-highlight {
+	background:rgba(var(--accent-rgb), .2);
+	box-shadow:0 0 0 2px rgba(var(--accent-rgb), .08);
+	color:var(--heading-color);
+	font-weight:800;
+	padding:0 2px;
+}
+
 .wiki-empty-state {
 	color: rgba(255,255,255,.65);
 	font-size: .9rem;
@@ -1245,6 +1253,41 @@ scroll-behavior:smooth;
 	font-size:.82rem;
 	line-height:1.5;
 	margin:0 0 16px;
+}
+
+.script-search-label {
+	display:grid;
+	gap:7px;
+	margin:0 0 16px;
+}
+
+.script-search-label span {
+	color:var(--text-muted);
+	font-size:.68rem;
+	font-weight:900;
+	letter-spacing:1.4px;
+	text-transform:uppercase;
+}
+
+.script-search-input {
+	background:var(--panel-bg);
+	border:1px solid rgba(var(--accent-rgb), .22);
+	color:var(--text-main);
+	font:inherit;
+	font-size:.86rem;
+	outline:none;
+	padding:10px 11px;
+	width:100%;
+}
+
+.script-search-input:focus {
+	border-color:rgba(var(--accent-rgb), .55);
+	box-shadow:0 0 0 2px rgba(var(--accent-rgb), .14);
+}
+
+.theme-steel .script-search-input:focus {
+	border-color:rgba(86, 104, 120, .55);
+	box-shadow:0 0 0 2px rgba(86, 104, 120, .16);
 }
 
 .script-list {

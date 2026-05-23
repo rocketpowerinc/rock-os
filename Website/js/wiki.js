@@ -818,6 +818,7 @@ async function loadDoc(path, options = {}) {
     enhanceInlineCode(content);
     enhanceCallouts(content);
     enhanceWikiLinks(content, path, { allMarkdownFiles, loadDoc });
+    highlightDocText(content, searchQuery);
     buildTableOfContents(content);
     enhanceBacklinks(content, path);
     content.scrollTop = 0;
@@ -1279,6 +1280,104 @@ function highlightSearchQuery(text, query) {
     );
 
     return html;
+}
+
+function highlightDocText(container, query) {
+
+    const trimmedQuery =
+        query.trim();
+
+    if (!trimmedQuery) {
+        return;
+    }
+
+    const matcher =
+        new RegExp(escapeRegExp(trimmedQuery), 'gi');
+
+    const textNodes =
+        [];
+
+    const walker =
+        document.createTreeWalker(
+            container,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode(node) {
+
+                    const parent =
+                        node.parentElement;
+
+                    if (
+                        !parent ||
+                        !node.nodeValue.trim() ||
+                        parent.closest('pre, code, script, style, textarea, .doc-breadcrumbs, .doc-meta, .wiki-backlinks, mark')
+                    ) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    matcher.lastIndex = 0;
+
+                    return matcher.test(node.nodeValue)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                }
+            }
+        );
+
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(node => {
+
+        const fragment =
+            document.createDocumentFragment();
+        const text =
+            node.nodeValue;
+        let lastIndex =
+            0;
+
+        matcher.lastIndex = 0;
+
+        text.replace(matcher, (match, offset) => {
+
+            if (offset > lastIndex) {
+                fragment.appendChild(
+                    document.createTextNode(
+                        text.slice(lastIndex, offset)
+                    )
+                );
+            }
+
+            const mark =
+                document.createElement('mark');
+
+            mark.className =
+                'wiki-content-highlight';
+            mark.textContent =
+                match;
+
+            fragment.appendChild(mark);
+
+            lastIndex =
+                offset + match.length;
+
+            return match;
+        });
+
+        if (lastIndex < text.length) {
+            fragment.appendChild(
+                document.createTextNode(
+                    text.slice(lastIndex)
+                )
+            );
+        }
+
+        node.parentNode.replaceChild(
+            fragment,
+            node
+        );
+    });
 }
 
 async function openDocFromUrlIfNeeded() {
