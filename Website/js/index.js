@@ -58,32 +58,50 @@ async function loadQuote() {
 
 function renderServerMode(status) {
 
-    if (!serverModeBanner || !serverModeTitle) {
-        return;
+    if (serverModeBanner && serverModeTitle) {
+        const mode =
+            status?.mode === 'lan' ? 'lan' :
+                status?.mode === 'local' ? 'local' :
+                    'unknown';
+
+        serverModeBanner.dataset.mode =
+            mode;
+
+        if (mode === 'lan') {
+            serverModeTitle.textContent = 'LAN';
+        } else if (mode === 'local') {
+            serverModeTitle.textContent = 'Host';
+        } else {
+            serverModeTitle.textContent = 'Unknown';
+        }
     }
 
-    const mode =
-        status?.mode === 'lan' ? 'lan' :
-            status?.mode === 'local' ? 'local' :
-                'unknown';
-
-    serverModeBanner.dataset.mode =
-        mode;
-
-    if (mode === 'lan') {
-        serverModeTitle.textContent =
-            'Server Mode: LAN';
-        return;
+    const cryptStatus = status?.gitCrypt || 'unknown';
+    const cryptElement = document.getElementById('encryptedFolderStatus');
+    if (cryptElement) {
+        if (cryptStatus === 'unlocked') {
+            cryptElement.textContent = 'Unlocked';
+            cryptElement.style.color = 'var(--success)';
+        } else if (cryptStatus === 'locked') {
+            cryptElement.textContent = 'Locked';
+            cryptElement.style.color = 'var(--accent)';
+        } else {
+            cryptElement.textContent = 'Missing';
+            cryptElement.style.color = 'var(--text-muted)';
+        }
     }
 
-    if (mode === 'local') {
-        serverModeTitle.textContent =
-            'Server Mode: Host';
-        return;
+    const countElement = document.getElementById('markdownFilesCount');
+    if (countElement) {
+        countElement.textContent =
+            typeof status?.markdownCount === 'number' ? `${status.markdownCount} Files` : '—';
     }
 
-    serverModeTitle.textContent =
-        'Server Mode: Unknown';
+    const scriptsCountElement = document.getElementById('scriptsFilesCount');
+    if (scriptsCountElement) {
+        scriptsCountElement.textContent =
+            typeof status?.scriptsCount === 'number' ? `${status.scriptsCount} Files` : '—';
+    }
 }
 
 async function loadServerMode() {

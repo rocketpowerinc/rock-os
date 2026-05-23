@@ -76,10 +76,13 @@ type scriptSearchResult struct {
 }
 
 type serverStatus struct {
-	Mode        string   `json:"mode"`
-	Host        string   `json:"host"`
-	Description string   `json:"description"`
-	URLs        []string `json:"urls"`
+	Mode          string   `json:"mode"`
+	Host          string   `json:"host"`
+	Description   string   `json:"description"`
+	URLs          []string `json:"urls"`
+	GitCrypt      string   `json:"gitCrypt"`
+	MarkdownCount int      `json:"markdownCount"`
+	ScriptsCount  int      `json:"scriptsCount"`
 }
 
 type wikiDocResponse struct {
@@ -164,7 +167,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/search", scriptsSearchHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
-	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
+	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
 	mux.HandleFunc("/markdown-index.json", markdownIndexHandler(siteRoot))
@@ -350,7 +353,7 @@ func gitCryptKeyPresent(siteRoot string) bool {
 	return len(matches) > 0
 }
 
-func serverStatusHandler(bindHost string, displayHosts []string, port int) http.HandlerFunc {
+func serverStatusHandler(bindHost string, displayHosts []string, port int, siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -369,11 +372,24 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int) http.
 			urls = append(urls, fmt.Sprintf("http://%s:%d/", displayHost, port))
 		}
 
+		gitCrypt := privateMarkdownStatus(siteRoot)
+		markdownCount := 0
+		if files, err := collectMarkdownFiles(siteRoot); err == nil {
+			markdownCount = len(files)
+		}
+		scriptsCount := 0
+		if scripts, err := collectScripts(siteRoot); err == nil {
+			scriptsCount = len(scripts)
+		}
+
 		writeJSON(w, serverStatus{
-			Mode:        mode,
-			Host:        bindHost,
-			Description: description,
-			URLs:        urls,
+			Mode:          mode,
+			Host:          bindHost,
+			Description:   description,
+			URLs:          urls,
+			GitCrypt:      gitCrypt,
+			MarkdownCount: markdownCount,
+			ScriptsCount:  scriptsCount,
 		})
 	}
 }

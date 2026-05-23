@@ -437,3 +437,91 @@ func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 		}
 	}
 }
+
+func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
+	siteRoot := t.TempDir()
+	createTestWebsiteRoot(t, siteRoot)
+
+	// Case 1: missing (Private folder doesn't exist)
+	req := httptest.NewRequest(http.MethodGet, "/api/server/status", nil)
+	rec := httptest.NewRecorder()
+	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var status serverStatus
+	if err := json.Unmarshal(rec.Body.Bytes(), &status); err != nil {
+		t.Fatal(err)
+	}
+
+	if status.GitCrypt != "missing" {
+		t.Errorf("expected gitCrypt to be 'missing', got %q", status.GitCrypt)
+	}
+	if status.MarkdownCount != 0 {
+		t.Errorf("expected markdownCount to be 0, got %d", status.MarkdownCount)
+	}
+	if status.ScriptsCount != 0 {
+		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
+	}
+
+	// Case 2: unlocked (Private folder exists with non-encrypted file)
+	privateDir := filepath.Join(siteRoot, markdownDir, "Private")
+	if err := os.MkdirAll(privateDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(privateDir, "doc.md"), []byte("plain text doc"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a test script file
+	scriptsLinuxDir := filepath.Join(siteRoot, scriptsDir, "Linux")
+	if err := os.MkdirAll(scriptsLinuxDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(scriptsLinuxDir, "test.sh"), []byte("#!/bin/sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	rec2 := httptest.NewRecorder()
+	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec2, req)
+
+	var status2 serverStatus
+	if err := json.Unmarshal(rec2.Body.Bytes(), &status2); err != nil {
+		t.Fatal(err)
+	}
+
+	if status2.GitCrypt != "unlocked" {
+		t.Errorf("expected gitCrypt to be 'unlocked', got %q", status2.GitCrypt)
+	}
+	if status2.MarkdownCount != 1 {
+		t.Errorf("expected markdownCount to be 1, got %d", status2.MarkdownCount)
+	}
+	if status2.ScriptsCount != 1 {
+		t.Errorf("expected scriptsCount to be 1, got %d", status2.ScriptsCount)
+	}
+
+	// Case 3: locked (Private folder exists with locked git-crypt file)
+	if err := os.WriteFile(filepath.Join(privateDir, "locked-doc.md"), []byte("GITCRYPT\nencrypted data here"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	rec3 := httptest.NewRecorder()
+	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec3, req)
+
+	var status3 serverStatus
+	if err := json.Unmarshal(rec3.Body.Bytes(), &status3); err != nil {
+		t.Fatal(err)
+	}
+
+	if status3.GitCrypt != "locked" {
+		t.Errorf("expected gitCrypt to be 'locked', got %q", status3.GitCrypt)
+	}
+	if status3.MarkdownCount != 2 {
+		t.Errorf("expected markdownCount to be 2, got %d", status3.MarkdownCount)
+	}
+	if status3.ScriptsCount != 1 {
+		t.Errorf("expected scriptsCount to be 1, got %d", status3.ScriptsCount)
+	}
+}

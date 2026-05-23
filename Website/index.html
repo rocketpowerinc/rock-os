@@ -36,9 +36,6 @@
 <a href="index.html">HOME</a>
 <a href="wiki.html">WIKI</a>
 <a href="scripts.html">SCRIPTS</a>
-<span class="server-mode-banner" id="serverModeBanner" data-mode="checking" aria-live="polite">
-<strong id="serverModeTitle">Server Mode: Checking</strong>
-</span>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
 <option value="steel">Steel</option>
 <option value="papers">Rugged</option>
@@ -80,19 +77,19 @@ Windows, macOS, Android, and iOS.
 <dl class="system-stats">
 <div>
 <dt>Mode</dt>
-<dd>Offline-first</dd>
+<dd id="serverModeBanner" data-mode="checking"><span id="serverModeTitle">Checking</span></dd>
 </div>
 <div>
-<dt>Server</dt>
-<dd>Go local</dd>
+<dt>Encryption</dt>
+<dd id="encryptedFolderStatus">Checking</dd>
 </div>
 <div>
-<dt>Docs</dt>
-<dd>Markdown</dd>
+<dt>Markdown</dt>
+<dd id="markdownFilesCount">Checking</dd>
 </div>
 <div>
-<dt>Assets</dt>
-<dd>Intranet-safe</dd>
+<dt>Scripts</dt>
+<dd id="scriptsFilesCount">Checking</dd>
 </div>
 </dl>
 </aside>
