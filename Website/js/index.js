@@ -84,7 +84,7 @@ function renderServerMode(status) {
             cryptElement.style.color = 'var(--success)';
         } else if (cryptStatus === 'locked') {
             cryptElement.textContent = 'Locked';
-            cryptElement.style.color = 'var(--accent)';
+            cryptElement.style.color = '#ef4444';
         } else {
             cryptElement.textContent = 'Missing';
             cryptElement.style.color = 'var(--text-muted)';
