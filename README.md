@@ -1,4 +1,4 @@
-# rock-os
+# Rock-OS
 
 Hardened for Collapse
 
