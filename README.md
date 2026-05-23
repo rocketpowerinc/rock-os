@@ -111,20 +111,20 @@ copy and prints a warning.
 ## 5.0 Release Binaries
 
 Prebuilt binaries are available on the
-[Rock OS 5.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v5.0).
+[Rock-OS v1.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v1.0).
 
 Choose the binary for your system:
 
 | System | Binary |
 | --- | --- |
-| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v5.0-windows-amd64.exe` |
-| Windows ARM64 | `rock-os-wiki-windows-arm64.exe` or `rock-os-wiki-v5.0-windows-arm64.exe` |
-| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v5.0-linux-amd64` |
-| Linux ARM64 | `rock-os-wiki-linux-arm64` or `rock-os-wiki-v5.0-linux-arm64` |
-| macOS Intel | `rock-os-wiki-macos-amd64` or `rock-os-wiki-v5.0-macos-amd64` |
-| macOS Apple Silicon | `rock-os-wiki-macos-arm64` or `rock-os-wiki-v5.0-macos-arm64` |
+| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v1.0-windows-amd64.exe` |
+| Windows ARM64 | `rock-os-wiki-windows-arm64.exe` or `rock-os-wiki-v1.0-windows-arm64.exe` |
+| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v1.0-linux-amd64` |
+| Linux ARM64 | `rock-os-wiki-linux-arm64` or `rock-os-wiki-v1.0-linux-arm64` |
+| macOS Intel | `rock-os-wiki-macos-amd64` or `rock-os-wiki-v1.0-macos-amd64` |
+| macOS Apple Silicon | `rock-os-wiki-macos-arm64` or `rock-os-wiki-v1.0-macos-arm64` |
 
-The release also includes `rock-os-wiki-v5.0-checksums.txt` for verifying
+The release also includes `rock-os-wiki-v1.0-checksums.txt` for verifying
 downloads.
 
 ## Dependencies
@@ -430,7 +430,7 @@ After the update check, the scripts start a stable latest-style binary such as
 `rock-os-wiki-linux-amd64`, `rock-os-wiki-linux-arm64`,
 `rock-os-wiki-macos-amd64`, or `rock-os-wiki-macos-arm64`. If that is not
 present, they try a versioned binary such as
-`rock-os-wiki-v5.0-windows-amd64.exe`. If no matching binary is present, they
+`rock-os-wiki-v1.0-windows-amd64.exe`. If no matching binary is present, they
 fall back to the Go source under `cmd/rock-os-wiki`.
 
 When `cmd/rock-os-wiki/main.go` changes, rebuild and publish a new release
