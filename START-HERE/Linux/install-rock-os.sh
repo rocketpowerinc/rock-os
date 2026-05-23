@@ -78,7 +78,7 @@ EOF
 }
 
 create_linux_desktop_launcher() {
-    desktop_dir="$HOME/Desktop"
+    desktop_dir="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
     launcher="$desktop_dir/Rock-OS.desktop"
     icon="$INSTALL_DIR/Website/assets/icon-512.png"
 
@@ -89,12 +89,24 @@ create_linux_desktop_launcher() {
 Type=Application
 Name=Rock-OS
 Comment=Start Rock-OS
-Exec=$INSTALL_DIR/START-HERE/Linux/start-rock-os.sh
+Exec=$ROCK_COMMAND
 Icon=$icon
 Terminal=true
+StartupNotify=true
 Categories=Utility;
 EOF
     chmod +x "$launcher"
+
+    # GNOME/Nemo/Cinnamon desktops often require this trust marker before a
+    # newly-created .desktop file can be launched by double-clicking.
+    if command -v gio >/dev/null 2>&1; then
+        gio set "$launcher" metadata::trusted true 2>/dev/null || true
+    fi
+
+    if command -v desktop-file-validate >/dev/null 2>&1; then
+        desktop-file-validate "$launcher" || yellow "Desktop launcher was created, but desktop-file-validate reported a warning."
+    fi
+
     green "Created Linux desktop launcher: $launcher"
 }
 
