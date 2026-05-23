@@ -63,42 +63,12 @@ try {
         }
     }
 } catch {
-    Write-Host "Warning: Could not fetch latest release from GitHub ($($_.Exception.Message))." -ForegroundColor Yellow
-    # Fallback to local .release directory scanning
-    if (Test-Path ".release") {
-        $dirs = Get-ChildItem ".release" -Directory | Where-Object { $_.Name -match "^v\d+(\.\d+)*$" }
-        if ($dirs) {
-            $versions = @()
-            foreach ($dir in $dirs) {
-                $verStr = $dir.Name.Substring(1)
-                if ($verStr -notmatch "\.") {
-                    $verStr = "$verStr.0"
-                }
-                try {
-                    $verObj = [version]$verStr
-                    $versions += [PSCustomObject]@{
-                        OriginalName = $dir.Name
-                        VersionObj   = $verObj
-                    }
-                } catch {}
-            }
-            if ($versions) {
-                $latestEntry = $versions | Sort-Object VersionObj | Select-Object -Last 1
-                $currentVersion = $latestEntry.OriginalName
-                $latestVer = $latestEntry.VersionObj
-
-                if ($latestVer.Build -ge 0) {
-                    $suggestPatch = "$($latestVer.Major).$($latestVer.Minor).$($latestVer.Build + 1)"
-                    $suggestMinor = "$($latestVer.Major).$($latestVer.Minor + 1)"
-                    $suggestionPrompt = "Current local: $currentVersion, suggest $suggestPatch or $suggestMinor"
-                } else {
-                    $suggestPoint = "$($latestVer.Major).$($latestVer.Minor + 1)"
-                    $suggestMajor = "$($latestVer.Major + 1).0"
-                    $suggestionPrompt = "Current local: $currentVersion, suggest $suggestPoint or $suggestMajor"
-                }
-            }
-        }
-    }
+    Write-Host "[ERROR] Could not fetch the latest release version from GitHub: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Please check your internet connection and verify that the repository is public." -ForegroundColor Yellow
+    Write-Host
+    Write-Host "Press any key to exit..." -ForegroundColor Gray
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    Exit 1
 }
 
 $rawVersion = Read-Host "Enter the next version number ($suggestionPrompt)"
@@ -128,6 +98,8 @@ if (-not (Test-Path $releaseDir)) {
     New-Item -ItemType Directory -Path $releaseDir | Out-Null
 }
 
+$absoluteReleaseDir = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $releaseDir))
+
 $targets = @(
     @{ os = "windows"; arch = "amd64"; suffix = ".exe"; name = "rock-os-wiki-windows-amd64.exe" },
     @{ os = "windows"; arch = "arm64"; suffix = ".exe"; name = "rock-os-wiki-windows-arm64.exe" },
@@ -139,11 +111,14 @@ $targets = @(
 
 $checksums = @()
 
+# Move into module directory to compile with go.mod present
+Push-Location "cmd/rock-os-wiki"
+
 foreach ($target in $targets) {
     $os = $target.os
     $arch = $target.arch
     $binaryName = $target.name
-    $outputPath = Join-Path $releaseDir $binaryName
+    $outputPath = Join-Path $absoluteReleaseDir $binaryName
 
     Write-Host "Building $os/$arch -> $binaryName..." -ForegroundColor Gray
 
@@ -152,10 +127,11 @@ foreach ($target in $targets) {
     $env:GOARCH = $arch
 
     # Compile binary with optimizations
-    go build -ldflags="-s -w" -o $outputPath cmd/rock-os-wiki/main.go
+    go build -ldflags="-s -w" -o $outputPath .
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Failed to compile binary for $os/$arch" -ForegroundColor Red
+        Pop-Location
         Exit 1
     }
 
@@ -164,6 +140,8 @@ foreach ($target in $targets) {
     $checksumLine = "$hash  $binaryName"
     $checksums += $checksumLine
 }
+
+Pop-Location
 
 # Write checksums file
 $checksumFile = Join-Path $releaseDir "rock-os-wiki-$versionName-checksums.txt"
