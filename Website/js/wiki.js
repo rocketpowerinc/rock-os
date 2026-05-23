@@ -1231,11 +1231,54 @@ function renderSearchResults() {
                 document.createElement('div');
 
             snippet.className = 'search-result-snippet';
-            snippet.innerText = result.snippet;
+            snippet.innerHTML =
+                highlightSearchQuery(
+                    result.snippet,
+                    query
+                );
 
             sidebar.appendChild(snippet);
         }
     });
+}
+
+function escapeRegExp(value) {
+
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightSearchQuery(text, query) {
+
+    const trimmedQuery =
+        query.trim();
+
+    if (!trimmedQuery) {
+        return escapeHtml(text);
+    }
+
+    const matcher =
+        new RegExp(escapeRegExp(trimmedQuery), 'gi');
+
+    let html = '';
+    let lastIndex = 0;
+
+    text.replace(matcher, (match, offset) => {
+
+        html += escapeHtml(
+            text.slice(lastIndex, offset)
+        );
+        html += `<mark class="search-match">${escapeHtml(match)}</mark>`;
+        lastIndex =
+            offset + match.length;
+
+        return match;
+    });
+
+    html += escapeHtml(
+        text.slice(lastIndex)
+    );
+
+    return html;
 }
 
 async function openDocFromUrlIfNeeded() {

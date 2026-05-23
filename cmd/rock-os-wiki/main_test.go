@@ -229,6 +229,44 @@ func TestWikiSearchHandlerReturnsEmptyResultsForBlankQuery(t *testing.T) {
 	}
 }
 
+func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
+	siteRoot := t.TempDir()
+	markdownRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(markdownRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(
+		filepath.Join(markdownRoot, "Fresh.md"),
+		[]byte("---\npinned: true\n---\n# Fresh\n"),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/markdown-index.json", nil)
+	recorder := httptest.NewRecorder()
+
+	markdownIndexHandler(siteRoot).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+
+	var files []markdownIndexEntry
+	if err := json.Unmarshal(recorder.Body.Bytes(), &files); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("expected one indexed file, got %#v", files)
+	}
+
+	if files[0].Path != "markdown/Fresh.md" || !files[0].Pinned {
+		t.Fatalf("unexpected index entry: %#v", files[0])
+	}
+}
+
 func TestCollectMarkdownFilesCachesPinnedMetadata(t *testing.T) {
 	siteRoot := t.TempDir()
 	markdownRoot := filepath.Join(siteRoot, markdownDir)

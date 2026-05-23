@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -11,11 +13,13 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/yuin/goldmark"
@@ -117,16 +121,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if _, err := writeMarkdownIndex(siteRoot); err != nil {
-		log.Fatal(err)
-	}
-
 	if *buildIndex {
+		if _, err := writeMarkdownIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
+
 		fmt.Println("Wrote markdown-index.json")
 		return
 	}
-
-	go watchMarkdownIndex(siteRoot, 2*time.Second)
 
 	bindHost, displayHosts, err := resolveHost(*host)
 	if err != nil {
@@ -141,6 +143,7 @@ func main() {
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
+	mux.HandleFunc("/markdown-index.json", markdownIndexHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -175,7 +178,37 @@ func main() {
 		}
 	}
 
-	log.Fatal(http.Serve(listener, mux))
+	server := &http.Server{
+		Handler: logRequests(mux),
+	}
+
+	shutdownErrors := make(chan error, 1)
+	go func() {
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+		defer signal.Stop(signals)
+
+		<-signals
+		fmt.Println()
+		fmt.Println("Shutting down Rock-OS...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		shutdownErrors <- server.Shutdown(ctx)
+	}()
+
+	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+
+	select {
+	case err := <-shutdownErrors:
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+	}
 }
 
 func serverStatusHandler(bindHost string, displayHosts []string, port int) http.HandlerFunc {
@@ -204,6 +237,44 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int) http.
 			URLs:        urls,
 		})
 	}
+}
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (writer *loggingResponseWriter) WriteHeader(status int) {
+	writer.status = status
+	writer.ResponseWriter.WriteHeader(status)
+}
+
+func (writer *loggingResponseWriter) Write(data []byte) (int, error) {
+	if writer.status == 0 {
+		writer.status = http.StatusOK
+	}
+
+	return writer.ResponseWriter.Write(data)
+}
+
+func logRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		writer := &loggingResponseWriter{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+
+		next.ServeHTTP(writer, r)
+
+		log.Printf(
+			"%s %s %d %s",
+			r.Method,
+			r.URL.Path,
+			writer.status,
+			time.Since(start).Round(time.Microsecond),
+		)
+	})
 }
 
 func wikiDocHandler(siteRoot string) http.HandlerFunc {
@@ -246,6 +317,24 @@ func wikiDocHandler(siteRoot string) http.HandlerFunc {
 		}
 
 		writeJSON(w, response)
+	}
+}
+
+func markdownIndexHandler(siteRoot string) http.HandlerFunc {
+	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if _, err := writeMarkdownIndex(siteRoot); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
 	}
 }
 
@@ -1045,23 +1134,6 @@ func printPortInUseMessage(address string, displayHosts []string, port int) {
 	fmt.Printf("If another app is using port %d, stop it or start Rock-OS on another port:\n", port)
 	fmt.Printf("  go run . --port %d\n", port+1)
 	fmt.Println()
-}
-
-func watchMarkdownIndex(siteRoot string, interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		changed, err := writeMarkdownIndex(siteRoot)
-		if err != nil {
-			log.Printf("Failed to update markdown index: %v", err)
-			continue
-		}
-
-		if changed {
-			log.Println("Updated markdown-index.json")
-		}
-	}
 }
 
 func writeMarkdownIndex(siteRoot string) (bool, error) {

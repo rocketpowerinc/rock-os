@@ -513,6 +513,13 @@ position:absolute;
 	border-left: 1px solid rgba(208,255,0,.25);
 }
 
+.search-match {
+	background:rgba(var(--accent-rgb), .18);
+	color:var(--accent);
+	font-weight:700;
+	padding:0 2px;
+}
+
 .wiki-empty-state {
 	color: rgba(255,255,255,.65);
 	font-size: .9rem;
@@ -1543,6 +1550,13 @@ scroll-behavior:smooth;
 	color:#d0ff00;
 }
 
+.wiki-toc-link.active {
+	background:rgba(var(--accent-rgb), .1);
+	border-color:var(--accent);
+	color:var(--accent);
+	font-weight:700;
+}
+
 .wiki-toc-link.level-3 {
 	font-size:.78rem;
 	margin-left:12px;
@@ -2386,6 +2400,20 @@ h3,
 	background:rgba(79,100,117,.09);
 	border-color:#6c7d89;
 	color:#354655;
+	text-shadow:none;
+}
+
+:root[data-theme="steel"] .wiki-toc-link.active {
+	background:rgba(79,100,117,.12);
+	border-color:#4f6475;
+	color:#182027;
+	text-shadow:none;
+}
+
+:root[data-theme="papers"] .wiki-toc-link.active {
+	background:rgba(138,79,18,.1);
+	border-color:#8a4f12;
+	color:#4a2b10;
 	text-shadow:none;
 }
 

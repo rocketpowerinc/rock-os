@@ -1,5 +1,8 @@
 import { escapeHtml } from './utils.js';
 
+let tocObserver = null;
+let tocScrollCleanup = null;
+
 function getToc() {
 
     return document.getElementById('wikiToc');
@@ -7,12 +10,53 @@ function getToc() {
 
 export function clearToc() {
 
+    stopTocScrollSpy();
+
     const toc =
         getToc();
 
     if (toc) {
         toc.innerHTML = '';
     }
+}
+
+function stopTocScrollSpy() {
+
+    if (tocObserver) {
+        tocObserver.disconnect();
+        tocObserver = null;
+    }
+
+    if (tocScrollCleanup) {
+        tocScrollCleanup();
+        tocScrollCleanup = null;
+    }
+}
+
+function setActiveTocLink(id) {
+
+    const toc =
+        getToc();
+
+    if (!toc || !id) {
+        return;
+    }
+
+    toc.querySelectorAll('.wiki-toc-link')
+        .forEach(link => {
+
+            link.classList.toggle(
+                'active',
+                link.getAttribute('href') === `#${id}`
+            );
+        });
+}
+
+function scrolledToBottom(container) {
+
+    return Math.ceil(
+        container.scrollTop + container.clientHeight
+    ) >= container.scrollHeight - 1;
 }
 
 function slugifyHeading(value) {
@@ -43,6 +87,139 @@ function highlightHeading(heading) {
 
         heading.classList.remove('heading-jump-highlight');
     }, 1800);
+}
+
+function observeTocScroll(container, headings) {
+
+    stopTocScrollSpy();
+
+    if (!headings.length) {
+        return;
+    }
+
+    setActiveTocLink(headings[0].id);
+
+    const setLastHeadingIfAtBottom = () => {
+
+        if (!scrolledToBottom(container)) {
+            return false;
+        }
+
+        setActiveTocLink(
+            headings[headings.length - 1].id
+        );
+
+        return true;
+    };
+
+    if ('IntersectionObserver' in window) {
+
+        const visibleHeadings =
+            new Map();
+
+        tocObserver =
+            new IntersectionObserver(entries => {
+
+                if (setLastHeadingIfAtBottom()) {
+                    return;
+                }
+
+                entries.forEach(entry => {
+
+                    if (entry.isIntersecting) {
+                        visibleHeadings.set(
+                            entry.target.id,
+                            entry.boundingClientRect.top
+                        );
+                    } else {
+                        visibleHeadings.delete(entry.target.id);
+                    }
+                });
+
+                if (!visibleHeadings.size) {
+                    return;
+                }
+
+                const [activeId] =
+                    Array.from(visibleHeadings.entries())
+                        .sort((a, b) => a[1] - b[1])[0];
+
+                setActiveTocLink(activeId);
+            }, {
+                root: container,
+                rootMargin: '-12% 0px -72% 0px',
+                threshold: [0, 1]
+            });
+
+        headings.forEach(heading =>
+            tocObserver.observe(heading)
+        );
+
+        let animationFrame = null;
+        const onScroll = () => {
+
+            if (animationFrame) {
+                window.cancelAnimationFrame(animationFrame);
+            }
+
+            animationFrame =
+                window.requestAnimationFrame(() => {
+                    animationFrame = null;
+                    setLastHeadingIfAtBottom();
+                });
+        };
+
+        container.addEventListener('scroll', onScroll, {
+            passive: true
+        });
+        tocScrollCleanup = () => {
+            container.removeEventListener('scroll', onScroll);
+            if (animationFrame) {
+                window.cancelAnimationFrame(animationFrame);
+            }
+        };
+
+        return;
+    }
+
+    let scrollTimer = null;
+
+    const updateActiveHeading = () => {
+
+        if (setLastHeadingIfAtBottom()) {
+            return;
+        }
+
+        const containerTop =
+            container.getBoundingClientRect().top;
+
+        const activeHeading =
+            headings
+                .slice()
+                .reverse()
+                .find(heading =>
+                    heading.getBoundingClientRect().top -
+                    containerTop <= 96
+                ) ||
+            headings[0];
+
+        setActiveTocLink(activeHeading.id);
+    };
+
+    const onScroll = () => {
+
+        window.clearTimeout(scrollTimer);
+        scrollTimer =
+            window.setTimeout(updateActiveHeading, 80);
+    };
+
+    container.addEventListener('scroll', onScroll, {
+        passive: true
+    });
+    tocScrollCleanup = () => {
+        container.removeEventListener('scroll', onScroll);
+        window.clearTimeout(scrollTimer);
+    };
 }
 
 export function buildTableOfContents(container) {
@@ -141,6 +318,7 @@ export function buildTableOfContents(container) {
                 });
 
                 highlightHeading(target);
+                setActiveTocLink(target.id);
 
                 const url =
                     new URL(window.location.href);
@@ -155,6 +333,8 @@ export function buildTableOfContents(container) {
                 );
             };
         });
+
+    observeTocScroll(container, headings);
 }
 
 export function scrollToCurrentHash() {
