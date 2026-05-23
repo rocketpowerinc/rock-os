@@ -55,11 +55,12 @@
 	</div>
 	<div id="sidebarListContainer"></div>
 </div>
+<div class="sidebar-resizer" id="sidebarResizer"></div>
 <button id="expandSidebarBtn" class="expand-sidebar-btn" aria-label="Expand Sidebar" title="Open sidebar" style="display:none;">&#x2630;</button>
 
 <div class="content" id="content">
 
-<h1>Rock-OS Wiki</h1>
+<h1>Wiki</h1>
 
 <p>Select a markdown document.</p>
 
@@ -75,17 +76,20 @@
 <script src="js/vendor/languages/powershell.min.js"></script>
 <script src="js/theme.js"></script>
 <script type="module" src="js/wiki.js"></script>
+<script src="js/sidebar-resizer.js"></script>
 <script>
 // Sidebar collapse/expand logic
 const sidebar = document.getElementById('sidebar');
 const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
 const expandSidebarBtn = document.getElementById('expandSidebarBtn');
 const content = document.getElementById('content');
+const resizer = document.getElementById('sidebarResizer');
 
 collapseSidebarBtn.addEventListener('click', function() {
 	sidebar.classList.add('collapsed');
 	expandSidebarBtn.style.display = 'block';
 	sidebar.style.display = 'none';
+	if (resizer) resizer.style.display = 'none';
 	content.classList.add('fullwidth');
 });
 
@@ -93,6 +97,7 @@ expandSidebarBtn.addEventListener('click', function() {
 	sidebar.classList.remove('collapsed');
 	expandSidebarBtn.style.display = 'none';
 	sidebar.style.display = '';
+	if (resizer) resizer.style.display = '';
 	content.classList.remove('fullwidth');
 });
 </script>

@@ -39,26 +39,27 @@
 
 <main class="scripts-layout">
 
-<aside class="scripts-sidebar" aria-label="Available scripts">
+<aside class="sidebar" id="sidebar" aria-label="Available scripts">
 <div class="sidebar-header">
 <h3>Scripts</h3>
 <div class="sidebar-actions">
+<button id="refreshScriptsBtn" class="icon-sidebar-btn" aria-label="Refresh Scripts" title="Refresh scripts">&#x21BB;</button>
 <button id="toggleAllScriptsBtn" class="icon-sidebar-btn" aria-label="Expand all script folders" title="Expand all script folders">&#x229E;</button>
+<button id="collapseSidebarBtn" class="icon-sidebar-btn" aria-label="Collapse Sidebar" title="Collapse sidebar">&#x2630;</button>
 </div>
 </div>
-<p class="script-sidebar-note">Preview first. Run second.</p>
-<label class="script-search-label" for="scriptSearchInput">
-<span>Search scripts</span>
-<input id="scriptSearchInput" class="script-search-input" type="search" placeholder="Find a script..." autocomplete="off">
-</label>
+<div class="wiki-search">
+<input id="scriptSearchInput" type="search" placeholder="Search scripts" autocomplete="off" aria-label="Search scripts">
 <div id="scriptSearchStatus" class="wiki-search-status"></div>
+</div>
 <div id="scriptList" class="script-list"></div>
 </aside>
+<div class="sidebar-resizer" id="sidebarResizer"></div>
+<button id="expandSidebarBtn" class="expand-sidebar-btn" aria-label="Expand Sidebar" title="Open sidebar" style="display:none;">&#x2630;</button>
 
 <section class="script-workbench">
 <div class="script-workbench-header">
 <div>
-<p class="command-kicker">Local Script Runner</p>
 <h1>Scripts</h1>
 </div>
 <button id="runScriptBtn" class="command-button primary" type="button" disabled>Run</button>
@@ -83,5 +84,29 @@ Select a script to preview it before running.
 
 <script src="js/theme.js"></script>
 <script src="js/scripts.js"></script>
+<script src="js/sidebar-resizer.js"></script>
+<script>
+// Sidebar collapse/expand logic
+const sidebar = document.getElementById('sidebar');
+const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+const expandSidebarBtn = document.getElementById('expandSidebarBtn');
+const resizer = document.getElementById('sidebarResizer');
+
+if (collapseSidebarBtn && expandSidebarBtn && sidebar) {
+	collapseSidebarBtn.addEventListener('click', function() {
+		sidebar.classList.add('collapsed');
+		expandSidebarBtn.style.display = 'block';
+		sidebar.style.display = 'none';
+		if (resizer) resizer.style.display = 'none';
+	});
+
+	expandSidebarBtn.addEventListener('click', function() {
+		sidebar.classList.remove('collapsed');
+		expandSidebarBtn.style.display = 'none';
+		sidebar.style.display = '';
+		if (resizer) resizer.style.display = '';
+	});
+}
+</script>
 </body>
 </html>
