@@ -813,6 +813,39 @@ func TestProfilesIndexHandlerRefreshesIndex(t *testing.T) {
 	}
 }
 
+func TestProfilesIndexHandlerFiltersProfile(t *testing.T) {
+	siteRoot := t.TempDir()
+	for _, profile := range []string{"Rocket", "Kids"} {
+		profileRoot := filepath.Join(siteRoot, profilesDir, profile)
+		if err := os.MkdirAll(profileRoot, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(profileRoot, "Profile.md"), []byte("# "+profile), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/profiles-index.json?profile=Kids", nil)
+	rec := httptest.NewRecorder()
+	profilesIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 profile file, got %d", len(index))
+	}
+	if index[0].Path != "profiles/Kids/Profile.md" {
+		t.Errorf("expected Kids profile file, got %q", index[0].Path)
+	}
+}
+
 func TestProfilesHandlersRejectLockedContent(t *testing.T) {
 	siteRoot := t.TempDir()
 	profilesRoot := filepath.Join(siteRoot, profilesDir)

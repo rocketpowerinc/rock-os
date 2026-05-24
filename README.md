@@ -144,7 +144,9 @@ markdown stored under `Website/profiles/`.
 The top navigation includes a **Profiles** tab between Home and Menu. When
 `Website/profiles/` is locked, the Profiles page shows a locked panel instead
 of listing private profile documents. After unlocking, it behaves like the other
-markdown tabs and shows profile folders such as Rocket, Kids, and Prepper.
+markdown tabs and shows profile folders such as Rocket, Kids, and Prepper. Each
+profile opens as its own dashboard with its own sidebar, search, favorites, and
+document view.
 
 ### Windows
 

@@ -2718,6 +2718,8 @@ func profilesIndexHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
+		files = filterProfilesFiles(files, r.URL.Query().Get("profile"))
+
 		writeJSON(w, files)
 	}
 }
@@ -2830,7 +2832,7 @@ func profilesSearchHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		results, err := searchProfiles(siteRoot, query)
+		results, err := searchProfiles(siteRoot, query, r.URL.Query().Get("profile"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -2842,11 +2844,12 @@ func profilesSearchHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func searchProfiles(siteRoot string, query string) ([]wikiSearchResult, error) {
+func searchProfiles(siteRoot string, query string, profile string) ([]wikiSearchResult, error) {
 	files, err := collectProfilesFiles(siteRoot)
 	if err != nil {
 		return nil, err
 	}
+	files = filterProfilesFiles(files, profile)
 
 	normalizedQuery := strings.ToLower(query)
 	results := []wikiSearchResult{}
@@ -2886,6 +2889,25 @@ func searchProfiles(siteRoot string, query string) ([]wikiSearchResult, error) {
 	}
 
 	return results, nil
+}
+
+func filterProfilesFiles(files []markdownIndexEntry, profile string) []markdownIndexEntry {
+	profile = strings.Trim(strings.ReplaceAll(profile, "\\", "/"), "/")
+	if profile == "" || strings.Contains(profile, "/") || strings.Contains(profile, "\x00") {
+		if profile == "" {
+			return files
+		}
+		return []markdownIndexEntry{}
+	}
+
+	prefix := profilesDir + "/" + profile + "/"
+	filtered := []markdownIndexEntry{}
+	for _, file := range files {
+		if strings.HasPrefix(file.Path, prefix) {
+			filtered = append(filtered, file)
+		}
+	}
+	return filtered
 }
 
 func writeProfilesIndex(siteRoot string) (bool, error) {

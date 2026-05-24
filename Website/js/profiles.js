@@ -1,5 +1,15 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
 async function profilesAreLocked() {
 
     try {
@@ -59,6 +69,116 @@ function renderLockedProfiles() {
     }
 }
 
+function currentProfileName() {
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    return params.get('profile') || '';
+}
+
+function profileNameFromPath(path) {
+
+    const match =
+        path.match(/^profiles\/([^/]+)\//);
+
+    return match
+        ? decodeURIComponent(match[1])
+        : '';
+}
+
+function profileUrl(profile) {
+
+    const url =
+        new URL('profiles.html', window.location.href);
+
+    url.searchParams.set('profile', profile);
+
+    return `${url.pathname}${url.search}`;
+}
+
+function renderProfilesLanding(files) {
+
+    const sidebar =
+        document.getElementById('sidebar');
+    const resizer =
+        document.getElementById('sidebarResizer');
+    const expandButton =
+        document.getElementById('expandSidebarBtn');
+    const toc =
+        document.getElementById('wikiToc');
+    const content =
+        document.getElementById('content');
+
+    if (sidebar) {
+        sidebar.style.display = 'none';
+    }
+    if (resizer) {
+        resizer.style.display = 'none';
+    }
+    if (expandButton) {
+        expandButton.style.display = 'none';
+    }
+    if (toc) {
+        toc.innerHTML = '';
+    }
+    if (!content) {
+        return;
+    }
+
+    const profiles =
+        Array.from(
+            new Set(
+                files
+                    .map(file => profileNameFromPath(file.path || file))
+                    .filter(Boolean)
+            )
+        )
+            .sort((a, b) =>
+                a.toLowerCase().localeCompare(b.toLowerCase())
+            );
+
+    content.classList.add('fullwidth');
+    content.innerHTML = `
+        <section class="profiles-dashboard">
+            <p class="wiki-error-kicker">Encrypted Profiles</p>
+            <h1>Profiles</h1>
+            <p>Choose a profile dashboard. Each profile keeps its own private markdown tree, search, favorites, and document view.</p>
+            <div class="profiles-card-grid">
+                ${profiles.map(profile => `
+                    <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}">
+                        <span>${escapeHtml(profile)}</span>
+                        <small>Open private dashboard</small>
+                    </a>
+                `).join('')}
+            </div>
+        </section>
+    `;
+}
+
+async function loadProfilesLanding() {
+
+    try {
+        const response =
+            await fetch('profiles-index.json?nocache=' + Date.now());
+
+        if (!response.ok) {
+            throw new Error(`Profiles index failed with HTTP ${response.status}`);
+        }
+
+        const files =
+            await response.json();
+
+        renderProfilesLanding(
+            Array.isArray(files) ? files : []
+        );
+    }
+    catch (err) {
+        console.warn(err);
+        renderLockedProfiles();
+    }
+}
+
 async function startProfiles() {
 
     if (await profilesAreLocked()) {
@@ -66,17 +186,49 @@ async function startProfiles() {
         return;
     }
 
+    const profile =
+        currentProfileName();
+
+    if (!profile) {
+        await loadProfilesLanding();
+        return;
+    }
+
+    document.title =
+        `Rock-OS ${profile}`;
+
+    const heading =
+        document.querySelector('.sidebar-header h3');
+    const search =
+        document.getElementById('profilesSearchInput');
+    const content =
+        document.getElementById('content');
+
+    if (heading) {
+        heading.textContent = profile;
+    }
+    if (search) {
+        search.placeholder = `Search ${profile}`;
+        search.setAttribute('aria-label', `Search ${profile}`);
+    }
+    if (content) {
+        content.innerHTML = `
+            <h1>${escapeHtml(profile)}</h1>
+            <p>Select a profile document.</p>
+        `;
+    }
+
     createMarkdownTabApp({
-        key: 'profiles',
-        label: 'Profiles',
+        key: `profiles-${profile}`,
+        label: profile,
         emptyLabel: 'profile files',
         searchStatusId: 'profilesSearchStatus',
         searchInputId: 'profilesSearchInput',
         refreshButtonId: 'refreshProfilesBtn',
-        indexUrl: 'profiles-index.json',
+        indexUrl: `profiles-index.json?profile=${encodeURIComponent(profile)}`,
         docApiUrl: '/api/profiles/doc',
-        searchApiUrl: '/api/profiles/search',
-        pathPrefix: 'profiles',
+        searchApiUrl: `/api/profiles/search?profile=${encodeURIComponent(profile)}`,
+        pathPrefix: `profiles/${profile}`,
         directOpenPageName: 'profiles.html'
     });
 }

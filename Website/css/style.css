@@ -920,6 +920,58 @@ color:#88ff88;
 	max-width:100%;
 }
 
+.profiles-dashboard {
+	margin:clamp(24px, 8vh, 72px) auto;
+	max-width:1040px;
+}
+
+.profiles-dashboard > p:not(.wiki-error-kicker) {
+	color:var(--text-muted);
+	line-height:1.7;
+	max-width:68ch;
+}
+
+.profiles-card-grid {
+	display:grid;
+	gap:18px;
+	grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+	margin-top:28px;
+}
+
+.profiles-card {
+	background:
+		linear-gradient(135deg, rgba(var(--accent-rgb), .10), rgba(var(--accent-2-rgb), .05)),
+		var(--panel-bg);
+	border:1px solid rgba(var(--accent-rgb), .25);
+	color:var(--text-main);
+	display:flex;
+	flex-direction:column;
+	gap:20px;
+	min-height:150px;
+	padding:22px;
+	text-decoration:none;
+	transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.profiles-card:hover {
+	border-color:rgba(var(--accent-rgb), .62);
+	box-shadow:0 18px 42px rgba(0,0,0,.14);
+	transform:translateY(-2px);
+}
+
+.profiles-card span {
+	font-size:1.2rem;
+	font-weight:900;
+}
+
+.profiles-card small {
+	color:var(--text-muted);
+	font-size:.75rem;
+	font-weight:800;
+	letter-spacing:.9px;
+	text-transform:uppercase;
+}
+
 .command-hero {
 	align-items:center;
 	display:grid;

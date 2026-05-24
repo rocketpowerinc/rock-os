@@ -45,6 +45,22 @@ const markdownContentLoads = new Map();
 loadSavedState();
 loadPinnedDocs();
 
+function urlWithParams(baseUrl, params = {}) {
+
+    const url =
+        new URL(baseUrl, window.location.href);
+
+    Object.entries(params)
+        .forEach(([key, value]) => {
+
+            if (value !== undefined && value !== null && value !== '') {
+                url.searchParams.set(key, value);
+            }
+        });
+
+    return `${url.pathname}${url.search}`;
+}
+
 function getSidebar() {
 
     return document.getElementById(
@@ -596,7 +612,10 @@ async function runSearch(query, requestId) {
 
         const response =
             await fetch(
-                `${tab.searchApiUrl}?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+                urlWithParams(tab.searchApiUrl, {
+                    q: query,
+                    nocache: Date.now()
+                })
             );
 
         if (!response.ok) {
@@ -1548,8 +1567,9 @@ async function loadIndex() {
         }
 
         const response = await fetch(
-            `${tab.indexUrl}?nocache=` +
-            Date.now()
+            urlWithParams(tab.indexUrl, {
+                nocache: Date.now()
+            })
         );
 
         if (!response.ok) {
