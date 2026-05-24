@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -28,6 +29,8 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 )
+
+var startupTime = time.Now()
 
 const (
 	indexFile            = "wiki-index.json"
@@ -93,6 +96,8 @@ type serverStatus struct {
 	GitCrypt     string   `json:"gitCrypt"`
 	WikiCount    int      `json:"wikiCount"`
 	ScriptsCount int      `json:"scriptsCount"`
+	Uptime       int64    `json:"uptime"`
+	LastSync     int64    `json:"lastSync"`
 }
 
 type wikiDocResponse struct {
@@ -413,6 +418,22 @@ func gitCryptKeyPresent(siteRoot string) bool {
 	return len(matches) > 0
 }
 
+func lastCommitTime(siteRoot string) int64 {
+	repoRoot := filepath.Dir(siteRoot)
+	cmd := exec.Command("git", "log", "-1", "--format=%ct")
+	cmd.Dir = repoRoot
+	output, err := cmd.Output()
+	if err != nil {
+		return 0
+	}
+	timestampStr := strings.TrimSpace(string(output))
+	sec, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return sec
+}
+
 func serverStatusHandler(bindHost string, displayHosts []string, port int, siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -450,6 +471,8 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 			GitCrypt:     gitCrypt,
 			WikiCount:    markdownCount,
 			ScriptsCount: scriptsCount,
+			Uptime:       int64(time.Since(startupTime).Seconds()),
+			LastSync:     lastCommitTime(siteRoot),
 		})
 	}
 }

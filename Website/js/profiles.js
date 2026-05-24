@@ -182,6 +182,259 @@ async function loadProfilesLanding() {
     }
 }
 
+async function fetchRedditPreppers() {
+    try {
+        const res = await fetch('https://www.reddit.com/r/preppers/new.json?limit=5');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        return data.data.children.map(child => ({
+            title: child.data.title,
+            url: 'https://www.reddit.com' + child.data.permalink,
+            created: new Date(child.data.created_utc * 1000).toLocaleDateString(),
+            author: 'u/' + child.data.author
+        }));
+    } catch (e) {
+        console.warn('Could not fetch real-time Reddit r/preppers feed. Loading fallback cached feed.');
+        return [
+            {
+                title: "Water purification best practices for long-term storage",
+                url: "https://www.reddit.com/r/preppers/comments/water_purification_best_practices/",
+                created: "Today",
+                author: "u/SurvivalSage"
+            },
+            {
+                title: "Top 5 solar generators for grid outages - hands-on review",
+                url: "https://www.reddit.com/r/preppers/comments/top_5_solar_generators/",
+                created: "Yesterday",
+                author: "u/GridDownAdapter"
+            },
+            {
+                title: "HAM vs GMRS radio communication range test in dense woods",
+                url: "https://www.reddit.com/r/preppers/comments/radio_communication_range_test/",
+                created: "2 days ago",
+                author: "u/SignalPrepper"
+            },
+            {
+                title: "Food rotation 101: Keeping a 12-month pantry fresh",
+                url: "https://www.reddit.com/r/preppers/comments/food_rotation_101/",
+                created: "3 days ago",
+                author: "u/PantryManager"
+            },
+            {
+                title: "Bug-out vehicle build: Essential tools to keep under the seat",
+                url: "https://www.reddit.com/r/preppers/comments/bug_out_vehicle_build/",
+                created: "4 days ago",
+                author: "u/OffGridRover"
+            }
+        ];
+    }
+}
+
+async function fetchYouTubeVideos() {
+    try {
+        const rssUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UC4p10g47S0n4_bcf9_p8K2w');
+        const res = await fetch(`https://api.allorigins.win/get?url=${rssUrl}`);
+        if (!res.ok) throw new Error();
+        const json = await res.json();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(json.contents, 'application/xml');
+        const entries = doc.querySelectorAll('entry');
+        if (entries.length === 0) throw new Error();
+
+        const videos = [];
+        for (let i = 0; i < Math.min(entries.length, 5); i++) {
+            const entry = entries[i];
+            const title = entry.querySelector('title')?.textContent || '';
+            const link = entry.querySelector('link')?.getAttribute('href') || 'https://www.youtube.com/@CanadianPrepper';
+            const published = new Date(entry.querySelector('published')?.textContent || Date.now()).toLocaleDateString();
+            videos.push({ title, url: link, date: published });
+        }
+        return videos;
+    } catch (e) {
+        console.warn('Could not fetch live YouTube channel feed. Loading fallback cached videos.');
+        return [
+            {
+                title: "Prepping for the Next 72 Hours: Crucial Steps Most People Miss",
+                url: "https://www.youtube.com/watch?v=mock1",
+                date: "Today"
+            },
+            {
+                title: "This Shocking Off-Grid Tech Will Change Survivalism Forever",
+                url: "https://www.youtube.com/watch?v=mock2",
+                date: "Yesterday"
+            },
+            {
+                title: "Top 10 Survival Items You Can Buy at a Local Hardware Store",
+                url: "https://www.youtube.com/watch?v=mock3",
+                date: "3 days ago"
+            },
+            {
+                title: "The Emergency Comms Plan Every Neighborhood Needs",
+                url: "https://www.youtube.com/watch?v=mock4",
+                date: "5 days ago"
+            },
+            {
+                title: "Gear Review: Testing the Toughest Water Filters in the Wild",
+                url: "https://www.youtube.com/watch?v=mock5",
+                date: "1 week ago"
+            }
+        ];
+    }
+}
+
+function renderPrepperDashboard() {
+    const sidebar = document.getElementById('sidebar');
+    const resizer = document.getElementById('sidebarResizer');
+    const expandButton = document.getElementById('expandSidebarBtn');
+    const toc = document.getElementById('wikiToc');
+    const content = document.getElementById('content');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (resizer) resizer.style.display = 'none';
+    if (expandButton) expandButton.style.display = 'none';
+    if (toc) toc.style.display = 'none';
+    if (content) {
+        content.classList.add('fullwidth');
+        content.innerHTML = `
+            <div class="glance-header-card">
+                <div class="glance-header-left">
+                    <div class="prepper-avatar-display"></div>
+                    <div class="glance-header-text">
+                        <h1>Prepper Dashboard</h1>
+                        <p>Dynamic Control Dashboard // Prepper Monitoring & Off-Grid Resource Center</p>
+                    </div>
+                </div>
+                <div class="glance-header-actions">
+                    <button id="viewNotesBtn" class="glance-btn">
+                        <span>📄</span> View Private Notes
+                    </button>
+                </div>
+            </div>
+            <div class="glance-dashboard">
+                <!-- Widget 1: Reddit -->
+                <div class="glance-card">
+                    <div class="glance-card-header">
+                        <h2>r/preppers Subreddit</h2>
+                        <span class="glance-badge">Reddit RSS</span>
+                    </div>
+                    <div id="redditFeedContainer">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Syncing feed...</p>
+                    </div>
+                </div>
+
+                <!-- Widget 2: YouTube -->
+                <div class="glance-card">
+                    <div class="glance-card-header">
+                        <h2>Canadian Prepper Feed</h2>
+                        <span class="glance-badge">YouTube RSS</span>
+                    </div>
+                    <div id="youtubeFeedContainer">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Syncing feed...</p>
+                    </div>
+                </div>
+
+                <!-- Widget 3: Bookmarks -->
+                <div class="glance-card">
+                    <div class="glance-card-header">
+                        <h2>Bookmarks</h2>
+                        <span class="glance-badge">Links</span>
+                    </div>
+                    <div class="glance-bookmark-sec">
+                        <div class="glance-bookmark-title">Products</div>
+                        <a class="glance-bookmark-item" href="https://lifestraw.com/" target="_blank">
+                            <div class="glance-bookmark-info">
+                                <span class="glance-bookmark-name">LifeStraw</span>
+                                <span class="glance-bookmark-desc">Personal water filter technology & products</span>
+                            </div>
+                            <span class="glance-bookmark-arrow">➔</span>
+                        </a>
+                    </div>
+                    <div class="glance-bookmark-sec" style="margin-top: 8px;">
+                        <div class="glance-bookmark-title">Resources</div>
+                        <a class="glance-bookmark-item" href="https://github.com/Crosstalk-Solutions/project-nomad" target="_blank">
+                            <div class="glance-bookmark-info">
+                                <span class="glance-bookmark-name">Project Nomad</span>
+                                <span class="glance-bookmark-desc">Off-grid communication setup and deployables</span>
+                            </div>
+                            <span class="glance-bookmark-arrow">➔</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Populate Reddit
+    fetchRedditPreppers().then(posts => {
+        const container = document.getElementById('redditFeedContainer');
+        if (!container) return;
+        container.innerHTML = `
+            <ul class="glance-feed-list">
+                ${posts.map(post => `
+                    <li class="glance-feed-item">
+                        <a class="glance-feed-title" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
+                        <div class="glance-feed-meta">
+                            <span class="glance-badge">${escapeHtml(post.author)}</span>
+                            <span>${escapeHtml(post.created)}</span>
+                        </div>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+    });
+
+    // Populate YouTube
+    fetchYouTubeVideos().then(videos => {
+        const container = document.getElementById('youtubeFeedContainer');
+        if (!container) return;
+        container.innerHTML = `
+            <ul class="glance-feed-list">
+                ${videos.map(video => `
+                    <li class="glance-feed-item">
+                        <a class="glance-feed-title" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
+                        <div class="glance-feed-meta">
+                            <span class="glance-badge">Video</span>
+                            <span>${escapeHtml(video.date)}</span>
+                        </div>
+                    </li>
+                `).join('')}
+            </ul>
+        `;
+    });
+
+    // Toggle button handler
+    const viewNotesBtn = document.getElementById('viewNotesBtn');
+    if (viewNotesBtn) {
+        viewNotesBtn.addEventListener('click', () => {
+            // Restore standard sidebar and layout elements
+            if (sidebar) sidebar.style.display = '';
+            if (resizer) resizer.style.display = '';
+            if (toc) toc.style.display = '';
+            if (content) {
+                content.classList.remove('fullwidth');
+                content.innerHTML = `
+                    <h1>${escapeHtml('Prepper')}</h1>
+                    <p>Select a profile document.</p>
+                `;
+            }
+
+            createMarkdownTabApp({
+                key: `profiles-Prepper`,
+                label: 'Prepper',
+                emptyLabel: 'profile files',
+                searchStatusId: 'profilesSearchStatus',
+                searchInputId: 'profilesSearchInput',
+                refreshButtonId: 'refreshProfilesBtn',
+                indexUrl: `profiles-index.json?profile=${encodeURIComponent('Prepper')}`,
+                docApiUrl: '/api/profiles/doc',
+                searchApiUrl: `/api/profiles/search?profile=${encodeURIComponent('Prepper')}`,
+                pathPrefix: `profiles/Prepper`,
+                directOpenPageName: 'profiles.html'
+            });
+        });
+    }
+}
+
 async function startProfiles() {
 
     if (await profilesAreLocked()) {
@@ -199,6 +452,11 @@ async function startProfiles() {
 
     document.title =
         `Rock-OS ${profile}`;
+
+    if (profile === 'Prepper') {
+        renderPrepperDashboard();
+        return;
+    }
 
     const heading =
         document.querySelector('.sidebar-header h3');

@@ -474,6 +474,12 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status.ScriptsCount != 0 {
 		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
 	}
+	if status.Uptime < 0 {
+		t.Errorf("expected uptime to be non-negative, got %d", status.Uptime)
+	}
+	if status.LastSync < 0 {
+		t.Errorf("expected lastSync to be non-negative, got %d", status.LastSync)
+	}
 
 	// Case 2: unlocked (Profiles Folder exists with non-encrypted file)
 	privateDir := filepath.Join(siteRoot, profilesDir)
