@@ -1295,7 +1295,8 @@ scroll-behavior:smooth;
 .content::after {
 	content:"";
 	display:block;
-	height:96px;
+	height:45vh;
+	min-height:180px;
 }
 
 .scripts-layout {

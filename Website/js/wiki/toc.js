@@ -89,6 +89,24 @@ function highlightHeading(heading) {
     }, 1800);
 }
 
+function scrollContainerToHeading(container, heading, behavior = 'smooth') {
+
+    const containerTop =
+        container.getBoundingClientRect().top;
+
+    const headingTop =
+        heading.getBoundingClientRect().top;
+
+    container.scrollTo({
+        top:
+            container.scrollTop +
+            headingTop -
+            containerTop -
+            24,
+        behavior
+    });
+}
+
 function observeTocScroll(container, headings) {
 
     stopTocScrollSpy();
@@ -309,13 +327,7 @@ export function buildTableOfContents(container) {
 
                 event.preventDefault();
 
-                container.scrollTo({
-                    top:
-                        target.offsetTop -
-                        container.offsetTop -
-                        24,
-                    behavior: 'smooth'
-                });
+                scrollContainerToHeading(container, target);
 
                 highlightHeading(target);
                 setActiveTocLink(target.id);
@@ -339,14 +351,17 @@ export function buildTableOfContents(container) {
 
 export function scrollToCurrentHash() {
 
-    if (!window.location.hash) {
+    const currentHash =
+        window.location.hash;
+
+    if (!currentHash) {
         return;
     }
 
     const target =
         document.getElementById(
             decodeURIComponent(
-                window.location.hash.slice(1)
+                currentHash.slice(1)
             )
         );
 
@@ -362,13 +377,19 @@ export function scrollToCurrentHash() {
             return;
         }
 
-        content.scrollTo({
-            top:
-                target.offsetTop -
-                content.offsetTop -
-                24,
-            behavior: 'smooth'
-        });
+        scrollContainerToHeading(content, target);
+        highlightHeading(target);
+
+        const url =
+            new URL(window.location.href);
+
+        url.hash = '';
+
+        window.history.replaceState(
+            {},
+            '',
+            url
+        );
     });
 }
 

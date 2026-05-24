@@ -25,7 +25,7 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^menu\\/(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
+    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 

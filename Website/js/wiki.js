@@ -100,6 +100,8 @@ function updateDocUrl(path, replace = false) {
 
     url.searchParams.set('doc', path);
 
+    url.hash = '';
+
     if (replace) {
         window.history.replaceState({}, '', url);
     } else {
@@ -456,9 +458,6 @@ go run .</code></pre>
     `;
 }
 
-    `;
-}
-
 function isDirectFileOpen() {
 
     return window.location.protocol === 'file:';
@@ -468,7 +467,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^menu\\/wiki\//, '')
+            .replace(/^menu\/wiki\//, '')
             .split('/');
 
     parts.pop();
@@ -487,7 +486,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^menu\\/wiki\//, '')
+                .replace(/^menu\/wiki\//, '')
                 .split('/');
 
         parts.pop();
@@ -1616,12 +1615,13 @@ async function loadIndex() {
 
         renderWikiError(
             'Could not connect to the wiki server',
-                'The browser could not load the wiki index. The server may not be running, or the page may have been opened from the wrong place.',
-                [
+            'The browser could not load the wiki index. The server may not be running, or the page may have been opened from the wrong place.',
+            [
                 'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
             ]
         );
+    }
     finally {
 
         indexLoadInProgress = false;

@@ -100,6 +100,8 @@ function updateDocUrl(path, replace = false) {
 
     url.searchParams.set('doc', path);
 
+    url.hash = '';
+
     if (replace) {
         window.history.replaceState({}, '', url);
     } else {
@@ -465,7 +467,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^menu\\/bookmarks\//, '')
+            .replace(/^menu\/bookmarks\//, '')
             .split('/');
 
     parts.pop();
@@ -484,7 +486,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^menu\\/bookmarks\//, '')
+                .replace(/^menu\/bookmarks\//, '')
                 .split('/');
 
         parts.pop();

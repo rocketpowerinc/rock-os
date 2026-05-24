@@ -309,7 +309,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^menu\\/rocket\//, '')
+            .replace(/^menu\/rocket\//, '')
             .split('/');
 
     parts.pop();
@@ -328,7 +328,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^menu\\/rocket\//, '')
+                .replace(/^menu\/rocket\//, '')
                 .split('/');
 
         parts.pop();
@@ -1117,6 +1117,8 @@ function updateDocUrl(path, replace = false) {
         new URL(window.location.href);
 
     url.searchParams.set('doc', path);
+
+    url.hash = '';
 
     if (replace) {
         window.history.replaceState(null, '', url.toString());
