@@ -40,8 +40,11 @@ function normalizeIndexFiles(payload) {
 
 async function loadTabIndex(tab) {
 
-    const indexUrl =
-        tabIndexes[tab];
+    let indexUrl = tabIndexes[tab];
+    if (!indexUrl && tab.startsWith('profiles-')) {
+        const profileName = tab.replace('profiles-', '');
+        indexUrl = `profiles-index.json?profile=${encodeURIComponent(profileName)}`;
+    }
 
     if (!indexUrl) {
         return [];
@@ -49,9 +52,10 @@ async function loadTabIndex(tab) {
 
     if (!tabIndexCache.has(tab)) {
 
+        const sep = indexUrl.includes('?') ? '&' : '?';
         tabIndexCache.set(
             tab,
-            fetch(`${indexUrl}?nocache=${Date.now()}`)
+            fetch(`${indexUrl}${sep}nocache=${Date.now()}`)
                 .then(response => response.ok ? response.json() : [])
                 .then(normalizeIndexFiles)
                 .catch(() => [])
@@ -135,13 +139,24 @@ export function wikiDocHref(path) {
 
     url.searchParams.set('doc', path);
 
+    if (path.startsWith('profiles/')) {
+        const parts = path.split('/');
+        if (parts.length > 1) {
+            url.searchParams.set('profile', parts[1]);
+        }
+    }
+
     return `${url.pathname}${url.search}`;
 }
 
 
 function getTabForPath(path) {
     if (path.startsWith('menu/wiki/')) return 'wiki';
-    if (path.startsWith('profiles/')) return 'profiles';
+    if (path.startsWith('profiles/')) {
+        const parts = path.split('/');
+        const profile = parts.length > 1 ? parts[1] : '';
+        return `profiles-${profile}`;
+    }
     if (path.startsWith('menu/guides/')) return 'guides';
     if (path.startsWith('menu/cheatsheets/')) return 'cheatsheets';
     if (path.startsWith('menu/dotfiles/')) return 'dotfiles';
@@ -152,7 +167,11 @@ function getTabForPath(path) {
 function getCurrentTab() {
     const path = window.location.pathname.toLowerCase();
     if (path.includes('wiki.html') || path.endsWith('/wiki')) return 'wiki';
-    if (path.includes('profiles.html') || path.endsWith('/profiles')) return 'profiles';
+    if (path.includes('profiles.html') || path.endsWith('/profiles')) {
+        const params = new URLSearchParams(window.location.search);
+        const profile = params.get('profile') || '';
+        return `profiles-${profile}`;
+    }
     if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
     if (path.includes('cheatsheets.html') || path.endsWith('/cheatsheets')) return 'cheatsheets';
     if (path.includes('dotfiles.html') || path.endsWith('/dotfiles')) return 'dotfiles';
