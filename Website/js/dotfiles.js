@@ -465,7 +465,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^tabs\/dotfiles\//, '')
+            .replace(/^menu\\/dotfiles\//, '')
             .split('/');
 
     parts.pop();
@@ -484,7 +484,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^tabs\/dotfiles\//, '')
+                .replace(/^menu\\/dotfiles\//, '')
                 .split('/');
 
         parts.pop();
@@ -920,7 +920,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('tabs/dotfiles/', '')
+            .replace('menu/dotfiles/', '')
             .split('/');
 
         let current = tree;

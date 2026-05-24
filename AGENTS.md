@@ -73,13 +73,13 @@ Markdown notes should be clear, practical, and a little human.
 - Windows scripts should remain readable when double-clicked. If a `.cmd` script
   finishes instead of staying open as a long-running server process, pause at
   the end so the user can read the output and close the window themselves.
-- User-managed website scripts live in `Website/tabs/scripts/`. The script dashboard
+- User-managed website scripts live in `Website/menu/scripts/`. The script dashboard
   should only expose allowlisted script files from that folder and should never
   become an arbitrary web command prompt.
-- Organize user scripts under platform folders such as `Website/tabs/scripts/Windows/`,
-  `Website/tabs/scripts/Linux/`, and `Website/tabs/scripts/Mac/`. The dashboard should
+- Organize user scripts under platform folders such as `Website/menu/scripts/Windows/`,
+  `Website/menu/scripts/Linux/`, and `Website/menu/scripts/Mac/`. The dashboard should
   render those folders as a collapsible tree.
-- Do not update `README.md` for every new script added under `Website/tabs/scripts/`.
+- Do not update `README.md` for every new script added under `Website/menu/scripts/`.
   The scripts folder may grow to hundreds of entries. Put useful comments inside
   scripts instead so each script explains itself where it runs.
 - The script dashboard supports `.cmd`, `.bat`, `.sh`, and `.ps1` files. Keep
@@ -116,7 +116,7 @@ Markdown notes should be clear, practical, and a little human.
 Private markdown lives under:
 
 ```text
-Website/tabs/rocket/
+Website/menu/rocket/
 ```
 
 This area is intended to be encrypted with `git-crypt`.
@@ -132,7 +132,7 @@ This area is intended to be encrypted with `git-crypt`.
 - Use existing project patterns before inventing new ones.
 - Keep changes scoped to the user request.
 - Update `README.md` when adding user-facing features, dependencies, or workflow
-  changes. Do not update it for ordinary additions under `Website/tabs/scripts/`.
+  changes. Do not update it for ordinary additions under `Website/menu/scripts/`.
 - Do not commit, stash, push, or open pull requests for the user unless they
   explicitly ask for that action.
 - Do not stage files unless the user explicitly asks. The user prefers to review

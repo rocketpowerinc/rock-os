@@ -91,7 +91,7 @@ copy and prints a warning.
 - Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?doc=tabs/wiki/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?doc=menu/wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -139,7 +139,7 @@ managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
 build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/tabs/rocket/`.
+markdown stored under `Website/menu/rocket/`.
 
 ### Windows
 
@@ -259,12 +259,13 @@ source ~/.bashrc
 cmd/rock-os-wiki/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               HTML, CSS, JS, assets, and media
-Website/tabs/wiki/     Public wiki markdown
-Website/tabs/guides/   Guided setup markdown
-Website/tabs/cheatsheets/ Quick-reference markdown
-Website/tabs/dotfiles/ Dotfile notes and configs
-Website/tabs/rocket/   Encrypted/private markdown
-Website/tabs/scripts/  User-managed runnable scripts
+Website/menu/wiki/     Public wiki markdown
+Website/menu/guides/   Guided setup markdown
+Website/menu/cheatsheets/ Quick-reference markdown
+Website/menu/dotfiles/ Dotfile notes and configs
+Website/menu/bookmarks/ Bookmark collections and link notes
+Website/menu/rocket/   Encrypted/private markdown
+Website/menu/scripts/  User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -352,18 +353,18 @@ hidden temporary executable that `go run` creates inside `.gocache`.
 ## Local Script Dashboard
 
 Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
-`Website/tabs/scripts/`. The dashboard lists allowed scripts, renders the script
+`Website/menu/scripts/`. The dashboard lists allowed scripts, renders the script
 contents for review, and only then enables a run button for scripts compatible
 with the current operating system. When you click Run, the server opens the
 script in the operating system's default terminal so normal prompts, `sudo`,
 and long-running commands behave like they would outside the browser.
 
-Organize scripts into folders such as `Website/tabs/scripts/Windows/`,
-`Website/tabs/scripts/Linux/`, and `Website/tabs/scripts/Mac/`. The dashboard renders
+Organize scripts into folders such as `Website/menu/scripts/Windows/`,
+`Website/menu/scripts/Linux/`, and `Website/menu/scripts/Mac/`. The dashboard renders
 those folders as a folded collapsible tree with an expand/fold-all control,
 similar to the wiki sidebar.
 
-For safety, the Go server only exposes scripts from `Website/tabs/scripts/` and does
+For safety, the Go server only exposes scripts from `Website/menu/scripts/` and does
 not provide an arbitrary command prompt. Supported script types are `.cmd`,
 `.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
 on the machine running the Go server.
@@ -506,7 +507,7 @@ starting the server. The server usually finds `Website` automatically, but
 This repo can use `git-crypt` for private markdown notes stored under:
 
 ```text
-Website/tabs/rocket/
+Website/menu/rocket/
 ```
 
 Those files can be committed to the public repo, but their contents are stored
@@ -566,7 +567,7 @@ macOS or Linux:
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/tabs/rocket/` should become readable, and the
+unlocking, files in `Website/menu/rocket/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -610,7 +611,7 @@ again.
 The Go server scans:
 
 ```text
-Website/tabs/wiki/
+Website/menu/wiki/
 ```
 
 It writes:
@@ -634,7 +635,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/tabs/wiki/
+Website/menu/wiki/
   Linux/
     AnduinOS/
       Guide.md
@@ -658,7 +659,7 @@ visible while editing.
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?doc=tabs/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?doc=menu/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

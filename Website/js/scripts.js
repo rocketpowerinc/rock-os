@@ -525,7 +525,7 @@ function renderScriptTree(scripts) {
         scriptList.textContent =
             allScripts.length
                 ? 'No scripts match your search.'
-                : 'No scripts found in Website/tabs/scripts.';
+                : 'No scripts found in Website/menu/scripts.';
         updateToggleAllScriptsButton();
         return;
     }

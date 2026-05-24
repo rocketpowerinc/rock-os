@@ -468,7 +468,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^tabs\/wiki\//, '')
+            .replace(/^menu\\/wiki\//, '')
             .split('/');
 
     parts.pop();
@@ -487,7 +487,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^tabs\/wiki\//, '')
+                .replace(/^menu\\/wiki\//, '')
                 .split('/');
 
         parts.pop();
@@ -923,7 +923,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('tabs/wiki/', '')
+            .replace('menu/wiki/', '')
             .split('/');
 
         let current = tree;

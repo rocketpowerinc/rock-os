@@ -88,7 +88,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -102,7 +102,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "tabs/wiki/Test.md" {
+	if response.Path != "menu/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -127,7 +127,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -151,7 +151,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=tabs/wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -202,7 +202,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "tabs/wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "menu/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -338,7 +338,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "tabs/wiki/Fresh.md" {
+	if files[0].Path != "menu/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -425,13 +425,13 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, scriptsDir, rocketDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, rocketDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "scripts.html", "rocket.html"} {
+	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "rocket.html"} {
 		if err := os.WriteFile(filepath.Join(siteRoot, file), []byte(file), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -548,25 +548,25 @@ func TestResolveGuideDoc(t *testing.T) {
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "tabs/guides/Setup.md")
+	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "menu/guides/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "tabs/guides/Setup.md" {
-		t.Errorf("expected tabs/guides/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "menu/guides/Setup.md" {
+		t.Errorf("expected menu/guides/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveGuideDoc(siteRoot, "tabs/guides/../secret.md")
+	_, _, err = resolveGuideDoc(siteRoot, "menu/guides/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveGuideDoc(siteRoot, "tabs/guides/Setup.txt")
+	_, _, err = resolveGuideDoc(siteRoot, "menu/guides/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
@@ -601,8 +601,8 @@ func TestGuidesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "tabs/guides/Install.md" {
-		t.Errorf("expected tabs/guides/Install.md, got %q", index[0].Path)
+	if index[0].Path != "menu/guides/Install.md" {
+		t.Errorf("expected menu/guides/Install.md, got %q", index[0].Path)
 	}
 }
 
@@ -635,8 +635,8 @@ func TestCheatsheetsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "tabs/cheatsheets/Commands.md" {
-		t.Errorf("expected tabs/cheatsheets/Commands.md, got %q", index[0].Path)
+	if index[0].Path != "menu/cheatsheets/Commands.md" {
+		t.Errorf("expected menu/cheatsheets/Commands.md, got %q", index[0].Path)
 	}
 }
 
@@ -669,8 +669,42 @@ func TestDotfilesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "tabs/dotfiles/Shell.md" {
-		t.Errorf("expected tabs/dotfiles/Shell.md, got %q", index[0].Path)
+	if index[0].Path != "menu/dotfiles/Shell.md" {
+		t.Errorf("expected menu/dotfiles/Shell.md, got %q", index[0].Path)
+	}
+}
+
+func TestBookmarksIndexHandler(t *testing.T) {
+	siteRoot := t.TempDir()
+	createTestWebsiteRoot(t, siteRoot)
+	bookmarksRoot := filepath.Join(siteRoot, bookmarksDir)
+	if err := os.MkdirAll(bookmarksRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(bookmarksRoot, "Links.md")
+	if err := os.WriteFile(docPath, []byte("# Links"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/bookmarks-index.json", nil)
+	rec := httptest.NewRecorder()
+	bookmarksIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 index entry, got %d", len(index))
+	}
+	if index[0].Path != "menu/bookmarks/Links.md" {
+		t.Errorf("expected menu/bookmarks/Links.md, got %q", index[0].Path)
 	}
 }
 
@@ -686,7 +720,7 @@ func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/rocket/doc?path=tabs/rocket/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/rocket/doc?path=menu/rocket/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	rocketDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -700,7 +734,7 @@ func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "tabs/rocket/Test.md" {
+	if response.Path != "menu/rocket/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -722,11 +756,11 @@ func TestResolveRocketDoc(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	normalized, target, err := resolveRocketDoc(siteRoot, "tabs/rocket/Target.md")
+	normalized, target, err := resolveRocketDoc(siteRoot, "menu/rocket/Target.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if normalized != "tabs/rocket/Target.md" {
+	if normalized != "menu/rocket/Target.md" {
 		t.Errorf("unexpected normalized path: %q", normalized)
 	}
 	if target != docPath {
@@ -734,7 +768,7 @@ func TestResolveRocketDoc(t *testing.T) {
 	}
 
 	// Traversals check
-	_, _, err = resolveRocketDoc(siteRoot, "tabs/rocket/../outside.md")
+	_, _, err = resolveRocketDoc(siteRoot, "menu/rocket/../outside.md")
 	if err == nil {
 		t.Error("expected traversal error")
 	}
@@ -774,7 +808,7 @@ func TestRocketIndexHandlerRefreshesIndex(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "tabs/rocket/PrivateFile.md" {
-		t.Errorf("expected tabs/rocket/PrivateFile.md, got %q", index[0].Path)
+	if index[0].Path != "menu/rocket/PrivateFile.md" {
+		t.Errorf("expected menu/rocket/PrivateFile.md, got %q", index[0].Path)
 	}
 }

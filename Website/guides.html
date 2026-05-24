@@ -25,12 +25,18 @@
 
 <div class="nav-links">
 <a href="index.html">HOME</a>
-<a href="wiki.html">WIKI</a>
-<a href="guides.html">GUIDES</a>
-<a href="cheatsheets.html">CHEATSHEETS</a>
-<a href="dotfiles.html">DOTFILES</a>
-<a href="scripts.html">SCRIPTS</a>
-<a href="rocket.html">ROCKET</a>
+<div class="nav-menu">
+<button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">MENU</button>
+<div class="nav-menu-list" role="menu">
+<a href="wiki.html" role="menuitem">Wiki</a>
+<a href="guides.html" role="menuitem">Guides</a>
+<a href="cheatsheets.html" role="menuitem">Cheatsheets</a>
+<a href="dotfiles.html" role="menuitem">Dotfiles</a>
+<a href="bookmarks.html" role="menuitem">Bookmarks</a>
+<a href="scripts.html" role="menuitem">Scripts</a>
+<a href="rocket.html" role="menuitem">Rocket</a>
+</div>
+</div>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
 <option value="steel">Steel</option>
 <option value="papers">Rugged</option>

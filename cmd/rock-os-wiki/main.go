@@ -31,15 +31,17 @@ import (
 
 const (
 	indexFile            = "wiki-index.json"
-	markdownDir          = "tabs/wiki"
-	scriptsDir           = "tabs/scripts"
-	guidesDir            = "tabs/guides"
+	markdownDir          = "menu/wiki"
+	scriptsDir           = "menu/scripts"
+	guidesDir            = "menu/guides"
 	guidesIndexFile      = "guides-index.json"
-	cheatsheetsDir       = "tabs/cheatsheets"
+	cheatsheetsDir       = "menu/cheatsheets"
 	cheatsheetsIndexFile = "cheatsheets-index.json"
-	dotfilesDir          = "tabs/dotfiles"
+	dotfilesDir          = "menu/dotfiles"
 	dotfilesIndexFile    = "dotfiles-index.json"
-	rocketDir            = "tabs/rocket"
+	bookmarksDir         = "menu/bookmarks"
+	bookmarksIndexFile   = "bookmarks-index.json"
+	rocketDir            = "menu/rocket"
 	rocketIndexFile      = "rocket-index.json"
 )
 
@@ -135,6 +137,10 @@ var globalDotfilesIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
+var globalBookmarksIndexCache = &markdownIndexCache{
+	entries: map[string]markdownIndexCacheEntry{},
+}
+
 var globalRocketIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
@@ -204,6 +210,9 @@ func main() {
 	mux.HandleFunc("/api/dotfiles/doc", dotfilesDocHandler(siteRoot))
 	mux.HandleFunc("/api/dotfiles/search", dotfilesSearchHandler(siteRoot))
 	mux.HandleFunc("/dotfiles-index.json", dotfilesIndexHandler(siteRoot))
+	mux.HandleFunc("/api/bookmarks/doc", bookmarksDocHandler(siteRoot))
+	mux.HandleFunc("/api/bookmarks/search", bookmarksSearchHandler(siteRoot))
+	mux.HandleFunc("/bookmarks-index.json", bookmarksIndexHandler(siteRoot))
 	mux.HandleFunc("/api/rocket/doc", rocketDocHandler(siteRoot))
 	mux.HandleFunc("/api/rocket/search", rocketSearchHandler(siteRoot))
 	mux.HandleFunc("/rocket-index.json", rocketIndexHandler(siteRoot))
@@ -488,6 +497,7 @@ func shouldCompressPath(path string) bool {
 		path == "/guides-index.json" ||
 		path == "/cheatsheets-index.json" ||
 		path == "/dotfiles-index.json" ||
+		path == "/bookmarks-index.json" ||
 		path == "/rocket-index.json" {
 		return true
 	}
@@ -590,20 +600,19 @@ func wikiDocHandler(siteRoot string) http.HandlerFunc {
 }
 
 func markdownIndexHandler(siteRoot string) http.HandlerFunc {
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if _, err := writeMarkdownIndex(siteRoot); err != nil {
+		files, err := collectMarkdownFiles(siteRoot)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fileServer.ServeHTTP(w, r)
+		writeJSON(w, files)
 	}
 }
 
@@ -1288,6 +1297,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		"guides.html",
 		"cheatsheets.html",
 		"dotfiles.html",
+		"bookmarks.html",
 		"scripts.html",
 		"rocket.html",
 	}
@@ -1304,6 +1314,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		guidesDir,
 		cheatsheetsDir,
 		dotfilesDir,
+		bookmarksDir,
 		scriptsDir,
 		rocketDir,
 		"css",
@@ -1712,20 +1723,19 @@ func writeGuidesIndex(siteRoot string) (bool, error) {
 }
 
 func guidesIndexHandler(siteRoot string) http.HandlerFunc {
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if _, err := writeGuidesIndex(siteRoot); err != nil {
+		files, err := collectGuideFiles(siteRoot)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fileServer.ServeHTTP(w, r)
+		writeJSON(w, files)
 	}
 }
 
@@ -1976,20 +1986,19 @@ func writeCheatsheetsIndex(siteRoot string) (bool, error) {
 }
 
 func cheatsheetsIndexHandler(siteRoot string) http.HandlerFunc {
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if _, err := writeCheatsheetsIndex(siteRoot); err != nil {
+		files, err := collectCheatsheetFiles(siteRoot)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fileServer.ServeHTTP(w, r)
+		writeJSON(w, files)
 	}
 }
 
@@ -2240,20 +2249,19 @@ func writeDotfilesIndex(siteRoot string) (bool, error) {
 }
 
 func dotfilesIndexHandler(siteRoot string) http.HandlerFunc {
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if _, err := writeDotfilesIndex(siteRoot); err != nil {
+		files, err := collectDotfileFiles(siteRoot)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fileServer.ServeHTTP(w, r)
+		writeJSON(w, files)
 	}
 }
 
@@ -2415,21 +2423,283 @@ func searchDotfiles(siteRoot string, query string) ([]wikiSearchResult, error) {
 	return results, nil
 }
 
-func rocketIndexHandler(siteRoot string) http.HandlerFunc {
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
+func collectBookmarkFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectBookmarkFilesWithCache(siteRoot, globalBookmarksIndexCache)
+}
 
+func collectBookmarkFilesWithCache(siteRoot string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {
+	root := filepath.Join(siteRoot, bookmarksDir)
+	files := []markdownIndexEntry{}
+	seen := map[string]struct{}{}
+
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		cache.prune(seen)
+		return files, nil
+	}
+
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if entry.IsDir() {
+			return nil
+		}
+
+		if !strings.EqualFold(filepath.Ext(entry.Name()), ".md") {
+			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+
+		relativePath, err := filepath.Rel(siteRoot, path)
+		if err != nil {
+			return err
+		}
+
+		absolutePath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		seen[absolutePath] = struct{}{}
+		cache.markSeen(absolutePath, info)
+
+		files = append(files, markdownIndexEntry{
+			Path: filepath.ToSlash(relativePath),
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	cache.prune(seen)
+
+	sort.Slice(files, func(i, j int) bool {
+		return strings.ToLower(files[i].Path) < strings.ToLower(files[j].Path)
+	})
+
+	return files, nil
+}
+
+func writeBookmarksIndex(siteRoot string) (bool, error) {
+	files, err := collectBookmarkFiles(siteRoot)
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON = append(nextJSON, '\n')
+
+	indexPath := filepath.Join(siteRoot, bookmarksIndexFile)
+	previousJSON, err := os.ReadFile(indexPath)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	if bytes.Equal(previousJSON, nextJSON) {
+		return false, nil
+	}
+
+	return true, os.WriteFile(indexPath, nextJSON, 0o644)
+}
+
+func bookmarksIndexHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if _, err := writeRocketIndex(siteRoot); err != nil {
+		files, err := collectBookmarkFiles(siteRoot)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fileServer.ServeHTTP(w, r)
+		writeJSON(w, files)
+	}
+}
+
+func bookmarksDocHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		docPath, path, err := resolveBookmarkDoc(siteRoot, r.URL.Query().Get("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "bookmark document not found", http.StatusNotFound)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rendered bytes.Buffer
+		if err := wikiMarkdown.Convert(content, &rendered); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := wikiDocResponse{
+			Path: docPath,
+			HTML: rendered.String(),
+		}
+
+		if info, err := os.Stat(path); err == nil {
+			response.LastEdited = info.ModTime().Format(time.RFC3339)
+		}
+
+		writeJSON(w, response)
+	}
+}
+
+func resolveBookmarkDoc(siteRoot string, docPath string) (string, string, error) {
+	normalized := filepath.ToSlash(
+		filepath.Clean(
+			strings.ReplaceAll(docPath, "\\", "/"),
+		),
+	)
+	normalized = strings.TrimPrefix(normalized, "/")
+
+	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
+		return "", "", fmt.Errorf("bookmark document path is required")
+	}
+
+	if !strings.HasPrefix(normalized, bookmarksDir+"/") {
+		return "", "", fmt.Errorf("bookmark document path must start with %s/", bookmarksDir)
+	}
+
+	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
+		return "", "", fmt.Errorf("bookmark document must be a .md file")
+	}
+
+	bookmarksRoot, err := filepath.Abs(filepath.Join(siteRoot, bookmarksDir))
+	if err != nil {
+		return "", "", err
+	}
+
+	target, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(normalized)))
+	if err != nil {
+		return "", "", err
+	}
+
+	relativeTarget, err := filepath.Rel(bookmarksRoot, target)
+	if err != nil {
+		return "", "", err
+	}
+
+	if strings.HasPrefix(relativeTarget, "..") || relativeTarget == "." {
+		return "", "", fmt.Errorf("bookmark document must stay inside %s", bookmarksDir)
+	}
+
+	return normalized, target, nil
+}
+
+func bookmarksSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := strings.TrimSpace(r.URL.Query().Get("q"))
+		if query == "" {
+			writeJSON(w, wikiSearchResponse{
+				Results: []wikiSearchResult{},
+			})
+			return
+		}
+
+		results, err := searchBookmarks(siteRoot, query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, wikiSearchResponse{
+			Results: results,
+		})
+	}
+}
+
+func searchBookmarks(siteRoot string, query string) ([]wikiSearchResult, error) {
+	files, err := collectBookmarkFiles(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedQuery := strings.ToLower(query)
+	results := []wikiSearchResult{}
+
+	for _, file := range files {
+		title := fileTitle(file.Path)
+		searchablePath := strings.ToLower(file.Path)
+		searchableTitle := strings.ToLower(title)
+
+		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
+			strings.Contains(searchableTitle, normalizedQuery)
+
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
+		}
+
+		text := string(content)
+		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
+		if !pathMatch && !contentMatch {
+			continue
+		}
+
+		result := wikiSearchResult{
+			Path:  file.Path,
+			Title: title,
+		}
+		if contentMatch {
+			result.Snippet = searchSnippet(text, normalizedQuery)
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func rocketIndexHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		files, err := collectRocketFiles(siteRoot)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, files)
 	}
 }
 

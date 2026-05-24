@@ -115,7 +115,7 @@ else
     bad "git-crypt is not installed."
 fi
 
-private_files="$(git ls-files -- 'Website/tabs/rocket' 2>/dev/null || true)"
+private_files="$(git ls-files -- 'Website/menu/rocket' 2>/dev/null || true)"
 private_found=""
 private_locked=""
 

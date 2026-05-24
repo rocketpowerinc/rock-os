@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rock-OS Wiki</title>
+<title>Rock-OS Bookmarks</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -52,16 +52,16 @@
 
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-header">
-		<h3>Wiki</h3>
+		<h3>Bookmarks</h3>
 		<div class="sidebar-actions">
-			<button id="refreshWikiBtn" class="icon-sidebar-btn" aria-label="Refresh Wiki" title="Refresh wiki">&#x21BB;</button>
+			<button id="refreshBookmarksBtn" class="icon-sidebar-btn" aria-label="Refresh Bookmarks" title="Refresh bookmarks">&#x21BB;</button>
 			<button id="toggleAllFoldersBtn" class="icon-sidebar-btn" aria-label="Expand all folders" title="Expand all folders">&#x229E;</button>
 			<button id="collapseSidebarBtn" class="icon-sidebar-btn" aria-label="Collapse Sidebar" title="Collapse sidebar">&#x2630;</button>
 		</div>
 	</div>
 	<div class="wiki-search">
-		<input id="wikiSearchInput" type="search" placeholder="Search wiki" autocomplete="off" aria-label="Search wiki">
-		<div id="wikiSearchStatus" class="wiki-search-status"></div>
+		<input id="bookmarksSearchInput" type="search" placeholder="Search bookmarks" autocomplete="off" aria-label="Search bookmarks">
+		<div id="bookmarksSearchStatus" class="wiki-search-status"></div>
 	</div>
 	<div id="sidebarListContainer"></div>
 </div>
@@ -70,9 +70,9 @@
 
 <div class="content" id="content">
 
-<h1>Wiki</h1>
+<h1>Bookmarks</h1>
 
-<p>Select a markdown document.</p>
+<p>Select a bookmark document.</p>
 
 </div>
 
@@ -85,7 +85,7 @@
 <script src="js/vendor/languages/bash.min.js"></script>
 <script src="js/vendor/languages/powershell.min.js"></script>
 <script src="js/theme.js"></script>
-<script type="module" src="js/wiki.js"></script>
+<script type="module" src="js/bookmarks.js"></script>
 <script src="js/sidebar-resizer.js"></script>
 <script>
 // Sidebar collapse/expand logic
@@ -111,6 +111,5 @@ expandSidebarBtn.addEventListener('click', function() {
 	content.classList.remove('fullwidth');
 });
 </script>
-
 </body>
 </html>

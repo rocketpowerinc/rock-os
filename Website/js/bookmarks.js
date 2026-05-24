@@ -6,8 +6,8 @@ import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.
 import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
-const stateStorageKey = 'rock-os-cheatsheets-state';
-const pinnedDocsStorageKey = 'rock-os-cheatsheets-pinned-docs';
+const stateStorageKey = 'rock-os-bookmarks-state';
+const pinnedDocsStorageKey = 'rock-os-bookmarks-pinned-docs';
 
 let lastIndexText = '';
 let activeDocPath = '';
@@ -37,7 +37,7 @@ function getSidebar() {
 function getSearchStatus() {
 
     return document.getElementById(
-        'cheatsheetsSearchStatus'
+        'bookmarksSearchStatus'
     );
 }
 
@@ -221,12 +221,12 @@ function renderEmptyState(container) {
     empty.className = 'wiki-empty-state';
 
     empty.innerText =
-        'No cheatsheets found.';
+        'No bookmarks found.';
 
     container.appendChild(empty);
 }
 
-function pinnedCheatsheetFiles() {
+function pinnedBookmarkFiles() {
 
     return allMarkdownFiles.filter(file =>
         isDocPinned(file)
@@ -308,7 +308,7 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
 function renderPinnedDocs(container) {
 
     const pinnedFiles =
-        pinnedCheatsheetFiles();
+        pinnedBookmarkFiles();
 
     if (!pinnedFiles.length) {
         return;
@@ -368,8 +368,8 @@ function renderWelcomeState() {
     }
 
     content.innerHTML = `
-        <h1>Rock-OS Cheatsheets</h1>
-        <p>Select a cheatsheet document.</p>
+        <h1>Rock-OS Bookmarks</h1>
+        <p>Select a bookmark document.</p>
     `;
 }
 
@@ -412,7 +412,7 @@ async function loadMarkdownText(path) {
     return pending;
 }
 
-function renderCheatsheetsError(title, message, details = []) {
+function renderBookmarksError(title, message, details = []) {
 
     const sidebar =
         getSidebar();
@@ -425,7 +425,7 @@ function renderCheatsheetsError(title, message, details = []) {
             document.createElement('div');
 
         empty.className = 'wiki-empty-state';
-        empty.innerText = 'cheatsheets server is not available.';
+        empty.innerText = 'bookmarks server is not available.';
 
         sidebar.appendChild(empty);
     }
@@ -446,7 +446,7 @@ function renderCheatsheetsError(title, message, details = []) {
 
     content.innerHTML = `
         <div class="wiki-error-panel">
-            <p class="wiki-error-kicker">Cheatsheets offline</p>
+            <p class="wiki-error-kicker">Bookmarks offline</p>
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
@@ -465,7 +465,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^menu\\/cheatsheets\//, '')
+            .replace(/^menu\\/bookmarks\//, '')
             .split('/');
 
     parts.pop();
@@ -484,7 +484,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^menu\\/cheatsheets\//, '')
+                .replace(/^menu\\/bookmarks\//, '')
                 .split('/');
 
         parts.pop();
@@ -576,7 +576,7 @@ async function runSearch(query, requestId) {
 
         const response =
             await fetch(
-                `/api/cheatsheets/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+                `/api/bookmarks/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
             );
 
         if (!response.ok) {
@@ -867,15 +867,15 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        `/api/cheatsheets/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
+        `/api/bookmarks/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
     );
 
     if (!response.ok) {
 
         console.error('Failed:', path);
         clearToc();
-        renderCheatsheetsError(
-            'Cheatsheet document not found',
+        renderBookmarksError(
+            'Bookmark document not found',
             `The server could not render ${path}.`,
             [
                 `The server returned HTTP ${response.status}.`,
@@ -920,7 +920,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('menu/cheatsheets/', '')
+            .replace('menu/bookmarks/', '')
             .split('/');
 
         let current = tree;
@@ -1485,12 +1485,12 @@ async function openDocFromUrlIfNeeded() {
 
     if (!allMarkdownFiles.includes(doc)) {
 
-        renderCheatsheetsError(
-            'Cheatsheet document not found',
-            `The URL points to ${doc}, but that file is not in cheatsheets-index.json.`,
+        renderBookmarksError(
+            'Bookmark document not found',
+            `The URL points to ${doc}, but that file is not in bookmarks-index.json.`,
             [
-                'Check that the file exists under the cheatsheets folder.',
-                'Click the refresh button after adding new cheatsheet files.'
+                'Check that the file exists under the bookmarks folder.',
+                'Click the refresh button after adding new bookmark files.'
             ]
         );
 
@@ -1514,13 +1514,13 @@ async function loadIndex() {
 
         if (isDirectFileOpen()) {
 
-            renderCheatsheetsError(
-                'Start the Rock-OS Cheatsheets server',
-                'This page was opened directly from the filesystem, so the browser cannot safely load the cheatsheets index or markdown files.',
+            renderBookmarksError(
+                'Start the Rock-OS Bookmarks server',
+                'This page was opened directly from the filesystem, so the browser cannot safely load the bookmarks index or markdown files.',
                 [
                     'Open a terminal in the repo root or Website folder.',
                     'Run the Go server command below.',
-                    'Use the http:// address printed by the server instead of opening cheatsheets.html directly.'
+                    'Use the http:// address printed by the server instead of opening bookmarks.html directly.'
                 ]
             );
 
@@ -1528,15 +1528,15 @@ async function loadIndex() {
         }
 
         const response = await fetch(
-            'cheatsheets-index.json?nocache=' +
+            'bookmarks-index.json?nocache=' +
             Date.now()
         );
 
         if (!response.ok) {
 
-            renderCheatsheetsError(
-                'Could not load the cheatsheets index',
-                'The page loaded, but cheatsheets-index.json was not available from the server.',
+            renderBookmarksError(
+                'Could not load the bookmarks index',
+                'The page loaded, but bookmarks-index.json was not available from the server.',
                 [
                     'Make sure the Go server is running from the repo root or Website folder.',
                     `The server returned HTTP ${response.status}.`
@@ -1611,9 +1611,9 @@ async function loadIndex() {
             err
         );
 
-        renderCheatsheetsError(
-            'Could not connect to the cheatsheets server',
-                'The browser could not load the cheatsheets index. The server may not be running, or the page may have been opened from the wrong place.',
+        renderBookmarksError(
+            'Could not connect to the bookmarks server',
+                'The browser could not load the bookmarks index. The server may not be running, or the page may have been opened from the wrong place.',
                 [
                 'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
@@ -1626,7 +1626,7 @@ async function loadIndex() {
     }
 }
 
-async function refreshCheatsheets() {
+async function refreshBookmarks() {
 
     lastIndexText = '';
     markdownContentCache.clear();
@@ -1639,30 +1639,30 @@ async function refreshCheatsheets() {
     }
 }
 
-const refreshCheatsheetsBtn =
-    document.getElementById('refreshCheatsheetsBtn');
+const refreshBookmarksBtn =
+    document.getElementById('refreshBookmarksBtn');
 
 const toggleAllFoldersBtn =
     document.getElementById('toggleAllFoldersBtn');
 
-const cheatsheetsSearchInput =
-    document.getElementById('cheatsheetsSearchInput');
+const bookmarksSearchInput =
+    document.getElementById('bookmarksSearchInput');
 
-if (refreshCheatsheetsBtn) {
+if (refreshBookmarksBtn) {
 
-    refreshCheatsheetsBtn.addEventListener('click', async () => {
+    refreshBookmarksBtn.addEventListener('click', async () => {
 
-        refreshCheatsheetsBtn.disabled = true;
-        refreshCheatsheetsBtn.classList.add('is-refreshing');
+        refreshBookmarksBtn.disabled = true;
+        refreshBookmarksBtn.classList.add('is-refreshing');
 
         try {
 
-            await refreshCheatsheets();
+            await refreshBookmarks();
         }
         finally {
 
-            refreshCheatsheetsBtn.disabled = false;
-            refreshCheatsheetsBtn.classList.remove('is-refreshing');
+            refreshBookmarksBtn.disabled = false;
+            refreshBookmarksBtn.classList.remove('is-refreshing');
         }
     });
 }
@@ -1674,12 +1674,12 @@ if (toggleAllFoldersBtn) {
     });
 }
 
-if (cheatsheetsSearchInput) {
+if (bookmarksSearchInput) {
 
-    cheatsheetsSearchInput.addEventListener('input', () => {
+    bookmarksSearchInput.addEventListener('input', () => {
 
         searchQuery =
-            cheatsheetsSearchInput.value;
+            bookmarksSearchInput.value;
 
         scheduleSearch();
     });

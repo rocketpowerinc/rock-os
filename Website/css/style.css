@@ -191,8 +191,8 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 padding:20px 40px;
-background:rgba(0,0,0,.85);
-border-bottom:1px solid rgba(208,255,0,.2);
+background:rgba(var(--nav-bg-rgb), .88);
+border-bottom:1px solid rgba(var(--accent-rgb), .2);
 backdrop-filter:blur(10px);
 position:sticky;
 top:0;
@@ -210,7 +210,7 @@ width:50px;
 }
 
 .brand{
-color:#d0ff00;
+color:var(--accent);
 font-weight:bold;
 letter-spacing:5px;
 }
@@ -222,14 +222,73 @@ gap:20px;
 }
 
 .nav-links a{
-color:#d0ff00;
+color:var(--accent);
 text-decoration:none;
 letter-spacing:2px;
 transition:.3s;
 }
 
-.nav-links a:hover{
-text-shadow:0 0 10px #d0ff00;
+.nav-links a:hover,
+.nav-menu-trigger:hover{
+text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
+}
+
+.nav-menu {
+	position:relative;
+}
+
+.nav-menu-trigger {
+	background:transparent;
+	border:0;
+	color:var(--accent);
+	cursor:pointer;
+	font:inherit;
+	font-weight:700;
+	letter-spacing:2px;
+	padding:0;
+	text-transform:uppercase;
+}
+
+.nav-menu-trigger::after {
+	content:"▾";
+	font-size:.7rem;
+	margin-left:8px;
+}
+
+.nav-menu-list {
+	background:var(--panel-bg);
+	border:1px solid rgba(var(--accent-rgb), .28);
+	box-shadow:0 18px 48px rgba(0,0,0,.24);
+	display:none;
+	gap:4px;
+	min-width:190px;
+	padding:8px;
+	position:absolute;
+	right:0;
+	top:100%;
+	z-index:30;
+}
+
+.nav-menu:hover .nav-menu-list,
+.nav-menu:focus-within .nav-menu-list {
+	display:grid;
+}
+
+.nav-menu:hover .nav-menu-trigger,
+.nav-menu:focus-within .nav-menu-trigger {
+	text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
+}
+
+.nav-menu-list a {
+	color:var(--accent);
+	display:block;
+	padding:10px 12px;
+	white-space:nowrap;
+}
+
+.nav-menu-list a:hover {
+	background:rgba(var(--accent-rgb), .1);
+	text-shadow:none;
 }
 
 .github-link {
@@ -2095,6 +2154,7 @@ opacity:.8;
 :root,
 :root[data-theme="rock"] {
 	--page-bg:#050505;
+	--nav-bg-rgb:0,0,0;
 	--panel-bg:#0a0a0a;
 	--panel-strong:#090909;
 	--text-main:#f0f0f0;
@@ -2120,6 +2180,7 @@ opacity:.8;
 
 :root[data-theme="scissors"] {
 	--page-bg:#06121f;
+	--nav-bg-rgb:5,16,30;
 	--panel-bg:rgba(9,24,42,.82);
 	--panel-strong:rgba(5,16,30,.92);
 	--text-main:#eaf6ff;
@@ -2145,6 +2206,7 @@ opacity:.8;
 
 :root[data-theme="papers"] {
 	--page-bg:#f5eedf;
+	--nav-bg-rgb:255,248,235;
 	--panel-bg:#fff8eb;
 	--panel-strong:#f0e2cc;
 	--text-main:#211a14;
@@ -2170,6 +2232,7 @@ opacity:.8;
 
 :root[data-theme="steel"] {
 	--page-bg:#eef1f4;
+	--nav-bg-rgb:255,255,255;
 	--panel-bg:#ffffff;
 	--panel-strong:#dfe4e8;
 	--text-main:#182027;
@@ -2709,6 +2772,11 @@ h3,
 	.nav-links {
 		flex-wrap:wrap;
 		gap:12px;
+	}
+
+	.nav-menu-list {
+		left:0;
+		right:auto;
 	}
 
 	.command-hero,

@@ -25,12 +25,12 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^tabs\/(wiki|guides|cheatsheets|dotfiles|rocket)\//.test(pathOnly)) {
+    if (/^menu\\/(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^(wiki|guides|cheatsheets|dotfiles|rocket)\//.test(pathOnly)) {
-        return normalizeDocPath(`tabs/${pathOnly}`);
+    if (/^(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
+        return normalizeDocPath(`menu/${pathOnly}`);
     }
 
     const currentFolder =
@@ -47,14 +47,16 @@ export function resolveMarkdownLink(
 export function wikiDocHref(path) {
 
     let targetPage = 'wiki.html';
-    if (path.startsWith('tabs/rocket/')) {
+    if (path.startsWith('menu/rocket/')) {
         targetPage = 'rocket.html';
-    } else if (path.startsWith('tabs/guides/')) {
+    } else if (path.startsWith('menu/guides/')) {
         targetPage = 'guides.html';
-    } else if (path.startsWith('tabs/cheatsheets/')) {
+    } else if (path.startsWith('menu/cheatsheets/')) {
         targetPage = 'cheatsheets.html';
-    } else if (path.startsWith('tabs/dotfiles/')) {
+    } else if (path.startsWith('menu/dotfiles/')) {
         targetPage = 'dotfiles.html';
+    } else if (path.startsWith('menu/bookmarks/')) {
+        targetPage = 'bookmarks.html';
     }
 
     const url =

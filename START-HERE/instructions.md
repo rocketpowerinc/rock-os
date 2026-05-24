@@ -155,7 +155,7 @@ This script does not commit, stash, or fix anything. It only reports.
 Private markdown lives here:
 
 ```text
-Website/tabs/rocket/
+Website/menu/rocket/
 ```
 
 That folder is intended to be encrypted with `git-crypt`.
