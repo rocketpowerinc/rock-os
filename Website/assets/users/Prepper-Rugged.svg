@@ -1,50 +1,86 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-  <!-- Background circle matching Rugged theme -->
-  <circle cx="50" cy="50" r="48" fill="#231c16" stroke="#8a4f12" stroke-width="2" />
-  
-  <g id="campfire" transform="translate(0, -2)">
-    <!-- STONES (Clay/Earth Stone) -->
-    <!-- Left Rock -->
-    <polygon points="18,80 32,70 28,84" fill="#60594f" stroke="#8a8174" stroke-width="0.5" />
-    <polygon points="32,70 42,80 28,84" fill="#787066" stroke="#8a8174" stroke-width="0.5" />
-    <polygon points="18,80 28,84 22,88" fill="#48423a" stroke="#8a8174" stroke-width="0.5" />
-    <polygon points="28,84 42,80 38,88 22,88" fill="#8a8174" stroke="#8a8174" stroke-width="0.5" />
-    
-    <!-- Right Rock -->
-    <polygon points="82,80 68,70 72,84" fill="#60594f" stroke="#b45d24" stroke-width="0.5" />
-    <polygon points="68,70 58,80 72,84" fill="#787066" stroke="#b45d24" stroke-width="0.5" />
-    <polygon points="82,80 72,84 78,88" fill="#48423a" stroke="#b45d24" stroke-width="0.5" />
-    <polygon points="72,84 58,80 62,88 78,88" fill="#b45d24" stroke="#b45d24" stroke-width="0.5" />
-    
-    <!-- Front Rock -->
-    <polygon points="38,82 50,73 50,86" fill="#787066" stroke="#8a8174" stroke-width="0.5" />
-    <polygon points="50,73 62,82 50,86" fill="#8a8174" stroke="#b45d24" stroke-width="0.5" />
-    <polygon points="38,82 50,86 46,90" fill="#60594f" stroke="#8a8174" stroke-width="0.5" />
-    <polygon points="62,82 50,86 54,90" fill="#6a6257" stroke="#b45d24" stroke-width="0.5" />
-    <polygon points="50,86 46,90 54,90" fill="#4d463d" stroke="#8a8174" stroke-width="0.5" />
+  <g id="campfire" transform="translate(0, -1)">
+    <!-- BACK ROCK RING (Dark background stones) -->
+    <polygon points="36,70 50,65 42,72" fill="#2d2118" stroke="#8a4f12" stroke-width="0.3" />
+    <polygon points="50,65 64,70 58,72" fill="#36281e" stroke="#b45d24" stroke-width="0.3" />
+    <polygon points="42,72 50,65 58,72" fill="#443225" stroke="#8a4f12" stroke-width="0.3" />
 
-    <!-- LOGS (Deep Woody Bark) -->
-    <!-- Log 1 (Left to Right) -->
-    <polygon points="25,73 70,53 74,58 29,78" fill="#422b1c" />
-    <polygon points="29,78 74,58 76,63 31,83" fill="#5a3b26" />
-    <polygon points="25,73 29,78 31,83 27,78" fill="#744d32" />
-    
-    <!-- Log 2 (Right to Left) -->
-    <polygon points="75,73 30,53 26,58 71,78" fill="#352216" />
-    <polygon points="71,78 26,58 24,63 69,83" fill="#4e3321" />
-    <polygon points="75,73 71,78 69,83 73,78" fill="#66432c" />
+    <!-- LOG 1 (Left to Right Diagonal) -->
+    <polygon points="22,76 68,52 74,56 28,80" fill="#302016" />
+    <polygon points="28,80 74,56 76,62 30,86" fill="#422c1e" />
+    <!-- End Cap Left -->
+    <polygon points="18,74 22,76 28,80 24,78" fill="#8a4f12" opacity="0.8" />
+    <polygon points="18,74 24,78 20,82 16,78" fill="#5c3f2b" />
 
-    <!-- FLAMES (Warm Clay Orange & Gold Facets) -->
-    <!-- Outer Flame -->
-    <polygon points="50,20 35,65 50,75" fill="#9a3159" opacity="0.85" />
-    <polygon points="50,20 50,75 65,65" fill="#8a4f12" opacity="0.85" />
-    
-    <!-- Middle Flame -->
-    <polygon points="50,35 42,65 50,72" fill="#b45d24" />
-    <polygon points="50,35 50,72 58,65" fill="#c57e3c" />
-    
-    <!-- Core Flame -->
-    <polygon points="50,48 45,65 50,70" fill="#f5eedf" />
-    <polygon points="50,48 50,70 55,65" fill="#fff8eb" />
+    <!-- LOG 2 (Right to Left Diagonal) -->
+    <polygon points="78,76 32,52 26,56 72,80" fill="#38251a" />
+    <polygon points="72,80 26,56 24,62 70,86" fill="#4a3222" />
+    <!-- End Cap Right -->
+    <polygon points="82,74 78,76 72,80 76,78" fill="#b45d24" opacity="0.8" />
+    <polygon points="82,74 76,78 80,82 84,78" fill="#63442f" />
+
+    <!-- LOG 3 (Center vertical/leaning log) -->
+    <polygon points="46,80 44,60 50,58 52,80" fill="#281a11" />
+    <polygon points="52,80 50,58 56,60 54,80" fill="#3b2719" />
+    <!-- End cap front -->
+    <polygon points="44,80 52,80 50,86 42,86" fill="#4d3728" />
+    <polygon points="52,80 54,80 56,86 50,86" fill="#8a4f12" opacity="0.6" />
+
+    <!-- BASE STONES (Faceted Rock Ring in Foreground) -->
+    <!-- Far Left Stone -->
+    <polygon points="15,80 26,72 23,83" fill="#302219" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="26,72 32,80 23,83" fill="#423024" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="15,80 23,83 18,87" fill="#231811" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="23,83 32,80 28,87 18,87" fill="#523c2d" stroke="#8a4f12" stroke-width="0.4" />
+
+    <!-- Mid Left Stone -->
+    <polygon points="30,82 40,75 36,86" fill="#423024" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="40,75 46,82 36,86" fill="#523c2d" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="30,82 36,86 33,89" fill="#302219" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="36,86 46,82 42,89 33,89" fill="#3a2a1f" stroke="#b45d24" stroke-width="0.4" />
+
+    <!-- Front Center Stone -->
+    <polygon points="43,84 50,77 50,87" fill="#523c2d" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="50,77 57,84 50,87" fill="#634936" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="43,84 50,87 47,91" fill="#3a2a1f" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="57,84 50,87 53,91" fill="#423024" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="50,87 47,91 53,91" fill="#231811" stroke="#8a4f12" stroke-width="0.4" />
+
+    <!-- Mid Right Stone -->
+    <polygon points="54,82 60,75 64,86" fill="#423024" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="60,75 70,82 64,86" fill="#523c2d" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="54,82 64,86 58,89" fill="#302219" stroke="#8a4f12" stroke-width="0.4" />
+    <polygon points="64,86 70,82 67,89 58,89" fill="#3a2a1f" stroke="#8a4f12" stroke-width="0.4" />
+
+    <!-- Far Right Stone -->
+    <polygon points="68,80 74,72 77,83" fill="#302219" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="74,72 85,80 77,83" fill="#423024" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="85,80 77,83 82,87" fill="#231811" stroke="#b45d24" stroke-width="0.4" />
+    <polygon points="77,83 85,80 82,87 79,87" fill="#523c2d" stroke="#b45d24" stroke-width="0.4" />
+
+    <!-- DETAILED layered FLAMES -->
+    <!-- Outer Flame Layer -->
+    <polygon points="50,10 32,64 50,75" fill="#9a3159" opacity="0.75" />
+    <polygon points="50,10 50,75 68,64" fill="#8a4f12" opacity="0.75" />
+    <polygon points="32,64 22,50 36,54" fill="#b45d24" opacity="0.7" />
+    <polygon points="68,64 78,50 64,54" fill="#d16b2a" opacity="0.7" />
+    <polygon points="22,50 18,62 32,64" fill="#9a3159" opacity="0.6" />
+    <polygon points="78,50 82,62 68,64" fill="#8a4f12" opacity="0.6" />
+    <polygon points="32,64 38,72 50,75" fill="#703f0b" />
+    <polygon points="68,64 62,72 50,75" fill="#944a17" />
+
+    <!-- Middle Flame Layer -->
+    <polygon points="50,22 36,58 50,70" fill="#9a3159" />
+    <polygon points="50,22 50,70 64,58" fill="#b45d24" />
+    <polygon points="36,58 28,48 40,50" fill="#e67e22" />
+    <polygon points="64,58 72,48 60,50" fill="#e8a75e" />
+    <polygon points="36,58 42,66 50,70" fill="#752042" />
+    <polygon points="64,58 58,66 50,70" fill="#ad6418" />
+
+    <!-- Inner Core Flame Layer -->
+    <polygon points="50,36 42,56 50,66" fill="#fcecd6" />
+    <polygon points="50,36 50,66 58,56" fill="#ffd49f" />
+    <polygon points="42,56 46,63 50,66" fill="#ffffff" />
+    <polygon points="58,56 54,63 50,66" fill="#ffffff" />
   </g>
 </svg>
