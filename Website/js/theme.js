@@ -2,43 +2,28 @@ const themeStorageKey = 'rock-os-theme';
 const defaultTheme = 'steel';
 const allowedThemes = [
     'steel',
-    'papers',
-    'rock',
-    'scissors'
+    'rugged',
+    'cyberpunk',
+    'blue-grass'
 ];
 
-const legacyThemes = {
-    terminal: 'rock',
-    'warm-paper': 'papers',
-    'blue-glass': 'scissors',
-    cyberpunk: 'rock',
-    rugged: 'papers',
-    'blue-grass': 'scissors',
-    bluegrass: 'scissors'
-};
-
 const themeImages = {
-    rock: 'assets/Rock-OS-Hero-Cyberpunk.png',
-    papers: 'assets/Rock-OS-Hero-Rugged.png',
-    steel: 'assets/Rock-OS-Hero-Steel.png',
-    scissors: 'assets/Rock-OS-Hero-Blue-Grass.png'
+    'cyberpunk': 'assets/Rock-OS-Hero-Cyberpunk.png',
+    'rugged': 'assets/Rock-OS-Hero-Rugged.png',
+    'steel': 'assets/Rock-OS-Hero-Steel.png',
+    'blue-grass': 'assets/Rock-OS-Hero-Blue-Grass.png'
 };
 
 function normalizeTheme(theme) {
-
     if (allowedThemes.includes(theme)) {
         return theme;
     }
-
-    return legacyThemes[theme] || defaultTheme;
+    return defaultTheme;
 }
 
 function applyTheme(theme) {
-
-    const nextTheme =
-        normalizeTheme(theme);
-    const themeImage =
-        themeImages[nextTheme] || themeImages[defaultTheme];
+    const nextTheme = normalizeTheme(theme);
+    const themeImage = themeImages[nextTheme] || themeImages[defaultTheme];
 
     document.documentElement.dataset.theme = nextTheme;
 
@@ -60,7 +45,6 @@ function applyTheme(theme) {
 }
 
 function savedTheme() {
-
     try {
         const theme =
             localStorage.getItem(themeStorageKey) ||
@@ -75,18 +59,13 @@ function savedTheme() {
     }
 }
 
-const themeSelect =
-    document.getElementById('themeSelect');
-
-const initialTheme =
-    savedTheme();
+const themeSelect = document.getElementById('themeSelect');
+const initialTheme = savedTheme();
 
 applyTheme(initialTheme);
 
 if (themeSelect) {
-
     themeSelect.value = initialTheme;
-
     themeSelect.addEventListener('change', () => {
         applyTheme(themeSelect.value);
     });
