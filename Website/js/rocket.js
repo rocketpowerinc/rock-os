@@ -309,7 +309,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^rocket\//, '')
+            .replace(/^tabs\/rocket\//, '')
             .split('/');
 
     parts.pop();
@@ -328,7 +328,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^rocket\//, '')
+                .replace(/^tabs\/rocket\//, '')
                 .split('/');
 
         parts.pop();

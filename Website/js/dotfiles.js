@@ -6,8 +6,8 @@ import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.
 import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
-const stateStorageKey = 'rock-os-wiki-state';
-const pinnedDocsStorageKey = 'rock-os-wiki-pinned-docs';
+const stateStorageKey = 'rock-os-dotfiles-state';
+const pinnedDocsStorageKey = 'rock-os-dotfiles-pinned-docs';
 
 let lastIndexText = '';
 let activeDocPath = '';
@@ -37,7 +37,7 @@ function getSidebar() {
 function getSearchStatus() {
 
     return document.getElementById(
-        'wikiSearchStatus'
+        'dotfilesSearchStatus'
     );
 }
 
@@ -221,12 +221,12 @@ function renderEmptyState(container) {
     empty.className = 'wiki-empty-state';
 
     empty.innerText =
-        'No markdown files found.';
+        'No dotfiles found.';
 
     container.appendChild(empty);
 }
 
-function pinnedMarkdownFiles() {
+function pinnedDotfileFiles() {
 
     return allMarkdownFiles.filter(file =>
         isDocPinned(file)
@@ -308,7 +308,7 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
 function renderPinnedDocs(container) {
 
     const pinnedFiles =
-        pinnedMarkdownFiles();
+        pinnedDotfileFiles();
 
     if (!pinnedFiles.length) {
         return;
@@ -368,8 +368,8 @@ function renderWelcomeState() {
     }
 
     content.innerHTML = `
-        <h1>Rock-OS Wiki</h1>
-        <p>Select a markdown document.</p>
+        <h1>Rock-OS Dotfiles</h1>
+        <p>Select a dotfile document.</p>
     `;
 }
 
@@ -412,7 +412,7 @@ async function loadMarkdownText(path) {
     return pending;
 }
 
-function renderWikiError(title, message, details = []) {
+function renderDotfilesError(title, message, details = []) {
 
     const sidebar =
         getSidebar();
@@ -425,7 +425,7 @@ function renderWikiError(title, message, details = []) {
             document.createElement('div');
 
         empty.className = 'wiki-empty-state';
-        empty.innerText = 'Wiki server is not available.';
+        empty.innerText = 'dotfiles server is not available.';
 
         sidebar.appendChild(empty);
     }
@@ -446,16 +446,13 @@ function renderWikiError(title, message, details = []) {
 
     content.innerHTML = `
         <div class="wiki-error-panel">
-            <p class="wiki-error-kicker">Wiki offline</p>
+            <p class="wiki-error-kicker">Dotfiles offline</p>
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
             <pre><code>cd cmd/rock-os-wiki
 go run .</code></pre>
         </div>
-    `;
-}
-
     `;
 }
 
@@ -468,7 +465,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^tabs\/wiki\//, '')
+            .replace(/^tabs\/dotfiles\//, '')
             .split('/');
 
     parts.pop();
@@ -487,7 +484,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^tabs\/wiki\//, '')
+                .replace(/^tabs\/dotfiles\//, '')
                 .split('/');
 
         parts.pop();
@@ -579,7 +576,7 @@ async function runSearch(query, requestId) {
 
         const response =
             await fetch(
-                `/api/wiki/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+                `/api/dotfiles/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
             );
 
         if (!response.ok) {
@@ -870,15 +867,15 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        `/api/wiki/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
+        `/api/dotfiles/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
     );
 
     if (!response.ok) {
 
         console.error('Failed:', path);
         clearToc();
-        renderWikiError(
-            'Markdown document not found',
+        renderDotfilesError(
+            'Dotfile document not found',
             `The server could not render ${path}.`,
             [
                 `The server returned HTTP ${response.status}.`,
@@ -923,7 +920,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('tabs/wiki/', '')
+            .replace('tabs/dotfiles/', '')
             .split('/');
 
         let current = tree;
@@ -1488,12 +1485,12 @@ async function openDocFromUrlIfNeeded() {
 
     if (!allMarkdownFiles.includes(doc)) {
 
-        renderWikiError(
-            'Wiki document not found',
-            `The URL points to ${doc}, but that file is not in wiki-index.json.`,
+        renderDotfilesError(
+            'Dotfile document not found',
+            `The URL points to ${doc}, but that file is not in dotfiles-index.json.`,
             [
-                'Check that the file exists under the wiki folder.',
-                'Click the refresh button after adding new wiki files.'
+                'Check that the file exists under the dotfiles folder.',
+                'Click the refresh button after adding new dotfile files.'
             ]
         );
 
@@ -1517,13 +1514,13 @@ async function loadIndex() {
 
         if (isDirectFileOpen()) {
 
-            renderWikiError(
-                'Start the Rock-OS Wiki server',
-                'This page was opened directly from the filesystem, so the browser cannot safely load the wiki index or wiki files.',
+            renderDotfilesError(
+                'Start the Rock-OS Dotfiles server',
+                'This page was opened directly from the filesystem, so the browser cannot safely load the dotfiles index or markdown files.',
                 [
                     'Open a terminal in the repo root or Website folder.',
                     'Run the Go server command below.',
-                    'Use the http:// address printed by the server instead of opening wiki.html directly.'
+                    'Use the http:// address printed by the server instead of opening dotfiles.html directly.'
                 ]
             );
 
@@ -1531,15 +1528,15 @@ async function loadIndex() {
         }
 
         const response = await fetch(
-            'wiki-index.json?nocache=' +
+            'dotfiles-index.json?nocache=' +
             Date.now()
         );
 
         if (!response.ok) {
 
-            renderWikiError(
-                'Could not load the wiki index',
-                'The page loaded, but wiki-index.json was not available from the server.',
+            renderDotfilesError(
+                'Could not load the dotfiles index',
+                'The page loaded, but dotfiles-index.json was not available from the server.',
                 [
                     'Make sure the Go server is running from the repo root or Website folder.',
                     `The server returned HTTP ${response.status}.`
@@ -1614,21 +1611,22 @@ async function loadIndex() {
             err
         );
 
-        renderWikiError(
-            'Could not connect to the wiki server',
-                'The browser could not load the wiki index. The server may not be running, or the page may have been opened from the wrong place.',
+        renderDotfilesError(
+            'Could not connect to the dotfiles server',
+                'The browser could not load the dotfiles index. The server may not be running, or the page may have been opened from the wrong place.',
                 [
                 'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
             ]
         );
+    }
     finally {
 
         indexLoadInProgress = false;
     }
 }
 
-async function refreshWiki() {
+async function refreshDotfiles() {
 
     lastIndexText = '';
     markdownContentCache.clear();
@@ -1641,30 +1639,30 @@ async function refreshWiki() {
     }
 }
 
-const refreshWikiBtn =
-    document.getElementById('refreshWikiBtn');
+const refreshDotfilesBtn =
+    document.getElementById('refreshDotfilesBtn');
 
 const toggleAllFoldersBtn =
     document.getElementById('toggleAllFoldersBtn');
 
-const wikiSearchInput =
-    document.getElementById('wikiSearchInput');
+const dotfilesSearchInput =
+    document.getElementById('dotfilesSearchInput');
 
-if (refreshWikiBtn) {
+if (refreshDotfilesBtn) {
 
-    refreshWikiBtn.addEventListener('click', async () => {
+    refreshDotfilesBtn.addEventListener('click', async () => {
 
-        refreshWikiBtn.disabled = true;
-        refreshWikiBtn.classList.add('is-refreshing');
+        refreshDotfilesBtn.disabled = true;
+        refreshDotfilesBtn.classList.add('is-refreshing');
 
         try {
 
-            await refreshWiki();
+            await refreshDotfiles();
         }
         finally {
 
-            refreshWikiBtn.disabled = false;
-            refreshWikiBtn.classList.remove('is-refreshing');
+            refreshDotfilesBtn.disabled = false;
+            refreshDotfilesBtn.classList.remove('is-refreshing');
         }
     });
 }
@@ -1676,12 +1674,12 @@ if (toggleAllFoldersBtn) {
     });
 }
 
-if (wikiSearchInput) {
+if (dotfilesSearchInput) {
 
-    wikiSearchInput.addEventListener('input', () => {
+    dotfilesSearchInput.addEventListener('input', () => {
 
         searchQuery =
-            wikiSearchInput.value;
+            dotfilesSearchInput.value;
 
         scheduleSearch();
     });

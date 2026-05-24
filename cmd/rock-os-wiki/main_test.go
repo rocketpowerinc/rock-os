@@ -425,13 +425,13 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, scriptsDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, scriptsDir, rocketDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, file := range []string{"index.html", "wiki.html", "scripts.html"} {
+	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "scripts.html", "rocket.html"} {
 		if err := os.WriteFile(filepath.Join(siteRoot, file), []byte(file), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -441,6 +441,9 @@ func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
+	if err := os.RemoveAll(filepath.Join(siteRoot, rocketDir)); err != nil {
+		t.Fatal(err)
+	}
 
 	// Write a wiki markdown file to ensure WikiCount is 1
 	wikiDoc := filepath.Join(siteRoot, markdownDir, "doc.md")
@@ -532,59 +535,59 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	}
 }
 
-func TestResolveBootstrapDoc(t *testing.T) {
+func TestResolveGuideDoc(t *testing.T) {
 	siteRoot := t.TempDir()
-	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
-	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
+	guidesRoot := filepath.Join(siteRoot, guidesDir)
+	if err := os.MkdirAll(guidesRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(bootstrapsRoot, "Setup.md")
+	docPath := filepath.Join(guidesRoot, "Setup.md")
 	if err := os.WriteFile(docPath, []byte("# Setup"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "tabs/bootstraps/Setup.md")
+	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "tabs/guides/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "tabs/bootstraps/Setup.md" {
-		t.Errorf("expected tabs/bootstraps/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "tabs/guides/Setup.md" {
+		t.Errorf("expected tabs/guides/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveBootstrapDoc(siteRoot, "tabs/bootstraps/../secret.md")
+	_, _, err = resolveGuideDoc(siteRoot, "tabs/guides/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveBootstrapDoc(siteRoot, "tabs/bootstraps/Setup.txt")
+	_, _, err = resolveGuideDoc(siteRoot, "tabs/guides/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
 }
 
-func TestBootstrapsIndexHandler(t *testing.T) {
+func TestGuidesIndexHandler(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
-	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
-	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
+	guidesRoot := filepath.Join(siteRoot, guidesDir)
+	if err := os.MkdirAll(guidesRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(bootstrapsRoot, "Install.md")
+	docPath := filepath.Join(guidesRoot, "Install.md")
 	if err := os.WriteFile(docPath, []byte("# Install"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/bootstraps-index.json", nil)
+	req := httptest.NewRequest(http.MethodGet, "/guides-index.json", nil)
 	rec := httptest.NewRecorder()
-	bootstrapsIndexHandler(siteRoot).ServeHTTP(rec, req)
+	guidesIndexHandler(siteRoot).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", rec.Code)
@@ -598,8 +601,76 @@ func TestBootstrapsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "tabs/bootstraps/Install.md" {
-		t.Errorf("expected tabs/bootstraps/Install.md, got %q", index[0].Path)
+	if index[0].Path != "tabs/guides/Install.md" {
+		t.Errorf("expected tabs/guides/Install.md, got %q", index[0].Path)
+	}
+}
+
+func TestCheatsheetsIndexHandler(t *testing.T) {
+	siteRoot := t.TempDir()
+	createTestWebsiteRoot(t, siteRoot)
+	cheatsheetsRoot := filepath.Join(siteRoot, cheatsheetsDir)
+	if err := os.MkdirAll(cheatsheetsRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(cheatsheetsRoot, "Commands.md")
+	if err := os.WriteFile(docPath, []byte("# Commands"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/cheatsheets-index.json", nil)
+	rec := httptest.NewRecorder()
+	cheatsheetsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 index entry, got %d", len(index))
+	}
+	if index[0].Path != "tabs/cheatsheets/Commands.md" {
+		t.Errorf("expected tabs/cheatsheets/Commands.md, got %q", index[0].Path)
+	}
+}
+
+func TestDotfilesIndexHandler(t *testing.T) {
+	siteRoot := t.TempDir()
+	createTestWebsiteRoot(t, siteRoot)
+	dotfilesRoot := filepath.Join(siteRoot, dotfilesDir)
+	if err := os.MkdirAll(dotfilesRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(dotfilesRoot, "Shell.md")
+	if err := os.WriteFile(docPath, []byte("# Shell"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dotfiles-index.json", nil)
+	rec := httptest.NewRecorder()
+	dotfilesIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected 1 index entry, got %d", len(index))
+	}
+	if index[0].Path != "tabs/dotfiles/Shell.md" {
+		t.Errorf("expected tabs/dotfiles/Shell.md, got %q", index[0].Path)
 	}
 }
 

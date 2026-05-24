@@ -91,7 +91,7 @@ copy and prints a warning.
 - Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?doc=wiki/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?doc=tabs/wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -256,9 +256,15 @@ source ~/.bashrc
 ## Project Layout
 
 ```text
-cmd/rock-os-wiki/  Go server source and tests
-START-HERE/        Human-friendly launcher folders for Windows, Linux, and macOS
-Website/           HTML, CSS, JS, assets, markdown, media, and scripts
+cmd/rock-os-wiki/      Go server source and tests
+START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
+Website/               HTML, CSS, JS, assets, and media
+Website/tabs/wiki/     Public wiki markdown
+Website/tabs/guides/   Guided setup markdown
+Website/tabs/cheatsheets/ Quick-reference markdown
+Website/tabs/dotfiles/ Dotfile notes and configs
+Website/tabs/rocket/   Encrypted/private markdown
+Website/tabs/scripts/  User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -631,7 +637,7 @@ Example:
 Website/tabs/wiki/
   Linux/
     AnduinOS/
-      Bootstrap.md
+      Guide.md
 ```
 
 ## Wiki Links
@@ -652,7 +658,7 @@ visible while editing.
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?doc=wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?doc=tabs/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

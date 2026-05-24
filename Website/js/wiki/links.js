@@ -25,11 +25,11 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (pathOnly.startsWith('tabs/wiki/')) {
+    if (/^tabs\/(wiki|guides|cheatsheets|dotfiles|rocket)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
-    if (pathOnly.startsWith('wiki/')) {
+    if (/^(wiki|guides|cheatsheets|dotfiles|rocket)\//.test(pathOnly)) {
         return normalizeDocPath(`tabs/${pathOnly}`);
     }
 
@@ -49,8 +49,12 @@ export function wikiDocHref(path) {
     let targetPage = 'wiki.html';
     if (path.startsWith('tabs/rocket/')) {
         targetPage = 'rocket.html';
-    } else if (path.startsWith('tabs/bootstraps/')) {
-        targetPage = 'bootstraps.html';
+    } else if (path.startsWith('tabs/guides/')) {
+        targetPage = 'guides.html';
+    } else if (path.startsWith('tabs/cheatsheets/')) {
+        targetPage = 'cheatsheets.html';
+    } else if (path.startsWith('tabs/dotfiles/')) {
+        targetPage = 'dotfiles.html';
     }
 
     const url =

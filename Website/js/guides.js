@@ -6,8 +6,8 @@ import { buildTableOfContents, clearToc, scrollToCurrentHash } from './wiki/toc.
 import { escapeHtml, fileTitle, formatEditedDate } from './wiki/utils.js';
 
 const expandedFolders = new Set();
-const stateStorageKey = 'rock-os-bootstraps-state';
-const pinnedDocsStorageKey = 'rock-os-bootstraps-pinned-docs';
+const stateStorageKey = 'rock-os-guides-state';
+const pinnedDocsStorageKey = 'rock-os-guides-pinned-docs';
 
 let lastIndexText = '';
 let activeDocPath = '';
@@ -37,7 +37,7 @@ function getSidebar() {
 function getSearchStatus() {
 
     return document.getElementById(
-        'bootstrapsSearchStatus'
+        'guidesSearchStatus'
     );
 }
 
@@ -221,12 +221,12 @@ function renderEmptyState(container) {
     empty.className = 'wiki-empty-state';
 
     empty.innerText =
-        'No bootstrap files found.';
+        'No guide files found.';
 
     container.appendChild(empty);
 }
 
-function pinnedBootstrapFiles() {
+function pinnedGuideFiles() {
 
     return allMarkdownFiles.filter(file =>
         isDocPinned(file)
@@ -308,7 +308,7 @@ function createSidebarDocLink(path, label, className = 'doc-link') {
 function renderPinnedDocs(container) {
 
     const pinnedFiles =
-        pinnedBootstrapFiles();
+        pinnedGuideFiles();
 
     if (!pinnedFiles.length) {
         return;
@@ -368,8 +368,8 @@ function renderWelcomeState() {
     }
 
     content.innerHTML = `
-        <h1>Rock-OS Bootstraps</h1>
-        <p>Select a bootstrap document.</p>
+        <h1>Rock-OS Guides</h1>
+        <p>Select a guide document.</p>
     `;
 }
 
@@ -412,7 +412,7 @@ async function loadMarkdownText(path) {
     return pending;
 }
 
-function renderBootstrapsError(title, message, details = []) {
+function renderGuidesError(title, message, details = []) {
 
     const sidebar =
         getSidebar();
@@ -425,7 +425,7 @@ function renderBootstrapsError(title, message, details = []) {
             document.createElement('div');
 
         empty.className = 'wiki-empty-state';
-        empty.innerText = 'bootstraps server is not available.';
+        empty.innerText = 'guides server is not available.';
 
         sidebar.appendChild(empty);
     }
@@ -446,7 +446,7 @@ function renderBootstrapsError(title, message, details = []) {
 
     content.innerHTML = `
         <div class="wiki-error-panel">
-            <p class="wiki-error-kicker">Bootstraps offline</p>
+            <p class="wiki-error-kicker">Guides offline</p>
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
@@ -465,7 +465,7 @@ function folderPathsForDoc(path) {
 
     const parts =
         path
-            .replace(/^bootstraps\//, '')
+            .replace(/^tabs\/guides\//, '')
             .split('/');
 
     parts.pop();
@@ -484,7 +484,7 @@ function allFolderPaths(files) {
 
         const parts =
             file
-                .replace(/^bootstraps\//, '')
+                .replace(/^tabs\/guides\//, '')
                 .split('/');
 
         parts.pop();
@@ -576,7 +576,7 @@ async function runSearch(query, requestId) {
 
         const response =
             await fetch(
-                `/api/bootstraps/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+                `/api/guides/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
             );
 
         if (!response.ok) {
@@ -867,15 +867,15 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        `/api/bootstraps/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
+        `/api/guides/doc?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
     );
 
     if (!response.ok) {
 
         console.error('Failed:', path);
         clearToc();
-        renderBootstrapsError(
-            'Bootstrap document not found',
+        renderGuidesError(
+            'Guide document not found',
             `The server could not render ${path}.`,
             [
                 `The server returned HTTP ${response.status}.`,
@@ -920,7 +920,7 @@ function buildTree(files) {
     files.forEach(file => {
 
         const parts = file
-            .replace('tabs/bootstraps/', '')
+            .replace('tabs/guides/', '')
             .split('/');
 
         let current = tree;
@@ -1485,12 +1485,12 @@ async function openDocFromUrlIfNeeded() {
 
     if (!allMarkdownFiles.includes(doc)) {
 
-        renderBootstrapsError(
-            'Bootstrap document not found',
-            `The URL points to ${doc}, but that file is not in bootstraps-index.json.`,
+        renderGuidesError(
+            'Guide document not found',
+            `The URL points to ${doc}, but that file is not in guides-index.json.`,
             [
-                'Check that the file exists under the bootstraps folder.',
-                'Click the refresh button after adding new bootstrap files.'
+                'Check that the file exists under the guides folder.',
+                'Click the refresh button after adding new guide files.'
             ]
         );
 
@@ -1514,13 +1514,13 @@ async function loadIndex() {
 
         if (isDirectFileOpen()) {
 
-            renderBootstrapsError(
-                'Start the Rock-OS Bootstraps server',
-                'This page was opened directly from the filesystem, so the browser cannot safely load the bootstraps index or markdown files.',
+            renderGuidesError(
+                'Start the Rock-OS Guides server',
+                'This page was opened directly from the filesystem, so the browser cannot safely load the guides index or markdown files.',
                 [
                     'Open a terminal in the repo root or Website folder.',
                     'Run the Go server command below.',
-                    'Use the http:// address printed by the server instead of opening bootstraps.html directly.'
+                    'Use the http:// address printed by the server instead of opening guides.html directly.'
                 ]
             );
 
@@ -1528,15 +1528,15 @@ async function loadIndex() {
         }
 
         const response = await fetch(
-            'bootstraps-index.json?nocache=' +
+            'guides-index.json?nocache=' +
             Date.now()
         );
 
         if (!response.ok) {
 
-            renderBootstrapsError(
-                'Could not load the bootstraps index',
-                'The page loaded, but bootstraps-index.json was not available from the server.',
+            renderGuidesError(
+                'Could not load the guides index',
+                'The page loaded, but guides-index.json was not available from the server.',
                 [
                     'Make sure the Go server is running from the repo root or Website folder.',
                     `The server returned HTTP ${response.status}.`
@@ -1611,9 +1611,9 @@ async function loadIndex() {
             err
         );
 
-        renderBootstrapsError(
-            'Could not connect to the bootstraps server',
-                'The browser could not load the bootstraps index. The server may not be running, or the page may have been opened from the wrong place.',
+        renderGuidesError(
+            'Could not connect to the guides server',
+                'The browser could not load the guides index. The server may not be running, or the page may have been opened from the wrong place.',
                 [
                 'Start the Go server from the repo root or Website folder.',
                 'Open the http:// address printed by the server.'
@@ -1626,7 +1626,7 @@ async function loadIndex() {
     }
 }
 
-async function refreshBootstraps() {
+async function refreshGuides() {
 
     lastIndexText = '';
     markdownContentCache.clear();
@@ -1639,30 +1639,30 @@ async function refreshBootstraps() {
     }
 }
 
-const refreshBootstrapsBtn =
-    document.getElementById('refreshBootstrapsBtn');
+const refreshGuidesBtn =
+    document.getElementById('refreshGuidesBtn');
 
 const toggleAllFoldersBtn =
     document.getElementById('toggleAllFoldersBtn');
 
-const bootstrapsSearchInput =
-    document.getElementById('bootstrapsSearchInput');
+const guidesSearchInput =
+    document.getElementById('guidesSearchInput');
 
-if (refreshBootstrapsBtn) {
+if (refreshGuidesBtn) {
 
-    refreshBootstrapsBtn.addEventListener('click', async () => {
+    refreshGuidesBtn.addEventListener('click', async () => {
 
-        refreshBootstrapsBtn.disabled = true;
-        refreshBootstrapsBtn.classList.add('is-refreshing');
+        refreshGuidesBtn.disabled = true;
+        refreshGuidesBtn.classList.add('is-refreshing');
 
         try {
 
-            await refreshBootstraps();
+            await refreshGuides();
         }
         finally {
 
-            refreshBootstrapsBtn.disabled = false;
-            refreshBootstrapsBtn.classList.remove('is-refreshing');
+            refreshGuidesBtn.disabled = false;
+            refreshGuidesBtn.classList.remove('is-refreshing');
         }
     });
 }
@@ -1674,12 +1674,12 @@ if (toggleAllFoldersBtn) {
     });
 }
 
-if (bootstrapsSearchInput) {
+if (guidesSearchInput) {
 
-    bootstrapsSearchInput.addEventListener('input', () => {
+    guidesSearchInput.addEventListener('input', () => {
 
         searchQuery =
-            bootstrapsSearchInput.value;
+            guidesSearchInput.value;
 
         scheduleSearch();
     });
