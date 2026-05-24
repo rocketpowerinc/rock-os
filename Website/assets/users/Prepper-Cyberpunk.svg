@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Background circle matching avatar style -->
+  <circle cx="50" cy="50" r="48" fill="#0a0a0a" stroke="#ff00cc" stroke-width="2" />
+  
+  <g id="campfire" transform="translate(0, -2)">
+    <!-- STONES (Cyberpunk Dark Slate with Neon borders) -->
+    <!-- Left Rock -->
+    <polygon points="18,80 32,70 28,84" fill="#0f0f15" stroke="#ff00cc" stroke-width="0.5" />
+    <polygon points="32,70 42,80 28,84" fill="#181822" stroke="#ff00cc" stroke-width="0.5" />
+    <polygon points="18,80 28,84 22,88" fill="#08080c" stroke="#ff00cc" stroke-width="0.5" />
+    <polygon points="28,84 42,80 38,88 22,88" fill="#242433" stroke="#ff00cc" stroke-width="0.5" />
+    
+    <!-- Right Rock -->
+    <polygon points="82,80 68,70 72,84" fill="#0f0f15" stroke="#d0ff00" stroke-width="0.5" />
+    <polygon points="68,70 58,80 72,84" fill="#181822" stroke="#d0ff00" stroke-width="0.5" />
+    <polygon points="82,80 72,84 78,88" fill="#08080c" stroke="#d0ff00" stroke-width="0.5" />
+    <polygon points="72,84 58,80 62,88 78,88" fill="#242433" stroke="#d0ff00" stroke-width="0.5" />
+    
+    <!-- Front Rock -->
+    <polygon points="38,82 50,73 50,86" fill="#181822" stroke="#ff00cc" stroke-width="0.5" />
+    <polygon points="50,73 62,82 50,86" fill="#242433" stroke="#d0ff00" stroke-width="0.5" />
+    <polygon points="38,82 50,86 46,90" fill="#0f0f15" stroke="#ff00cc" stroke-width="0.5" />
+    <polygon points="62,82 50,86 54,90" fill="#12121a" stroke="#d0ff00" stroke-width="0.5" />
+    <polygon points="50,86 46,90 54,90" fill="#0a0a0d" stroke="#ff00cc" stroke-width="0.5" />
+
+    <!-- LOGS (Dark Cyber Purple Wood) -->
+    <!-- Log 1 (Left to Right) -->
+    <polygon points="25,73 70,53 74,58 29,78" fill="#1a0521" />
+    <polygon points="29,78 74,58 76,63 31,83" fill="#2a0a33" />
+    <polygon points="25,73 29,78 31,83 27,78" fill="#3d144c" />
+    
+    <!-- Log 2 (Right to Left) -->
+    <polygon points="75,73 30,53 26,58 71,78" fill="#15031b" />
+    <polygon points="71,78 26,58 24,63 69,83" fill="#22072a" />
+    <polygon points="75,73 71,78 69,83 73,78" fill="#350f42" />
+
+    <!-- FLAMES (Glowing Neon Pink and Yellow Facets) -->
+    <!-- Outer Flame -->
+    <polygon points="50,20 35,65 50,75" fill="#ff00cc" opacity="0.85" />
+    <polygon points="50,20 50,75 65,65" fill="#d0ff00" opacity="0.85" />
+    
+    <!-- Middle Flame -->
+    <polygon points="50,35 42,65 50,72" fill="#ff33aa" />
+    <polygon points="50,35 50,72 58,65" fill="#e2ff33" />
+    
+    <!-- Core Flame -->
+    <polygon points="50,48 45,65 50,70" fill="#ff99e6" />
+    <polygon points="50,48 50,70 55,65" fill="#f3ff99" />
+  </g>
+</svg>

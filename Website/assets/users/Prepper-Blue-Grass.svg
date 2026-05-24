@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Background circle matching Blue-Grass theme -->
+  <circle cx="50" cy="50" r="48" fill="#081827" stroke="#5ee7ff" stroke-width="2" />
+  
+  <g id="campfire" transform="translate(0, -2)">
+    <!-- STONES (Muted Marine Gray/Blue) -->
+    <!-- Left Rock -->
+    <polygon points="18,80 32,70 28,84" fill="#32495d" stroke="#425c75" stroke-width="0.5" />
+    <polygon points="32,70 42,80 28,84" fill="#4a657e" stroke="#425c75" stroke-width="0.5" />
+    <polygon points="18,80 28,84 22,88" fill="#253746" stroke="#425c75" stroke-width="0.5" />
+    <polygon points="28,84 42,80 38,88 22,88" fill="#5a7690" stroke="#425c75" stroke-width="0.5" />
+    
+    <!-- Right Rock -->
+    <polygon points="82,80 68,70 72,84" fill="#32495d" stroke="#7cffc4" stroke-width="0.5" />
+    <polygon points="68,70 58,80 72,84" fill="#4a657e" stroke="#7cffc4" stroke-width="0.5" />
+    <polygon points="82,80 72,84 78,88" fill="#253746" stroke="#7cffc4" stroke-width="0.5" />
+    <polygon points="72,84 58,80 62,88 78,88" fill="#7cffc4" stroke="#7cffc4" stroke-width="0.5" />
+    
+    <!-- Front Rock -->
+    <polygon points="38,82 50,73 50,86" fill="#4a657e" stroke="#425c75" stroke-width="0.5" />
+    <polygon points="50,73 62,82 50,86" fill="#5a7690" stroke="#7cffc4" stroke-width="0.5" />
+    <polygon points="38,82 50,86 46,90" fill="#32495d" stroke="#425c75" stroke-width="0.5" />
+    <polygon points="62,82 50,86 54,90" fill="#3f586f" stroke="#7cffc4" stroke-width="0.5" />
+    <polygon points="50,86 46,90 54,90" fill="#293d4f" stroke="#425c75" stroke-width="0.5" />
+
+    <!-- LOGS (Vintage Dark Teal/Navy) -->
+    <!-- Log 1 (Left to Right) -->
+    <polygon points="25,73 70,53 74,58 29,78" fill="#0d283c" />
+    <polygon points="29,78 74,58 76,63 31,83" fill="#153e5c" />
+    <polygon points="25,73 29,78 31,83 27,78" fill="#1f5780" />
+    
+    <!-- Log 2 (Right to Left) -->
+    <polygon points="75,73 30,53 26,58 71,78" fill="#0a1f2f" />
+    <polygon points="71,78 26,58 24,63 69,83" fill="#102f46" />
+    <polygon points="75,73 71,78 69,83 73,78" fill="#174364" />
+
+    <!-- FLAMES (Retro Teal & Mint Facets) -->
+    <!-- Outer Flame -->
+    <polygon points="50,20 35,65 50,75" fill="#5ee7ff" opacity="0.85" />
+    <polygon points="50,20 50,75 65,65" fill="#7cffc4" opacity="0.85" />
+    
+    <!-- Middle Flame -->
+    <polygon points="50,35 42,65 50,72" fill="#8df0ff" />
+    <polygon points="50,35 50,72 58,65" fill="#a3ffd7" />
+    
+    <!-- Core Flame -->
+    <polygon points="50,48 45,65 50,70" fill="#c2f7ff" />
+    <polygon points="50,48 50,70 55,65" fill="#ffffff" />
+  </g>
+</svg>

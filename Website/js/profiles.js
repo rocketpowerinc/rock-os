@@ -146,9 +146,12 @@ function renderProfilesLanding(files) {
             <p>Choose a profile dashboard. Each profile keeps its own private markdown tree, search, favorites, and document view.</p>
             <div class="profiles-card-grid">
                 ${profiles.map(profile => `
-                    <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}">
-                        <span>${escapeHtml(profile)}</span>
-                        <small>Open private dashboard</small>
+                    <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}" data-profile="${escapeHtml(profile)}">
+                        <div class="profile-card-icon"></div>
+                        <div class="profiles-card-info">
+                            <span>${escapeHtml(profile)}</span>
+                            <small>Open private dashboard</small>
+                        </div>
                     </a>
                 `).join('')}
             </div>

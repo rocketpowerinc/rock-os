@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Background circle matching Rugged theme -->
+  <circle cx="50" cy="50" r="48" fill="#231c16" stroke="#8a4f12" stroke-width="2" />
+  
+  <g id="campfire" transform="translate(0, -2)">
+    <!-- STONES (Clay/Earth Stone) -->
+    <!-- Left Rock -->
+    <polygon points="18,80 32,70 28,84" fill="#60594f" stroke="#8a8174" stroke-width="0.5" />
+    <polygon points="32,70 42,80 28,84" fill="#787066" stroke="#8a8174" stroke-width="0.5" />
+    <polygon points="18,80 28,84 22,88" fill="#48423a" stroke="#8a8174" stroke-width="0.5" />
+    <polygon points="28,84 42,80 38,88 22,88" fill="#8a8174" stroke="#8a8174" stroke-width="0.5" />
+    
+    <!-- Right Rock -->
+    <polygon points="82,80 68,70 72,84" fill="#60594f" stroke="#b45d24" stroke-width="0.5" />
+    <polygon points="68,70 58,80 72,84" fill="#787066" stroke="#b45d24" stroke-width="0.5" />
+    <polygon points="82,80 72,84 78,88" fill="#48423a" stroke="#b45d24" stroke-width="0.5" />
+    <polygon points="72,84 58,80 62,88 78,88" fill="#b45d24" stroke="#b45d24" stroke-width="0.5" />
+    
+    <!-- Front Rock -->
+    <polygon points="38,82 50,73 50,86" fill="#787066" stroke="#8a8174" stroke-width="0.5" />
+    <polygon points="50,73 62,82 50,86" fill="#8a8174" stroke="#b45d24" stroke-width="0.5" />
+    <polygon points="38,82 50,86 46,90" fill="#60594f" stroke="#8a8174" stroke-width="0.5" />
+    <polygon points="62,82 50,86 54,90" fill="#6a6257" stroke="#b45d24" stroke-width="0.5" />
+    <polygon points="50,86 46,90 54,90" fill="#4d463d" stroke="#8a8174" stroke-width="0.5" />
+
+    <!-- LOGS (Deep Woody Bark) -->
+    <!-- Log 1 (Left to Right) -->
+    <polygon points="25,73 70,53 74,58 29,78" fill="#422b1c" />
+    <polygon points="29,78 74,58 76,63 31,83" fill="#5a3b26" />
+    <polygon points="25,73 29,78 31,83 27,78" fill="#744d32" />
+    
+    <!-- Log 2 (Right to Left) -->
+    <polygon points="75,73 30,53 26,58 71,78" fill="#352216" />
+    <polygon points="71,78 26,58 24,63 69,83" fill="#4e3321" />
+    <polygon points="75,73 71,78 69,83 73,78" fill="#66432c" />
+
+    <!-- FLAMES (Warm Clay Orange & Gold Facets) -->
+    <!-- Outer Flame -->
+    <polygon points="50,20 35,65 50,75" fill="#9a3159" opacity="0.85" />
+    <polygon points="50,20 50,75 65,65" fill="#8a4f12" opacity="0.85" />
+    
+    <!-- Middle Flame -->
+    <polygon points="50,35 42,65 50,72" fill="#b45d24" />
+    <polygon points="50,35 50,72 58,65" fill="#c57e3c" />
+    
+    <!-- Core Flame -->
+    <polygon points="50,48 45,65 50,70" fill="#f5eedf" />
+    <polygon points="50,48 50,70 55,65" fill="#fff8eb" />
+  </g>
+</svg>

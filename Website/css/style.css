@@ -934,7 +934,7 @@ color:#88ff88;
 .profiles-card-grid {
 	display:grid;
 	gap:18px;
-	grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+	grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
 	margin-top:28px;
 }
 
@@ -945,9 +945,10 @@ color:#88ff88;
 	border:1px solid rgba(var(--accent-rgb), .25);
 	color:var(--text-main);
 	display:flex;
-	flex-direction:column;
+	flex-direction:row;
+	align-items:center;
 	gap:20px;
-	min-height:150px;
+	min-height:100px;
 	padding:22px;
 	text-decoration:none;
 	transition:border-color .18s ease, transform .18s ease, box-shadow .18s ease;
@@ -959,9 +960,36 @@ color:#88ff88;
 	transform:translateY(-2px);
 }
 
+.profile-card-icon {
+	flex-shrink:0;
+	width:64px;
+	height:64px;
+	border-radius:50%;
+	border:2px solid rgba(var(--accent-rgb), .25);
+	background-size:cover;
+	background-position:center;
+	background-repeat:no-repeat;
+	background-color:rgba(var(--accent-rgb), .05);
+	box-shadow:0 4px 12px rgba(0, 0, 0, .25);
+	transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.profiles-card:hover .profile-card-icon {
+	border-color:var(--accent);
+	box-shadow:0 6px 18px rgba(var(--accent-rgb), .35);
+	transform:scale(1.05);
+}
+
+.profiles-card-info {
+	display:flex;
+	flex-direction:column;
+	gap:6px;
+}
+
 .profiles-card span {
 	font-size:1.2rem;
 	font-weight:900;
+	margin:0;
 }
 
 .profiles-card small {
@@ -970,6 +998,53 @@ color:#88ff88;
 	font-weight:800;
 	letter-spacing:.9px;
 	text-transform:uppercase;
+	margin:0;
+}
+
+/* --- PROFILE ICONS BY THEME --- */
+
+/* Cyberpunk (rock) */
+:root[data-theme="rock"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
+	background-image:url('../assets/users/Rocket-Cyberpunk.png');
+}
+:root[data-theme="rock"] .profiles-card[data-profile="Kids"] .profile-card-icon {
+	background-image:url('../assets/users/Kids-Cyberpunk.png');
+}
+:root[data-theme="rock"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
+	background-image:url('../assets/users/Prepper-Cyberpunk.svg');
+}
+
+/* Steel */
+:root[data-theme="steel"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
+	background-image:url('../assets/users/Rocket-Steel.png');
+}
+:root[data-theme="steel"] .profiles-card[data-profile="Kids"] .profile-card-icon {
+	background-image:url('../assets/users/Kids-Steel.png');
+}
+:root[data-theme="steel"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
+	background-image:url('../assets/users/Prepper-Steel.svg');
+}
+
+/* Rugged (papers) */
+:root[data-theme="papers"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
+	background-image:url('../assets/users/Rocket-Rugged.png');
+}
+:root[data-theme="papers"] .profiles-card[data-profile="Kids"] .profile-card-icon {
+	background-image:url('../assets/users/Kids-Rugged.png');
+}
+:root[data-theme="papers"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
+	background-image:url('../assets/users/Prepper-Rugged.svg');
+}
+
+/* Blue-Grass (scissors) */
+:root[data-theme="scissors"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
+	background-image:url('../assets/users/Rocket-Blue-Grass.png');
+}
+:root[data-theme="scissors"] .profiles-card[data-profile="Kids"] .profile-card-icon {
+	background-image:url('../assets/users/Kids-Blue-Grass.png');
+}
+:root[data-theme="scissors"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
+	background-image:url('../assets/users/Prepper-Blue-Grass.svg');
 }
 
 .command-hero {
