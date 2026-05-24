@@ -68,6 +68,27 @@ export function wikiDocHref(path) {
 }
 
 
+function getTabForPath(path) {
+    if (path.startsWith('menu/wiki/')) return 'wiki';
+    if (path.startsWith('menu/rocket/')) return 'rocket';
+    if (path.startsWith('menu/guides/')) return 'guides';
+    if (path.startsWith('menu/cheatsheets/')) return 'cheatsheets';
+    if (path.startsWith('menu/dotfiles/')) return 'dotfiles';
+    if (path.startsWith('menu/bookmarks/')) return 'bookmarks';
+    return '';
+}
+
+function getCurrentTab() {
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes('wiki.html') || path.endsWith('/wiki')) return 'wiki';
+    if (path.includes('rocket.html') || path.endsWith('/rocket')) return 'rocket';
+    if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
+    if (path.includes('cheatsheets.html') || path.endsWith('/cheatsheets')) return 'cheatsheets';
+    if (path.includes('dotfiles.html') || path.endsWith('/dotfiles')) return 'dotfiles';
+    if (path.includes('bookmarks.html') || path.endsWith('/bookmarks')) return 'bookmarks';
+    return 'wiki';
+}
+
 export function enhanceWikiLinks(
     container,
     currentDocPath,
@@ -92,6 +113,11 @@ export function enhanceWikiLinks(
 
             link.href = wikiDocHref(docPath);
             link.dataset.path = docPath;
+
+            const isCrossTab = getTabForPath(docPath) !== getCurrentTab();
+            if (isCrossTab) {
+                return;
+            }
 
             if (!docExists) {
 

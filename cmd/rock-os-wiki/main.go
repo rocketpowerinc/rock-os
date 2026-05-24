@@ -181,8 +181,23 @@ func main() {
 		if _, err := writeMarkdownIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
+		if _, err := writeGuidesIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := writeCheatsheetsIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := writeDotfilesIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := writeBookmarksIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := writeRocketIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
 
-		fmt.Println("Wrote wiki-index.json")
+		fmt.Println("Wrote all index.json files")
 		return
 	}
 
