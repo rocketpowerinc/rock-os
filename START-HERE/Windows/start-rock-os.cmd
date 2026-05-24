@@ -68,7 +68,7 @@ if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
 
 if not exist "%ROCK_OS_ROOT%\.git" (
     call :red "This folder is not a cloned Git repository."
-    call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Rocket markdown."
+    call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Profiles."
     call :yellow "Use this instead:"
     echo git clone https://github.com/rocketpowerinc/rock-os.git
     echo cd rock-os

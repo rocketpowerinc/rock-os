@@ -33,7 +33,7 @@ esac
 
 if [ ! -e "$REPO_ROOT/.git" ]; then
     red "This folder is not a cloned Git repository."
-    yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Rocket markdown."
+    yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Profiles."
     yellow "Use this instead:"
     printf '%s\n' "git clone https://github.com/rocketpowerinc/rock-os.git"
     printf '%s\n' "cd rock-os"

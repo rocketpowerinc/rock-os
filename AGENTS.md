@@ -114,15 +114,17 @@ Markdown notes should be clear, practical, and a little human.
 
 
 
-## Rocket Markdown
+## Profiles
 
-Rocket markdown is the private markdown area. It lives under:
+Profiles is the private markdown area. It lives under:
 
 ```text
-Website/menu/rocket/
+Website/profiles/
 ```
 
-This area is intended to be encrypted with `git-crypt`.
+This area is intended to be encrypted with `git-crypt`. The Profiles page
+should show a locked state instead of rendering profile folders while the
+content is still encrypted.
 
 - Do not break `git-crypt` workflows.
 - Do not remove key safety checks unless the user explicitly asks.

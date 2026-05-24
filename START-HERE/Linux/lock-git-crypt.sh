@@ -16,10 +16,10 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-echo "Locking Rocket markdown with git-crypt..."
+echo "Locking Profiles with git-crypt..."
 if ! git-crypt lock; then
     echo "Failed to lock the repository."
-    echo "Close open Rocket files or commit/stash changes, then try again."
+    echo "Close open Profiles files or commit/stash changes, then try again."
     exit 1
 fi
 

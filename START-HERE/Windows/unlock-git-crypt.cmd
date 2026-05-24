@@ -79,7 +79,7 @@ if not "%UNLOCK_RESULT%"=="0" (
     exit /b %UNLOCK_RESULT%
 )
 
-call :verify_rocket_unlocked
+call :verify_profiles_unlocked
 if errorlevel 1 (
     call :wait
     exit /b 1
@@ -90,47 +90,47 @@ echo Key restored to "%ROCK_OS_ROOT%\%KEY_NAME%".
 call :wait
 exit /b 0
 
-:verify_rocket_unlocked
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files = git ls-files -- 'Website/menu/rocket' 2>$null; foreach ($file in $files) { if (-not (Test-Path -LiteralPath $file)) { continue }; $bytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes, 1, 8) -eq 'GITCRYPT') { exit 2 } }; exit 0"
+:verify_profiles_unlocked
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files = git ls-files -- 'Website/profiles' 2>$null; foreach ($file in $files) { if (-not (Test-Path -LiteralPath $file)) { continue }; $bytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes, 1, 8) -eq 'GITCRYPT') { exit 2 } }; exit 0"
 set "VERIFY_RESULT=%ERRORLEVEL%"
 if "%VERIFY_RESULT%"=="0" (
-    echo Rocket markdown verified unlocked.
+    echo Profiles verified unlocked.
     exit /b 0
 )
 if not "%VERIFY_RESULT%"=="2" (
-    echo Could not verify Rocket markdown unlock state.
+    echo Could not verify Profiles unlock state.
     exit /b 1
 )
 
-echo Rocket files still look encrypted. Refreshing clean Rocket files...
-set "ROCKET_DIRTY="
-for /f "delims=" %%S in ('git status --porcelain -- "Website/menu/rocket" 2^>nul') do set "ROCKET_DIRTY=1"
-if defined ROCKET_DIRTY (
-    echo Rocket markdown has local changes, so this script will not restore it automatically.
+echo Profiles files still look encrypted. Refreshing clean Profiles files...
+set "PROFILES_DIRTY="
+for /f "delims=" %%S in ('git status --porcelain -- "Website/profiles" 2^>nul') do set "PROFILES_DIRTY=1"
+if defined PROFILES_DIRTY (
+    echo Profiles has local changes, so this script will not restore it automatically.
     echo Back up or clear those changes first, then run:
-    echo git restore --source=HEAD --worktree -- Website/menu/rocket
+    echo git restore --source=HEAD --worktree -- Website/profiles
     exit /b 1
 )
 
-for /f "delims=" %%F in ('git ls-files -- "Website/menu/rocket" 2^>nul') do (
+for /f "delims=" %%F in ('git ls-files -- "Website/profiles" 2^>nul') do (
     if exist "%%F" del /f /q "%%F" >nul 2>nul
 )
 
-git restore --source=HEAD --worktree -- "Website/menu/rocket" >nul 2>nul
-if errorlevel 1 git checkout -- "Website/menu/rocket" >nul 2>nul
+git restore --source=HEAD --worktree -- "Website/profiles" >nul 2>nul
+if errorlevel 1 git checkout -- "Website/profiles" >nul 2>nul
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files = git ls-files -- 'Website/menu/rocket' 2>$null; foreach ($file in $files) { if (-not (Test-Path -LiteralPath $file)) { continue }; $bytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes, 1, 8) -eq 'GITCRYPT') { exit 2 } }; exit 0"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files = git ls-files -- 'Website/profiles' 2>$null; foreach ($file in $files) { if (-not (Test-Path -LiteralPath $file)) { continue }; $bytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes, 1, 8) -eq 'GITCRYPT') { exit 2 } }; exit 0"
 set "VERIFY_RESULT=%ERRORLEVEL%"
 if "%VERIFY_RESULT%"=="2" (
-    echo Rocket markdown still looks encrypted after refresh.
+    echo Profiles still looks encrypted after refresh.
     exit /b 1
 )
 if not "%VERIFY_RESULT%"=="0" (
-    echo Could not verify Rocket markdown unlock state after refresh.
+    echo Could not verify Profiles unlock state after refresh.
     exit /b 1
 )
 
-echo Rocket markdown verified unlocked.
+echo Profiles verified unlocked.
 exit /b 0
 
 :wait

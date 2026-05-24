@@ -115,7 +115,7 @@ else
     bad "git-crypt is not installed."
 fi
 
-private_files="$(git ls-files -- 'Website/menu/rocket' 2>/dev/null || true)"
+private_files="$(git ls-files -- 'Website/profiles' 2>/dev/null || true)"
 private_found=""
 private_locked=""
 
@@ -139,11 +139,11 @@ if [ -f "${TMPDIR:-/tmp}/rock-os-private-locked-$$" ]; then
 fi
 
 if [ -z "$private_found" ]; then
-    info "No tracked Rocket wiki files found."
+    info "No tracked Profiles files found."
 elif [ -n "$private_locked" ]; then
-    bad "Rocket Wiki Folder Locked."
+    bad "Profiles Folder Locked."
 else
-    ok "Rocket Wiki Folder Unlocked."
+    ok "Profiles Folder Unlocked."
 fi
 
 key_count="$(find . -maxdepth 1 -type f -name '*.key' | wc -l | tr -d ' ')"

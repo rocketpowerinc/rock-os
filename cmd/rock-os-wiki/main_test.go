@@ -425,13 +425,13 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, rocketDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, profilesDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "rocket.html"} {
+	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "profiles.html"} {
 		if err := os.WriteFile(filepath.Join(siteRoot, file), []byte(file), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -441,7 +441,7 @@ func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
-	if err := os.RemoveAll(filepath.Join(siteRoot, rocketDir)); err != nil {
+	if err := os.RemoveAll(filepath.Join(siteRoot, profilesDir)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -475,8 +475,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
 	}
 
-	// Case 2: unlocked (rocket folder exists with non-encrypted file)
-	privateDir := filepath.Join(siteRoot, rocketDir)
+	// Case 2: unlocked (Profiles Folder exists with non-encrypted file)
+	privateDir := filepath.Join(siteRoot, profilesDir)
 	if err := os.MkdirAll(privateDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -511,7 +511,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected scriptsCount to be 1, got %d", status2.ScriptsCount)
 	}
 
-	// Case 3: locked (rocket folder exists with locked git-crypt file)
+	// Case 3: locked (Profiles Folder exists with locked git-crypt file)
 	if err := os.WriteFile(filepath.Join(privateDir, "locked-doc.md"), []byte("GITCRYPT\nencrypted data here"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -708,22 +708,22 @@ func TestBookmarksIndexHandler(t *testing.T) {
 	}
 }
 
-func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
+func TestProfilesDocHandlerRendersMarkdown(t *testing.T) {
 	siteRoot := t.TempDir()
-	rocketRoot := filepath.Join(siteRoot, rocketDir)
-	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+	profilesRoot := filepath.Join(siteRoot, profilesDir)
+	if err := os.MkdirAll(profilesRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(rocketRoot, "Test.md")
+	docPath := filepath.Join(profilesRoot, "Test.md")
 	if err := os.WriteFile(docPath, []byte("# Secret\n\n- lock\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/rocket/doc?path=menu/rocket/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=profiles/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
-	rocketDocHandler(siteRoot).ServeHTTP(recorder, request)
+	profilesDocHandler(siteRoot).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
@@ -734,7 +734,7 @@ func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "menu/rocket/Test.md" {
+	if response.Path != "profiles/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -743,24 +743,24 @@ func TestRocketDocHandlerRendersMarkdown(t *testing.T) {
 	}
 }
 
-func TestResolveRocketDoc(t *testing.T) {
+func TestResolveProfilesDoc(t *testing.T) {
 	siteRoot := t.TempDir()
-	rocketRoot := filepath.Join(siteRoot, rocketDir)
-	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+	profilesRoot := filepath.Join(siteRoot, profilesDir)
+	if err := os.MkdirAll(profilesRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Normal doc check
-	docPath := filepath.Join(rocketRoot, "Target.md")
+	docPath := filepath.Join(profilesRoot, "Target.md")
 	if err := os.WriteFile(docPath, []byte("# Target"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	normalized, target, err := resolveRocketDoc(siteRoot, "menu/rocket/Target.md")
+	normalized, target, err := resolveProfilesDoc(siteRoot, "profiles/Target.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if normalized != "menu/rocket/Target.md" {
+	if normalized != "profiles/Target.md" {
 		t.Errorf("unexpected normalized path: %q", normalized)
 	}
 	if target != docPath {
@@ -768,33 +768,33 @@ func TestResolveRocketDoc(t *testing.T) {
 	}
 
 	// Traversals check
-	_, _, err = resolveRocketDoc(siteRoot, "menu/rocket/../outside.md")
+	_, _, err = resolveProfilesDoc(siteRoot, "profiles/../outside.md")
 	if err == nil {
 		t.Error("expected traversal error")
 	}
 
 	// Prefix check
-	_, _, err = resolveRocketDoc(siteRoot, "wiki/Target.md")
+	_, _, err = resolveProfilesDoc(siteRoot, "wiki/Target.md")
 	if err == nil {
 		t.Error("expected prefix error")
 	}
 }
 
-func TestRocketIndexHandlerRefreshesIndex(t *testing.T) {
+func TestProfilesIndexHandlerRefreshesIndex(t *testing.T) {
 	siteRoot := t.TempDir()
-	rocketRoot := filepath.Join(siteRoot, rocketDir)
-	if err := os.MkdirAll(rocketRoot, 0o755); err != nil {
+	profilesRoot := filepath.Join(siteRoot, profilesDir)
+	if err := os.MkdirAll(profilesRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(rocketRoot, "PrivateFile.md")
+	docPath := filepath.Join(profilesRoot, "PrivateFile.md")
 	if err := os.WriteFile(docPath, []byte("# PrivateFile"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/rocket-index.json", nil)
+	req := httptest.NewRequest(http.MethodGet, "/profiles-index.json", nil)
 	rec := httptest.NewRecorder()
-	rocketIndexHandler(siteRoot).ServeHTTP(rec, req)
+	profilesIndexHandler(siteRoot).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", rec.Code)
@@ -808,7 +808,52 @@ func TestRocketIndexHandlerRefreshesIndex(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "menu/rocket/PrivateFile.md" {
-		t.Errorf("expected menu/rocket/PrivateFile.md, got %q", index[0].Path)
+	if index[0].Path != "profiles/PrivateFile.md" {
+		t.Errorf("expected profiles/PrivateFile.md, got %q", index[0].Path)
+	}
+}
+
+func TestProfilesHandlersRejectLockedContent(t *testing.T) {
+	siteRoot := t.TempDir()
+	profilesRoot := filepath.Join(siteRoot, profilesDir)
+	if err := os.MkdirAll(profilesRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(profilesRoot, "Locked.md")
+	if err := os.WriteFile(docPath, []byte("\x00GITCRYPT\x00locked"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name    string
+		request *http.Request
+		handler http.HandlerFunc
+	}{
+		{
+			name:    "index",
+			request: httptest.NewRequest(http.MethodGet, "/profiles-index.json", nil),
+			handler: profilesIndexHandler(siteRoot),
+		},
+		{
+			name:    "doc",
+			request: httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=profiles/Locked.md", nil),
+			handler: profilesDocHandler(siteRoot),
+		},
+		{
+			name:    "search",
+			request: httptest.NewRequest(http.MethodGet, "/api/profiles/search?q=locked", nil),
+			handler: profilesSearchHandler(siteRoot),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			tc.handler.ServeHTTP(recorder, tc.request)
+			if recorder.Code != http.StatusLocked {
+				t.Fatalf("expected status 423, got %d", recorder.Code)
+			}
+		})
 	}
 }

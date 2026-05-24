@@ -139,7 +139,12 @@ managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
 build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/menu/rocket/`.
+markdown stored under `Website/profiles/`.
+
+The top navigation includes a **Profiles** tab between Home and Menu. When
+`Website/profiles/` is locked, the Profiles page shows a locked panel instead
+of listing private profile documents. After unlocking, it behaves like the other
+markdown tabs and shows profile folders such as Rocket, Kids, and Prepper.
 
 ### Windows
 
@@ -264,7 +269,7 @@ Website/menu/guides/   Guided setup markdown
 Website/menu/cheatsheets/ Quick-reference markdown
 Website/menu/dotfiles/ Dotfile notes and configs
 Website/menu/bookmarks/ Bookmark collections and link notes
-Website/menu/rocket/   Encrypted/private markdown
+Website/profiles/      Encrypted/private profile markdown
 Website/menu/scripts/  User-managed runnable scripts
 ```
 
@@ -502,13 +507,13 @@ LAN to connect. Use `--build-index` to rebuild all local tab index JSON files
 without starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
-## Unlocking Rocket Markdown
+## Unlocking Profiles
 
-This repo can use `git-crypt` for Rocket markdown, which is the private markdown
+This repo can use `git-crypt` for Profiles, which is the private markdown
 area stored under:
 
 ```text
-Website/menu/rocket/
+Website/profiles/
 ```
 
 Those files can be committed to the public repo, but their contents are stored
@@ -568,7 +573,7 @@ macOS or Linux:
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/menu/rocket/` should become readable, and the
+unlocking, files in `Website/profiles/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -585,9 +590,9 @@ git-crypt export-key rock-os-git-crypt.key
 
 Store exported keys somewhere private and backed up, outside this repository.
 
-### Locking Rocket Markdown Again
+### Locking Profiles Again
 
-To re-lock Rocket markdown after you are done editing:
+To re-lock Profiles after you are done editing:
 
 Windows:
 
@@ -623,7 +628,7 @@ Website/guides-index.json
 Website/cheatsheets-index.json
 Website/dotfiles-index.json
 Website/bookmarks-index.json
-Website/rocket-index.json
+Website/profiles-index.json
 ```
 
 The browser reads the matching index endpoint and builds each sidebar tree. When

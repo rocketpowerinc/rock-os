@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rock-OS Rocket</title>
+<title>Rock-OS Profiles</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -25,6 +25,7 @@
 
 <div class="nav-links">
 <a href="index.html">HOME</a>
+<a href="profiles.html">PROFILES</a>
 <div class="nav-menu">
 <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">MENU</button>
 <div class="nav-menu-list" role="menu">
@@ -34,7 +35,6 @@
 <a href="dotfiles.html" role="menuitem">Dotfiles</a>
 <a href="bookmarks.html" role="menuitem">Bookmarks</a>
 <a href="scripts.html" role="menuitem">Scripts</a>
-<a href="rocket.html" role="menuitem">Rocket</a>
 </div>
 </div>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
@@ -49,19 +49,18 @@
 
 <div class="layout">
 
-
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-header">
-		<h3>Rocket</h3>
+		<h3>Profiles</h3>
 		<div class="sidebar-actions">
-			<button id="refreshRocketBtn" class="icon-sidebar-btn" aria-label="Refresh Rocket" title="Refresh rocket">&#x21BB;</button>
+			<button id="refreshProfilesBtn" class="icon-sidebar-btn" aria-label="Refresh Profiles" title="Refresh profiles">&#x21BB;</button>
 			<button id="toggleAllFoldersBtn" class="icon-sidebar-btn" aria-label="Expand all folders" title="Expand all folders">&#x229E;</button>
 			<button id="collapseSidebarBtn" class="icon-sidebar-btn" aria-label="Collapse Sidebar" title="Collapse sidebar">&#x2630;</button>
 		</div>
 	</div>
 	<div class="wiki-search">
-		<input id="rocketSearchInput" type="search" placeholder="Search rocket" autocomplete="off" aria-label="Search rocket">
-		<div id="rocketSearchStatus" class="wiki-search-status"></div>
+		<input id="profilesSearchInput" type="search" placeholder="Search profiles" autocomplete="off" aria-label="Search profiles">
+		<div id="profilesSearchStatus" class="wiki-search-status"></div>
 	</div>
 	<div id="sidebarListContainer"></div>
 </div>
@@ -70,9 +69,9 @@
 
 <div class="content" id="content">
 
-<h1>Rocket</h1>
+<h1>Profiles</h1>
 
-<p>Select a rocket document.</p>
+<p>Select a profile document.</p>
 
 </div>
 
@@ -80,15 +79,13 @@
 
 </div>
 
-
 <script src="js/vendor/highlight.min.js"></script>
 <script src="js/vendor/languages/bash.min.js"></script>
 <script src="js/vendor/languages/powershell.min.js"></script>
 <script src="js/theme.js"></script>
-<script type="module" src="js/rocket.js"></script>
+<script type="module" src="js/profiles.js"></script>
 <script src="js/sidebar-resizer.js"></script>
 <script>
-// Sidebar collapse/expand logic
 const sidebar = document.getElementById('sidebar');
 const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
 const expandSidebarBtn = document.getElementById('expandSidebarBtn');

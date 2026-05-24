@@ -8,7 +8,7 @@ const tabIndexes = {
     cheatsheets: 'cheatsheets-index.json',
     dotfiles: 'dotfiles-index.json',
     bookmarks: 'bookmarks-index.json',
-    rocket: 'rocket-index.json'
+    profiles: 'profiles-index.json'
 };
 
 function normalizeIndexFiles(payload) {
@@ -96,11 +96,11 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
+    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^profiles\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^(wiki|guides|cheatsheets|dotfiles|bookmarks|rocket)\//.test(pathOnly)) {
+    if (/^(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly)) {
         return normalizeDocPath(`menu/${pathOnly}`);
     }
 
@@ -118,8 +118,8 @@ export function resolveMarkdownLink(
 export function wikiDocHref(path) {
 
     let targetPage = 'wiki.html';
-    if (path.startsWith('menu/rocket/')) {
-        targetPage = 'rocket.html';
+    if (path.startsWith('profiles/')) {
+        targetPage = 'profiles.html';
     } else if (path.startsWith('menu/guides/')) {
         targetPage = 'guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
@@ -141,7 +141,7 @@ export function wikiDocHref(path) {
 
 function getTabForPath(path) {
     if (path.startsWith('menu/wiki/')) return 'wiki';
-    if (path.startsWith('menu/rocket/')) return 'rocket';
+    if (path.startsWith('profiles/')) return 'profiles';
     if (path.startsWith('menu/guides/')) return 'guides';
     if (path.startsWith('menu/cheatsheets/')) return 'cheatsheets';
     if (path.startsWith('menu/dotfiles/')) return 'dotfiles';
@@ -152,7 +152,7 @@ function getTabForPath(path) {
 function getCurrentTab() {
     const path = window.location.pathname.toLowerCase();
     if (path.includes('wiki.html') || path.endsWith('/wiki')) return 'wiki';
-    if (path.includes('rocket.html') || path.endsWith('/rocket')) return 'rocket';
+    if (path.includes('profiles.html') || path.endsWith('/profiles')) return 'profiles';
     if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
     if (path.includes('cheatsheets.html') || path.endsWith('/cheatsheets')) return 'cheatsheets';
     if (path.includes('dotfiles.html') || path.endsWith('/dotfiles')) return 'dotfiles';

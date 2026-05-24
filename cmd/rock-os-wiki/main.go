@@ -41,8 +41,8 @@ const (
 	dotfilesIndexFile    = "dotfiles-index.json"
 	bookmarksDir         = "menu/bookmarks"
 	bookmarksIndexFile   = "bookmarks-index.json"
-	rocketDir            = "menu/rocket"
-	rocketIndexFile      = "rocket-index.json"
+	profilesDir          = "profiles"
+	profilesIndexFile    = "profiles-index.json"
 )
 
 const (
@@ -141,7 +141,7 @@ var globalBookmarksIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
-var globalRocketIndexCache = &markdownIndexCache{
+var globalProfilesIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
@@ -193,7 +193,7 @@ func main() {
 		if _, err := writeBookmarksIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
-		if _, err := writeRocketIndex(siteRoot); err != nil {
+		if _, err := writeProfilesIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
 
@@ -228,9 +228,9 @@ func main() {
 	mux.HandleFunc("/api/bookmarks/doc", bookmarksDocHandler(siteRoot))
 	mux.HandleFunc("/api/bookmarks/search", bookmarksSearchHandler(siteRoot))
 	mux.HandleFunc("/bookmarks-index.json", bookmarksIndexHandler(siteRoot))
-	mux.HandleFunc("/api/rocket/doc", rocketDocHandler(siteRoot))
-	mux.HandleFunc("/api/rocket/search", rocketSearchHandler(siteRoot))
-	mux.HandleFunc("/rocket-index.json", rocketIndexHandler(siteRoot))
+	mux.HandleFunc("/api/profiles/doc", profilesDocHandler(siteRoot))
+	mux.HandleFunc("/api/profiles/search", profilesSearchHandler(siteRoot))
+	mux.HandleFunc("/profiles-index.json", profilesIndexHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -332,7 +332,7 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 	if _, err := exec.LookPath("git-crypt"); err == nil {
 		printStatus("OK", ansiGreen, "git-crypt installed.")
 	} else {
-		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Rocket markdown.")
+		printStatus("WARN", ansiYellow, "git-crypt not found. Needed only for encrypted Profiles.")
 	}
 
 	if gitCryptKeyPresent(siteRoot) {
@@ -343,11 +343,11 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 
 	switch privateMarkdownStatus(siteRoot) {
 	case "locked":
-		printStatus("INFO", ansiCyan, "Rocket Markdown Folder Locked.")
+		printStatus("INFO", ansiCyan, "Profiles Folder Locked.")
 	case "unlocked":
-		printStatus("OK", ansiGreen, "Rocket Markdown Folder Unlocked.")
+		printStatus("OK", ansiGreen, "Profiles Folder Unlocked.")
 	default:
-		printStatus("INFO", ansiCyan, "Rocket Markdown Folder not found.")
+		printStatus("INFO", ansiCyan, "Profiles Folder not found.")
 	}
 
 	printStatus("OK", ansiGreen, "Request logging enabled.")
@@ -366,7 +366,7 @@ func colorize(color string, value string) string {
 }
 
 func privateMarkdownStatus(siteRoot string) string {
-	privateRoot := filepath.Join(siteRoot, rocketDir)
+	privateRoot := filepath.Join(siteRoot, profilesDir)
 	if info, err := os.Stat(privateRoot); err != nil || !info.IsDir() {
 		return "missing"
 	}
@@ -513,7 +513,7 @@ func shouldCompressPath(path string) bool {
 		path == "/cheatsheets-index.json" ||
 		path == "/dotfiles-index.json" ||
 		path == "/bookmarks-index.json" ||
-		path == "/rocket-index.json" {
+		path == "/profiles-index.json" {
 		return true
 	}
 
@@ -1314,7 +1314,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		"dotfiles.html",
 		"bookmarks.html",
 		"scripts.html",
-		"rocket.html",
+		"profiles.html",
 	}
 
 	for _, file := range requiredFiles {
@@ -1331,7 +1331,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		dotfilesDir,
 		bookmarksDir,
 		scriptsDir,
-		rocketDir,
+		profilesDir,
 		"css",
 		"js",
 	}
@@ -2701,14 +2701,18 @@ func searchBookmarks(siteRoot string, query string) ([]wikiSearchResult, error) 
 	return results, nil
 }
 
-func rocketIndexHandler(siteRoot string) http.HandlerFunc {
+func profilesIndexHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		if privateMarkdownStatus(siteRoot) == "locked" {
+			http.Error(w, "profiles are locked", http.StatusLocked)
+			return
+		}
 
-		files, err := collectRocketFiles(siteRoot)
+		files, err := collectProfilesFiles(siteRoot)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -2718,14 +2722,18 @@ func rocketIndexHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func rocketDocHandler(siteRoot string) http.HandlerFunc {
+func profilesDocHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		if privateMarkdownStatus(siteRoot) == "locked" {
+			http.Error(w, "profiles are locked", http.StatusLocked)
+			return
+		}
 
-		docPath, path, err := resolveRocketDoc(siteRoot, r.URL.Query().Get("path"))
+		docPath, path, err := resolveProfilesDoc(siteRoot, r.URL.Query().Get("path"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -2734,7 +2742,7 @@ func rocketDocHandler(siteRoot string) http.HandlerFunc {
 		content, err := os.ReadFile(path)
 		if err != nil {
 			if os.IsNotExist(err) {
-				http.Error(w, "rocket document not found", http.StatusNotFound)
+				http.Error(w, "profiles document not found", http.StatusNotFound)
 				return
 			}
 
@@ -2761,7 +2769,7 @@ func rocketDocHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func resolveRocketDoc(siteRoot string, docPath string) (string, string, error) {
+func resolveProfilesDoc(siteRoot string, docPath string) (string, string, error) {
 	normalized := filepath.ToSlash(
 		filepath.Clean(
 			strings.ReplaceAll(docPath, "\\", "/"),
@@ -2770,18 +2778,18 @@ func resolveRocketDoc(siteRoot string, docPath string) (string, string, error) {
 	normalized = strings.TrimPrefix(normalized, "/")
 
 	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
-		return "", "", fmt.Errorf("rocket document path is required")
+		return "", "", fmt.Errorf("profiles document path is required")
 	}
 
-	if !strings.HasPrefix(normalized, rocketDir+"/") {
-		return "", "", fmt.Errorf("rocket document path must start with %s/", rocketDir)
+	if !strings.HasPrefix(normalized, profilesDir+"/") {
+		return "", "", fmt.Errorf("profiles document path must start with %s/", profilesDir)
 	}
 
 	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
-		return "", "", fmt.Errorf("rocket document must be a .md file")
+		return "", "", fmt.Errorf("profiles document must be a .md file")
 	}
 
-	rocketRoot, err := filepath.Abs(filepath.Join(siteRoot, rocketDir))
+	profilesRoot, err := filepath.Abs(filepath.Join(siteRoot, profilesDir))
 	if err != nil {
 		return "", "", err
 	}
@@ -2791,22 +2799,26 @@ func resolveRocketDoc(siteRoot string, docPath string) (string, string, error) {
 		return "", "", err
 	}
 
-	relativeTarget, err := filepath.Rel(rocketRoot, target)
+	relativeTarget, err := filepath.Rel(profilesRoot, target)
 	if err != nil {
 		return "", "", err
 	}
 
 	if strings.HasPrefix(relativeTarget, "..") || relativeTarget == "." {
-		return "", "", fmt.Errorf("rocket document must stay inside %s", rocketDir)
+		return "", "", fmt.Errorf("profiles document must stay inside %s", profilesDir)
 	}
 
 	return normalized, target, nil
 }
 
-func rocketSearchHandler(siteRoot string) http.HandlerFunc {
+func profilesSearchHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if privateMarkdownStatus(siteRoot) == "locked" {
+			http.Error(w, "profiles are locked", http.StatusLocked)
 			return
 		}
 
@@ -2818,7 +2830,7 @@ func rocketSearchHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		results, err := searchRocket(siteRoot, query)
+		results, err := searchProfiles(siteRoot, query)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -2830,8 +2842,8 @@ func rocketSearchHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func searchRocket(siteRoot string, query string) ([]wikiSearchResult, error) {
-	files, err := collectRocketFiles(siteRoot)
+func searchProfiles(siteRoot string, query string) ([]wikiSearchResult, error) {
+	files, err := collectProfilesFiles(siteRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -2876,8 +2888,8 @@ func searchRocket(siteRoot string, query string) ([]wikiSearchResult, error) {
 	return results, nil
 }
 
-func writeRocketIndex(siteRoot string) (bool, error) {
-	files, err := collectRocketFiles(siteRoot)
+func writeProfilesIndex(siteRoot string) (bool, error) {
+	files, err := collectProfilesFiles(siteRoot)
 	if err != nil {
 		return false, err
 	}
@@ -2889,7 +2901,7 @@ func writeRocketIndex(siteRoot string) (bool, error) {
 
 	nextJSON = append(nextJSON, '\n')
 
-	indexPath := filepath.Join(siteRoot, rocketIndexFile)
+	indexPath := filepath.Join(siteRoot, profilesIndexFile)
 	previousJSON, err := os.ReadFile(indexPath)
 	if err != nil && !os.IsNotExist(err) {
 		return false, err
@@ -2902,6 +2914,6 @@ func writeRocketIndex(siteRoot string) (bool, error) {
 	return true, os.WriteFile(indexPath, nextJSON, 0o644)
 }
 
-func collectRocketFiles(siteRoot string) ([]markdownIndexEntry, error) {
-	return collectMarkdownFilesWithCache(siteRoot, rocketDir, globalRocketIndexCache)
+func collectProfilesFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectMarkdownFilesWithCache(siteRoot, profilesDir, globalProfilesIndexCache)
 }
