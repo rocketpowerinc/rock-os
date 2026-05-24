@@ -1,5 +1,76 @@
 import { normalizeDocPath } from './utils.js';
 
+const tabIndexCache = new Map();
+
+const tabIndexes = {
+    wiki: 'wiki-index.json',
+    guides: 'guides-index.json',
+    cheatsheets: 'cheatsheets-index.json',
+    dotfiles: 'dotfiles-index.json',
+    bookmarks: 'bookmarks-index.json',
+    rocket: 'rocket-index.json'
+};
+
+function normalizeIndexFiles(payload) {
+
+    const files =
+        Array.isArray(payload)
+        ? payload
+        : [payload];
+
+    return files
+        .map(file => {
+
+            if (typeof file === 'string') {
+                return file.trim();
+            }
+
+            if (
+                file &&
+                typeof file === 'object' &&
+                typeof file.path === 'string'
+            ) {
+                return file.path.trim();
+            }
+
+            return '';
+        })
+        .filter(path => path.toLowerCase().endsWith('.md'));
+}
+
+async function loadTabIndex(tab) {
+
+    const indexUrl =
+        tabIndexes[tab];
+
+    if (!indexUrl) {
+        return [];
+    }
+
+    if (!tabIndexCache.has(tab)) {
+
+        tabIndexCache.set(
+            tab,
+            fetch(`${indexUrl}?nocache=${Date.now()}`)
+                .then(response => response.ok ? response.json() : [])
+                .then(normalizeIndexFiles)
+                .catch(() => [])
+        );
+    }
+
+    return tabIndexCache.get(tab);
+}
+
+function markBrokenLink(link, docPath) {
+
+    link.classList.add('broken-wiki-link');
+    link.title = `Missing wiki page: ${docPath}`;
+    link.setAttribute(
+        'aria-label',
+        `${link.textContent.trim()} missing wiki page`
+    );
+}
+
 export function resolveMarkdownLink(
     href,
     currentDocPath
@@ -116,17 +187,23 @@ export function enhanceWikiLinks(
 
             const isCrossTab = getTabForPath(docPath) !== getCurrentTab();
             if (isCrossTab) {
+                loadTabIndex(getTabForPath(docPath))
+                    .then(files => {
+
+                        if (!files.includes(docPath)) {
+                            markBrokenLink(link, docPath);
+                            link.onclick = event => {
+                                event.preventDefault();
+                            };
+                        }
+                    });
+
                 return;
             }
 
             if (!docExists) {
 
-                link.classList.add('broken-wiki-link');
-                link.title = `Missing wiki page: ${docPath}`;
-                link.setAttribute(
-                    'aria-label',
-                    `${link.textContent.trim()} missing wiki page`
-                );
+                markBrokenLink(link, docPath);
             }
 
             link.onclick = event => {

@@ -44,6 +44,9 @@ marketing page.
 - Keep wiki frontend code organized as native browser modules under
   `Website/js/wiki/` when adding reusable rendering, navigation, search, or UI
   helpers. Do not add a frontend build step unless the user explicitly asks.
+- Markdown-style tabs should use `createMarkdownTabApp` from
+  `Website/js/wiki/markdown-tab.js` with a small config wrapper instead of
+  cloning full tab JavaScript files.
 - Keep generated indexes, release binaries, caches, and downloaded artifacts out
   of Git unless there is a deliberate reason to track them.
 

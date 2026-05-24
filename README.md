@@ -498,8 +498,8 @@ go run . --site-root ../../Website
 
 Use `--host 127.0.0.1` to serve only on the current computer. Use `--host local`
 or `--host lan` only when you intentionally want other devices on the trusted
-LAN to connect. Use `--build-index` to rebuild `wiki-index.json` without
-starting the server. The server usually finds `Website` automatically, but
+LAN to connect. Use `--build-index` to rebuild all local tab index JSON files
+without starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
 ## Unlocking Rocket Markdown
@@ -615,19 +615,24 @@ The Go server scans:
 Website/menu/wiki/
 ```
 
-It writes:
+The server exposes:
 
 ```text
 Website/wiki-index.json
+Website/guides-index.json
+Website/cheatsheets-index.json
+Website/dotfiles-index.json
+Website/bookmarks-index.json
+Website/rocket-index.json
 ```
 
-The browser reads that JSON file and builds the sidebar tree. When you open a
-document, it asks the Go server to render that markdown through the local
-`/api/wiki/doc` endpoint, then the browser adds wiki features such as code copy
-buttons, callouts, backlinks, and the table of contents.
+The browser reads the matching index endpoint and builds each sidebar tree. When
+you open a document, it asks the Go server to render that markdown through the
+matching local API endpoint, then the browser adds wiki features such as code
+copy buttons, callouts, backlinks, and the table of contents.
 
-`wiki-index.json` is generated local state and is intentionally ignored by
-Git. That keeps local private or experimental markdown files from constantly
+The generated `*-index.json` files are local state and are intentionally ignored
+by Git. That keeps local private or experimental markdown files from constantly
 dirtying the repo or leaking filenames into commits.
 
 Raw HTML inside markdown is omitted for safety. That protects the local script
@@ -653,9 +658,8 @@ Internal links between markdown files should use normal relative markdown links:
 When rendered in the wiki, internal `.md` links are opened through `wiki.html`
 with a `doc` parameter instead of navigating to the raw file directly.
 
-If an internal `.md` link points to a file that is not in
-`Website/wiki-index.json`, the wiki marks it as missing so broken links are
-visible while editing.
+If an internal `.md` link points to a file that is not in the current tab index,
+the wiki marks it as missing so broken links are visible while editing.
 
 Direct wiki URLs look like this:
 
