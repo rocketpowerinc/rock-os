@@ -144,15 +144,15 @@ What it checks:
 - Whether Go is installed.
 - Whether port `8000` is already in use.
 - Whether `git-crypt` is installed.
-- Whether Private markdown appears locked or unlocked.
+- Whether Rocket markdown appears locked or unlocked.
 - Whether a `.key` file is sitting in the repo root.
 - Full `git-crypt status` output.
 
 This script does not commit, stash, or fix anything. It only reports.
 
-## Private Markdown Scripts
+## Rocket Private Scripts
 
-Private markdown lives here:
+Rocket markdown is the private markdown area. It lives here:
 
 ```text
 Website/menu/rocket/
@@ -162,7 +162,7 @@ That folder is intended to be encrypted with `git-crypt`.
 
 ### `unlock-git-crypt`
 
-Use this after cloning the repo on a trusted computer when Private markdown is
+Use this after cloning the repo on a trusted computer when Rocket markdown is
 still encrypted.
 
 How it works:
@@ -178,14 +178,14 @@ The restored `.key` file is ignored by Git. Keep it private and never commit it.
 
 ### `lock-git-crypt`
 
-Use this when you want to re-lock Private markdown.
+Use this when you want to re-lock Rocket markdown.
 
 What it does:
 
 - Runs `git-crypt lock` from the repo root.
-- Leaves the repo locked again so Private markdown is encrypted on disk.
+- Leaves the repo locked again so Rocket markdown is encrypted on disk.
 
-If locking fails, close open Private markdown files and make sure you do not
+If locking fails, close open Rocket markdown files and make sure you do not
 have pending private edits that block `git-crypt`.
 
 ## Folder Layout

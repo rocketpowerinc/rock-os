@@ -502,9 +502,10 @@ LAN to connect. Use `--build-index` to rebuild `wiki-index.json` without
 starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
-## Unlocking Private Markdown
+## Unlocking Rocket Markdown
 
-This repo can use `git-crypt` for private markdown notes stored under:
+This repo can use `git-crypt` for Rocket markdown, which is the private markdown
+area stored under:
 
 ```text
 Website/menu/rocket/
@@ -584,9 +585,9 @@ git-crypt export-key rock-os-git-crypt.key
 
 Store exported keys somewhere private and backed up, outside this repository.
 
-### Locking Private Markdown Again
+### Locking Rocket Markdown Again
 
-To re-lock private markdown after you are done editing:
+To re-lock Rocket markdown after you are done editing:
 
 Windows:
 

@@ -111,9 +111,9 @@ Markdown notes should be clear, practical, and a little human.
 
 
 
-## Private Markdown
+## Rocket Markdown
 
-Private markdown lives under:
+Rocket markdown is the private markdown area. It lives under:
 
 ```text
 Website/menu/rocket/
