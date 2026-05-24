@@ -74,6 +74,7 @@ del "%TEMP_KEY%" >nul 2>nul
 
 if not "%UNLOCK_RESULT%"=="0" (
     echo Failed to unlock the repository.
+    echo If you see "unable to write key file", check permissions on .git\git-crypt\keys.
     call :wait
     exit /b %UNLOCK_RESULT%
 )
@@ -109,6 +110,10 @@ if defined ROCKET_DIRTY (
     echo Back up or clear those changes first, then run:
     echo git restore --source=HEAD --worktree -- Website/menu/rocket
     exit /b 1
+)
+
+for /f "delims=" %%F in ('git ls-files -- "Website/menu/rocket" 2^>nul') do (
+    if exist "%%F" del /f /q "%%F" >nul 2>nul
 )
 
 git restore --source=HEAD --worktree -- "Website/menu/rocket" >nul 2>nul

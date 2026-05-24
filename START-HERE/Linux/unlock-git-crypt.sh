@@ -29,6 +29,10 @@ verify_rocket_unlocked() {
         return 1
     fi
 
+    git ls-files -- 'Website/menu/rocket' | while IFS= read -r file; do
+        [ -f "$file" ] && rm -f -- "$file"
+    done
+
     if ! git restore --source=HEAD --worktree -- 'Website/menu/rocket' 2>/dev/null; then
         git checkout -- 'Website/menu/rocket'
     fi
@@ -82,6 +86,7 @@ fi
 rm -f "$temp_key"
 if [ "$unlock_result" -ne 0 ]; then
     echo "Failed to unlock the repository."
+    echo "If you see 'unable to write key file', check permissions on .git/git-crypt/keys."
     exit "$unlock_result"
 fi
 
