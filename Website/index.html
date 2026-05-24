@@ -38,12 +38,12 @@
 <div class="nav-menu">
 <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">MENU</button>
 <div class="nav-menu-list" role="menu">
-<a href="wiki.html" role="menuitem">Wiki</a>
-<a href="guides.html" role="menuitem">Guides</a>
+<a href="bookmarks.html" role="menuitem">Bookmarks</a>
 <a href="cheatsheets.html" role="menuitem">Cheatsheets</a>
 <a href="dotfiles.html" role="menuitem">Dotfiles</a>
-<a href="bookmarks.html" role="menuitem">Bookmarks</a>
+<a href="guides.html" role="menuitem">Guides</a>
 <a href="scripts.html" role="menuitem">Scripts</a>
+<a href="wiki.html" role="menuitem">Wiki</a>
 </div>
 </div>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
@@ -106,11 +106,8 @@ Windows, macOS, Android, and iOS.
 
 </section>
 
-<section class="status-strip" aria-label="System modules">
-<span><strong>Local Wiki</strong> Ready</span>
-<span><strong>Media</strong> Local</span>
-<span><strong>Privacy</strong> Git-Crypt Ready</span>
-<span><strong>Platforms</strong> Linux / Windows / macOS / Mobile</span>
+<section class="status-strip" aria-label="System modules" style="grid-template-columns: 1fr; text-align: center;">
+<span><strong>Platforms</strong> Linux / Windows / Mac / iOS / Android</span>
 </section>
 
 <section class="quote-panel" aria-label="Field note">
@@ -126,62 +123,45 @@ Windows, macOS, Android, and iOS.
 </div>
 
 <div class="launch-grid">
-<a class="launch-link" href="wiki.html">
-<span>01</span>
-<strong>Open The Wiki</strong>
-<small>Browse the full local knowledge base.</small>
+<a class="launch-link" href="https://github.com/rocketpowerinc/rock-os/blob/main/README.md" target="_blank" rel="noopener noreferrer">
+<strong>README</strong>
+<small>View setup guides, project goals, and overview documentation on GitHub.</small>
 </a>
 
-<a class="launch-link" href="wiki.html?doc=menu/wiki/Linux/1.3%20-%20Servers.md">
-<span>02</span>
-<strong>Linux Servers</strong>
-<small>Build capable systems without a desktop layer.</small>
+<a class="launch-link" href="profiles.html">
+<strong>Profiles</strong>
+<small>Access private, encrypted prepper profiles and user-specific configurations.</small>
+</a>
+
+<a class="launch-link" href="bookmarks.html">
+<strong>Bookmarks</strong>
+<small>Browse structured directories of curated web links and offline resources.</small>
 </a>
 
 <a class="launch-link" href="cheatsheets.html">
-<span>03</span>
 <strong>Cheatsheets</strong>
-<small>Quick-reference notes for commands and workflows.</small>
+<small>Quick-reference sheets for recovery command lines and Git-Crypt settings.</small>
 </a>
 
-<a class="launch-link" href="cheatsheets.html?doc=menu/cheatsheets/Git-Crypt.md">
-<span>04</span>
-<strong>Git-Crypt Guide</strong>
-<small>Keep private wiki docs encrypted in public Git.</small>
+<a class="launch-link" href="dotfiles.html">
+<strong>Dotfiles</strong>
+<small>Standardized settings and dotfiles to bootstrap new platform configs.</small>
 </a>
-</div>
 
-</section>
+<a class="launch-link" href="guides.html">
+<strong>Guides</strong>
+<small>Handbooks and playbooks for LAN setups, distros, and host hardening.</small>
+</a>
 
-<section class="mission-grid">
+<a class="launch-link" href="scripts.html">
+<strong>Scripts</strong>
+<small>Native command tools and scripts to automate environment configuration.</small>
+</a>
 
-<div class="section-heading">
-<p class="command-kicker">Mission modules</p>
-<h2>Built For Local Resilience</h2>
-</div>
-
-<div class="feature-grid command-feature-grid">
-
-<article class="feature-card command-card">
-<h3>Local First</h3>
-<p>Runs from your own machine and serves your docs across the local network without needing a cloud control plane.</p>
-</article>
-
-<article class="feature-card command-card">
-<h3>Offline Ready</h3>
-<p>Wiki documents, local assets, media folders, and guide notes stay useful when the internet is unavailable.</p>
-</article>
-
-<article class="feature-card command-card">
-<h3>Cross Platform</h3>
-<p>Linux gets the full ISO path, while Windows, macOS, Android, and iOS get practical hardening and setup playbooks.</p>
-</article>
-
-<article class="feature-card command-card">
-<h3>Private Knowledge</h3>
-<p>Git-friendly documentation with optional encrypted private folders for sensitive notes that should not leak in public.</p>
-</article>
-
+<a class="launch-link" href="wiki.html">
+<strong>Wiki</strong>
+<small>Explore the main local knowledge base and offline distro handbooks.</small>
+</a>
 </div>
 
 </section>
@@ -193,17 +173,16 @@ Windows, macOS, Android, and iOS.
 <div class="terminal-header" aria-label="Linux terminal session">
 <div class="terminal-title">
 <span class="terminal-prompt-glyph">$</span>
-<span>admin@rock-os:~/wiki</span>
 </div>
 <span class="terminal-shell">shell</span>
 </div>
 
 <div class="terminal-content command-terminal-content">
-<p><span class="terminal-prompt">admin@rock-os:~$</span> ./START-HERE/Linux/start-rock-os.sh</p>
-<p><span>OK</span> initializing local wiki core</p>
-<p><span>OK</span> wiki tree online</p>
+<p><span class="terminal-prompt">admin@rock-os:~$</span> ./START-HERE</p>
+<p><span>OK</span> initializing local rock core</p>
 <p><span>OK</span> local assets mounted</p>
-<p><span>OK</span> encrypted notes supported</p>
+<p><span>OK</span> profiles supported</p>
+<p><span>OK</span> system online</p>
 <p><span>OK</span> command center ready<span class="terminal-cursor"></span></p>
 </div>
 
