@@ -129,6 +129,10 @@ content is still encrypted.
 - Do not break `git-crypt` workflows.
 - Do not remove key safety checks unless the user explicitly asks.
 - Do not commit `.key` files.
+- If the encrypted Profiles folder needs to be moved, renamed, split, or
+  restructured, tell the user to unlock it first. Never move encrypted
+  git-crypt content while it is locked, because that can corrupt ciphertext and
+  make files fail to decrypt later.
 - Remember that GitHub ZIP downloads are not real Git clones and cannot unlock
   `git-crypt` content.
 
