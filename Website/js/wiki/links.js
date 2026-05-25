@@ -130,11 +130,11 @@ export function wikiDocHref(path) {
     if (path.startsWith('profiles/')) {
         const parts = path.split('/');
         const profile = parts.length > 1 ? parts[1] : '';
-        targetPage = profile ? `/profiles/${profile}/` : '/profiles.html';
+        targetPage = profile ? `/profiles/${encodeURIComponent(profile)}/` : '/profiles.html';
     } else if (path.startsWith('dashboards/')) {
         const parts = path.split('/');
         const dashboard = parts.length > 1 ? parts[1] : '';
-        targetPage = dashboard ? `/dashboards/${dashboard}/` : '/dashboards.html';
+        targetPage = dashboard ? `/dashboards/${encodeURIComponent(dashboard)}/` : '/dashboards.html';
     } else if (path.startsWith('menu/guides/')) {
         targetPage = '/guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
@@ -192,7 +192,8 @@ function getCurrentTab() {
         const profile = lastPart === 'index.html' && parts.length > 1
             ? parts[parts.length - 2]
             : lastPart;
-        return `profiles-${profile.charAt(0).toUpperCase() + profile.slice(1)}`;
+        const decodedProfile = decodeURIComponent(profile);
+        return `profiles-${decodedProfile.charAt(0).toUpperCase() + decodedProfile.slice(1)}`;
     }
     if (path.includes('/dashboards/')) {
         const parts = path.split('/').filter(Boolean);
@@ -200,7 +201,8 @@ function getCurrentTab() {
         const dashboard = lastPart === 'index.html' && parts.length > 1
             ? parts[parts.length - 2]
             : lastPart;
-        return `dashboards-${dashboard.charAt(0).toUpperCase() + dashboard.slice(1)}`;
+        const decodedDashboard = decodeURIComponent(dashboard);
+        return `dashboards-${decodedDashboard.charAt(0).toUpperCase() + decodedDashboard.slice(1)}`;
     }
 
     // Support individual profile/dashboard pages (e.g. rocket.html, windows.html)

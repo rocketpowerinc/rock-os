@@ -170,9 +170,11 @@ function currentProfileName() {
             const name = filename === 'index.html' && parts.length > 0
                 ? parts[parts.length - 1]
                 : filename.substring(0, filename.length - 5);
-            profile = name.charAt(0).toUpperCase() + name.slice(1);
+            const decodedName = decodeURIComponent(name);
+            profile = decodedName.charAt(0).toUpperCase() + decodedName.slice(1);
         } else if (filename && parts.includes(appMode.rootDir)) {
-            profile = filename.charAt(0).toUpperCase() + filename.slice(1);
+            const decodedName = decodeURIComponent(filename);
+            profile = decodedName.charAt(0).toUpperCase() + decodedName.slice(1);
         }
     }
     return profile;
@@ -189,7 +191,7 @@ function profileNameFromPath(path) {
 }
 
 function profileUrl(profile) {
-    return `/${appMode.rootDir}/${profile}/`;
+    return `/${appMode.rootDir}/${encodeURIComponent(profile)}/`;
 }
 
 function renderProfilesLanding(files) {
