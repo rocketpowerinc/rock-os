@@ -146,10 +146,15 @@ function currentProfileName() {
     const params = new URLSearchParams(window.location.search);
     let profile = params.get('profile') || params.get('dashboard') || '';
     if (!profile) {
-        const filename = window.location.pathname.split('/').pop();
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        const filename = parts.pop() || '';
         if (filename && filename !== appMode.mainPage && filename.endsWith('.html')) {
-            const name = filename.substring(0, filename.length - 5);
+            const name = filename === 'index.html' && parts.length > 0
+                ? parts[parts.length - 1]
+                : filename.substring(0, filename.length - 5);
             profile = name.charAt(0).toUpperCase() + name.slice(1);
+        } else if (filename && parts.includes(appMode.rootDir)) {
+            profile = filename.charAt(0).toUpperCase() + filename.slice(1);
         }
     }
     return profile;
@@ -166,7 +171,7 @@ function profileNameFromPath(path) {
 }
 
 function profileUrl(profile) {
-    return `/${appMode.rootDir}/${profile}/${profile}.html`;
+    return `/${appMode.rootDir}/${profile}/`;
 }
 
 function renderProfilesLanding(files) {
@@ -258,13 +263,13 @@ async function loadProfilesLanding() {
     }
 }
 
-const REDDIT_PLACEHOLDER = '/assets/icons/reddit.png';
+const REDDIT_PLACEHOLDER = '/assets/widget-icons/reddit.png';
 
 const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMzUsMTggNTAsMjUgMzUsMzIiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=';
 const PODCAST_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMzciIHk9IjIwIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzQ2ODJCNCIvPjxwYXRoIGQ9Ik0gMzQgMjIgQSA4IDggMCAwIDAgNDYgMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjQwIiB5MT0iMzAiIHgyPSI0MCIgeTI9IjM2IiBzdHJva2U9IiM0NjgyQjQiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIzNSIgeTE9IjM2IiB4Mj0iNDUiIHkyPSIzNiIgc3Ryb2tlPSIjNDY4MkI0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
 const SPOTIFY_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjUiIHI9IjEyIiBmaWxsPSIjMWRiOTU0Ii8+PHBhdGggZD0iTSAzMiAyNCBDIDM3IDIxIDQzIDIxIDQ4IDI0IE0gMzQgMjcgQyAzOCAyNSA0MiAyNSA0NiAyNyBNIDM2IDMwIEMgMzkgMjkgNDEgMjkgNDQgMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzEyMTIxMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==';
 const NEWS_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjE1IiB5PSIxNSIgd2lkdGg9IjgwIiBoZWlnaHQ9IjIwIiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMjAiIHkxPSIyMCIgeDI9Ijg1IiB5Mj0iMjAiIHN0cm9rZT0iIzQ2QjhEMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjIwIiB5MT0iMjUiIHgyPSI2MCIgeTI9IjI1IiBzdHJva2U9IiM0NkI4RDMiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyMCIgeTE9IjMwIiB4Mj0iNTUiIHkyPSIzMCIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
-const GOOGLE_NEWS_PLACEHOLDER = '/assets/icons/google-news.png';
+const GOOGLE_NEWS_PLACEHOLDER = '/assets/widget-icons/google-news.png';
 
 function newsPlaceholderForSource(source) {
     const normalized = String(source || '').toLowerCase();

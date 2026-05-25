@@ -155,6 +155,26 @@ under `Website/dashboards/`; each folder can have its own `dashboard.json`,
 Profiles for sensitive/private notes and Dashboards for public local tools or
 platform-specific launch points.
 
+Profiles and Dashboards use the same folder convention:
+
+```text
+Website/profiles/Rocket/index.html
+Website/dashboards/Windows/index.html
+```
+
+The folder name is the dashboard/profile name. The `index.html` file is the
+entry page. Use `Overview.md` for the first note, with `dashboard.json`,
+`widgets.txt`, an optional local `assets/` folder, and additional markdown
+files beside it. Profile and dashboard page icons should live inside that
+item's own folder, for example:
+
+```text
+Website/profiles/Rocket/assets/Rocket-Steel.svg
+Website/dashboards/Windows/assets/windows.png
+```
+
+Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
+
 ### Windows
 
 Install Go with `winget`:

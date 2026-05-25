@@ -150,6 +150,24 @@ markdown notes, sidebar search, favorites, and document view. Unlike Profiles,
 Dashboards are not encrypted with `git-crypt` and should always be available.
 Do not put sensitive private notes in Dashboards.
 
+Profiles and Dashboards should use matching folder conventions. Each item
+folder should use `index.html` as the entry page, with `dashboard.json`,
+`widgets.txt`, `Overview.md`, optional local `assets/`, and other markdown
+files beside it:
+
+```text
+Website/profiles/Rocket/index.html
+Website/profiles/Rocket/Overview.md
+Website/profiles/Rocket/assets/Rocket-Steel.svg
+Website/dashboards/Windows/index.html
+Website/dashboards/Windows/Overview.md
+Website/dashboards/Windows/assets/windows.png
+```
+
+Profile and dashboard page icons should live inside their respective profile or
+dashboard folder. Shared widget/feed fallback icons live under
+`Website/assets/widget-icons/`.
+
 ## Development Habits
 
 - Use existing project patterns before inventing new ones.

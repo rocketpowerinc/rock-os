@@ -130,11 +130,11 @@ export function wikiDocHref(path) {
     if (path.startsWith('profiles/')) {
         const parts = path.split('/');
         const profile = parts.length > 1 ? parts[1] : '';
-        targetPage = profile ? `/profiles/${profile}/${profile}.html` : '/profiles.html';
+        targetPage = profile ? `/profiles/${profile}/` : '/profiles.html';
     } else if (path.startsWith('dashboards/')) {
         const parts = path.split('/');
         const dashboard = parts.length > 1 ? parts[1] : '';
-        targetPage = dashboard ? `/dashboards/${dashboard}/${dashboard}.html` : '/dashboards.html';
+        targetPage = dashboard ? `/dashboards/${dashboard}/` : '/dashboards.html';
     } else if (path.startsWith('menu/guides/')) {
         targetPage = '/guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
@@ -186,12 +186,31 @@ function getCurrentTab() {
         const dashboard = params.get('profile') || params.get('dashboard') || '';
         return `dashboards-${dashboard}`;
     }
+    if (path.includes('/profiles/')) {
+        const parts = path.split('/').filter(Boolean);
+        const lastPart = parts[parts.length - 1] || '';
+        const profile = lastPart === 'index.html' && parts.length > 1
+            ? parts[parts.length - 2]
+            : lastPart;
+        return `profiles-${profile.charAt(0).toUpperCase() + profile.slice(1)}`;
+    }
+    if (path.includes('/dashboards/')) {
+        const parts = path.split('/').filter(Boolean);
+        const lastPart = parts[parts.length - 1] || '';
+        const dashboard = lastPart === 'index.html' && parts.length > 1
+            ? parts[parts.length - 2]
+            : lastPart;
+        return `dashboards-${dashboard.charAt(0).toUpperCase() + dashboard.slice(1)}`;
+    }
 
     // Support individual profile/dashboard pages (e.g. rocket.html, windows.html)
     const standardPages = ['wiki.html', 'guides.html', 'cheatsheets.html', 'dotfiles.html', 'bookmarks.html', 'scripts.html', 'index.html', 'dashboards.html'];
-    const filename = path.split('/').pop();
+    const parts = path.split('/').filter(Boolean);
+    const filename = parts.pop() || '';
     if (filename && filename.endsWith('.html') && !standardPages.includes(filename) && filename !== 'profiles.html') {
-        const itemName = filename.replace('.html', '');
+        const itemName = filename === 'index.html' && parts.length > 0
+            ? parts[parts.length - 1]
+            : filename.replace('.html', '');
         const formattedName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
         if (path.includes('/dashboards/')) {
             return `dashboards-${formattedName}`;
