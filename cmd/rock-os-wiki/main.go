@@ -2978,6 +2978,7 @@ type feedItem struct {
 	URL         string    `json:"url"`
 	Created     string    `json:"created"`
 	Author      string    `json:"author,omitempty"`
+	Source      string    `json:"source,omitempty"`
 	Thumbnail   string    `json:"thumbnail"`
 	PublishTime time.Time `json:"-"`
 }
@@ -3521,10 +3522,25 @@ type itunesImage struct {
 }
 
 type rssItem struct {
-	Title       string `xml:"title"`
-	Link        string `xml:"link"`
-	PubDate     string `xml:"pubDate"`
-	Description string `xml:"description"`
+	Title          string       `xml:"title"`
+	Link           string       `xml:"link"`
+	PubDate        string       `xml:"pubDate"`
+	Description    string       `xml:"description"`
+	Image          rssImage     `xml:"image"`
+	Enclosure      rssEnclosure `xml:"enclosure"`
+	MediaThumbnail mediaImage   `xml:"http://search.yahoo.com/mrss/ thumbnail"`
+	MediaContent   mediaImage   `xml:"http://search.yahoo.com/mrss/ content"`
+}
+
+type rssEnclosure struct {
+	URL  string `xml:"url,attr"`
+	Type string `xml:"type,attr"`
+}
+
+type mediaImage struct {
+	URL    string `xml:"url,attr"`
+	Medium string `xml:"medium,attr"`
+	Type   string `xml:"type,attr"`
 }
 
 func feedPodcastHandler(siteRoot string) http.HandlerFunc {
@@ -3838,7 +3854,7 @@ func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
 	return inputURL
 }
 
-func fetchNewsFeedWithCache(feedURL string, siteRoot string) ([]feedItem, error) {
+func fetchNewsFeedWithCache(feedURL string, siteRoot string, limit int) ([]feedItem, error) {
 	if err := validatePublicFetchURL(feedURL); err != nil {
 		return nil, err
 	}
@@ -3851,12 +3867,12 @@ func fetchNewsFeedWithCache(feedURL string, siteRoot string) ([]feedItem, error)
 	// Cache path based on hash of the resolved feed URL
 	hasher := sha256.New()
 	hasher.Write([]byte(resolvedFeedURL))
-	cacheFilename := fmt.Sprintf("news_%x.json", hasher.Sum(nil))
+	cacheFilename := fmt.Sprintf("news_%x_l%d.json", hasher.Sum(nil), limit)
 	cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
 	cachePath := filepath.Join(cacheDir, cacheFilename)
 
 	// Try to fetch live feed
-	items, err := fetchLiveNewsFeed(resolvedFeedURL)
+	items, err := fetchLiveNewsFeed(resolvedFeedURL, limit)
 	if err == nil {
 		// Save to cache
 		_ = os.MkdirAll(cacheDir, 0755)
@@ -3900,7 +3916,7 @@ func feedNewsHandler(siteRoot string) http.HandlerFunc {
 
 		var allItems []feedItem
 		for _, feedURL := range feedURLs {
-			items, err := fetchNewsFeedWithCache(feedURL, siteRoot)
+			items, err := fetchNewsFeedWithCache(feedURL, siteRoot, limit)
 			if err == nil {
 				allItems = append(allItems, items...)
 			}
@@ -3911,16 +3927,11 @@ func feedNewsHandler(siteRoot string) http.HandlerFunc {
 			return allItems[i].Created > allItems[j].Created
 		})
 
-		// Limit the results
-		if len(allItems) > limit {
-			allItems = allItems[:limit]
-		}
-
 		writeJSON(w, allItems)
 	}
 }
 
-func fetchLiveNewsFeed(feedURL string) ([]feedItem, error) {
+func fetchLiveNewsFeed(feedURL string, limit int) ([]feedItem, error) {
 	client := newPublicFetchClient(8 * time.Second)
 	req, err := http.NewRequest("GET", feedURL, nil)
 	if err != nil {
@@ -3943,12 +3954,15 @@ func fetchLiveNewsFeed(feedURL string) ([]feedItem, error) {
 		return nil, err
 	}
 
-	limit := len(rss.Channel.Items)
-	if limit > 5 {
+	if limit <= 0 {
 		limit = 5
+	}
+	if limit > len(rss.Channel.Items) {
+		limit = len(rss.Channel.Items)
 	}
 
 	items := make([]feedItem, 0, limit)
+	source := newsFeedSourceName(feedURL, rss.Channel.Title)
 	for i := 0; i < limit; i++ {
 		item := rss.Channel.Items[i]
 		dateStr := ""
@@ -3962,23 +3976,87 @@ func fetchLiveNewsFeed(feedURL string) ([]feedItem, error) {
 			}
 		}
 
-		// Try to parse a thumbnail from description (HTML img src) if present
-		thumbnail := ""
-		re := regexp.MustCompile(`(?i)<img[^>]+src=["']([^"']+)["']`)
-		match := re.FindStringSubmatch(item.Description)
-		if len(match) > 1 {
-			thumbnail = match[1]
-		}
-
 		items = append(items, feedItem{
 			Title:     item.Title,
 			URL:       item.Link,
 			Created:   dateStr,
-			Thumbnail: thumbnail,
+			Source:    source,
+			Thumbnail: newsItemThumbnail(item),
 		})
 	}
 
 	return items, nil
+}
+
+func newsFeedSourceName(feedURL string, channelTitle string) string {
+	if parsed, err := url.Parse(feedURL); err == nil {
+		host := strings.ToLower(parsed.Hostname())
+		switch {
+		case strings.Contains(host, "ign.com"):
+			return "IGN"
+		case strings.Contains(host, "news.google.com"):
+			return "Google News"
+		}
+	}
+
+	channelTitle = strings.TrimSpace(channelTitle)
+	if channelTitle != "" {
+		return channelTitle
+	}
+
+	return "News"
+}
+
+func newsItemThumbnail(item rssItem) string {
+	candidates := []string{
+		item.MediaThumbnail.URL,
+		item.Image.URL,
+	}
+
+	if item.MediaContent.URL != "" && isImageMedia(item.MediaContent.Medium, item.MediaContent.Type, item.MediaContent.URL) {
+		candidates = append(candidates, item.MediaContent.URL)
+	}
+	if item.Enclosure.URL != "" && isImageMedia("", item.Enclosure.Type, item.Enclosure.URL) {
+		candidates = append(candidates, item.Enclosure.URL)
+	}
+
+	if descriptionImage := firstHTMLImageSrc(item.Description); descriptionImage != "" {
+		candidates = append(candidates, descriptionImage)
+	}
+
+	for _, candidate := range candidates {
+		candidate = strings.TrimSpace(candidate)
+		if strings.HasPrefix(candidate, "http://") || strings.HasPrefix(candidate, "https://") {
+			return candidate
+		}
+	}
+
+	return ""
+}
+
+func isImageMedia(medium string, mediaType string, mediaURL string) bool {
+	medium = strings.ToLower(strings.TrimSpace(medium))
+	mediaType = strings.ToLower(strings.TrimSpace(mediaType))
+	mediaURL = strings.ToLower(strings.TrimSpace(mediaURL))
+
+	if medium == "image" || strings.HasPrefix(mediaType, "image/") {
+		return true
+	}
+
+	return strings.HasSuffix(mediaURL, ".jpg") ||
+		strings.HasSuffix(mediaURL, ".jpeg") ||
+		strings.HasSuffix(mediaURL, ".png") ||
+		strings.HasSuffix(mediaURL, ".webp") ||
+		strings.HasSuffix(mediaURL, ".gif")
+}
+
+func firstHTMLImageSrc(html string) string {
+	re := regexp.MustCompile(`(?is)<img[^>]+src=["']([^"']+)["']`)
+	match := re.FindStringSubmatch(html)
+	if len(match) > 1 {
+		return strings.TrimSpace(match[1])
+	}
+	return ""
 }
 
 func resolveNewsURLToFeed(inputURL string) string {

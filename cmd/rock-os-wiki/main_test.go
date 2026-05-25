@@ -73,6 +73,43 @@ func TestValidatePublicFetchURLAllowsPublicIPTarget(t *testing.T) {
 	}
 }
 
+func TestNewsItemThumbnailFindsCommonRSSImageFields(t *testing.T) {
+	tests := []struct {
+		name string
+		item rssItem
+		want string
+	}{
+		{
+			name: "media thumbnail",
+			item: rssItem{MediaThumbnail: mediaImage{URL: "https://example.com/thumb.jpg"}},
+			want: "https://example.com/thumb.jpg",
+		},
+		{
+			name: "media content image",
+			item: rssItem{MediaContent: mediaImage{URL: "https://example.com/content.webp", Medium: "image"}},
+			want: "https://example.com/content.webp",
+		},
+		{
+			name: "enclosure image",
+			item: rssItem{Enclosure: rssEnclosure{URL: "https://example.com/enclosure.png", Type: "image/png"}},
+			want: "https://example.com/enclosure.png",
+		},
+		{
+			name: "description image",
+			item: rssItem{Description: `<p><img src="https://example.com/desc.jpg"></p>`},
+			want: "https://example.com/desc.jpg",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := newsItemThumbnail(tt.item); got != tt.want {
+				t.Fatalf("expected %q, got %q", tt.want, got)
+			}
+		})
+	}
+}
+
 func TestResolveSiteRootFindsWebsiteFromRepoRoot(t *testing.T) {
 	repoRoot := t.TempDir()
 	websiteRoot := filepath.Join(repoRoot, "Website")

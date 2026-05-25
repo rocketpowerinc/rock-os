@@ -187,6 +187,17 @@ const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL
 const PODCAST_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMzciIHk9IjIwIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzQ2ODJCNCIvPjxwYXRoIGQ9Ik0gMzQgMjIgQSA4IDggMCAwIDAgNDYgMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjQwIiB5MT0iMzAiIHgyPSI0MCIgeTI9IjM2IiBzdHJva2U9IiM0NjgyQjQiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIzNSIgeTE9IjM2IiB4Mj0iNDUiIHkyPSIzNiIgc3Ryb2tlPSIjNDY4MkI0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
 const SPOTIFY_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjUiIHI9IjEyIiBmaWxsPSIjMWRiOTU0Ii8+PHBhdGggZD0iTSAzMiAyNCBDIDM3IDIxIDQzIDIxIDQ4IDI0IE0gMzQgMjcgQyAzOCAyNSA0MiAyNSA0NiAyNyBNIDM2IDMwIEMgMzkgMjkgNDEgMjkgNDQgMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzEyMTIxMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==';
 const NEWS_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjE1IiB5PSIxNSIgd2lkdGg9IjgwIiBoZWlnaHQ9IjIwIiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMjAiIHkxPSIyMCIgeDI9Ijg1IiB5Mj0iMjAiIHN0cm9rZT0iIzQ2QjhEMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjIwIiB5MT0iMjUiIHgyPSI2MCIgeTI9IjI1IiBzdHJva2U9IiM0NkI4RDMiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyMCIgeTE9IjMwIiB4Mj0iNTUiIHkyPSIzMCIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
+const GOOGLE_NEWS_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" width="80" height="50"><rect width="80" height="50" rx="4" fill="#fff"/><rect x="8" y="10" width="64" height="30" rx="3" fill="#f8fafd" stroke="#d9dee7"/><path d="M24 25a16 16 0 1 1 4.7 11.3" fill="none" stroke="#4285f4" stroke-width="5" stroke-linecap="round"/><path d="M40 25h16" stroke="#4285f4" stroke-width="5" stroke-linecap="round"/><path d="M26 16a16 16 0 0 1 22.5 0" fill="none" stroke="#ea4335" stroke-width="5" stroke-linecap="round"/><path d="M48.5 16a16 16 0 0 1 2.8 17.2" fill="none" stroke="#fbbc05" stroke-width="5" stroke-linecap="round"/><path d="M28.7 36.3a16 16 0 0 0 22.6-3.1" fill="none" stroke="#34a853" stroke-width="5" stroke-linecap="round"/></svg>')}`;
+
+function newsPlaceholderForSource(source) {
+    const normalized = String(source || '').toLowerCase();
+
+    if (normalized.includes('google')) {
+        return GOOGLE_NEWS_PLACEHOLDER;
+    }
+
+    return NEWS_PLACEHOLDER;
+}
 
 async function fetchRedditFeed(subreddit, urls, fallback) {
     try {
@@ -316,7 +327,8 @@ async function fetchNewsFeed(urls, limit, fallback) {
             title: item.title,
             url: item.url,
             date: item.created || 'News',
-            thumbnail: item.thumbnail || NEWS_PLACEHOLDER
+            source: item.source || 'News',
+            thumbnail: item.thumbnail || newsPlaceholderForSource(item.source)
         }));
     } catch (e) {
         console.warn(`Could not fetch live News feed. Loading fallback.`);
@@ -557,7 +569,7 @@ function renderDashboard(profile, config, feeds) {
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
                                         <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(headline.url)}" target="_blank">${escapeHtml(headline.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
-                                            <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                            <span class="glance-badge">${escapeHtml(headline.source || w.badge)}</span>
                                             <span>${escapeHtml(headline.date)}</span>
                                         </div>
                                     </div>
