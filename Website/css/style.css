@@ -3515,6 +3515,7 @@ body.is-resize-dragging {
 }
 
 .glance-bookmark-banner {
+	box-sizing: border-box;
 	display: flex;
 	align-items: center;
 	padding: 10px 12px;
@@ -3596,38 +3597,38 @@ body.is-resize-dragging {
 
 /* --- WIDGET SIZES (Small, Medium, Large) --- */
 
-/* Small Size */
-.glance-feed-thumb.size-small {
+/* Small Link Size */
+.glance-feed-thumb.link-size-small {
 	display: none !important;
 }
 
-.glance-feed-item.size-small {
+.glance-feed-item.link-size-small {
 	padding: 4px 6px !important;
 	min-height: auto !important;
 }
 
-.glance-bookmark-banner.size-small {
+.glance-bookmark-banner.link-size-small {
 	padding: 6px 10px !important;
 }
 
-.glance-bookmark-banner.size-small .bookmark-banner-accent {
+.glance-bookmark-banner.link-size-small .bookmark-banner-accent {
 	display: none !important;
 }
 
-.glance-bookmark-item.size-small {
+.glance-bookmark-item.link-size-small {
 	padding: 6px 8px !important;
 }
 
-/* Large Size */
+/* Large Link Size */
 /* Videos (YouTube) & Podcast - nice square 4x4 (100px x 100px) large thumbnail */
-.glance-feed-thumb.size-large {
+.glance-feed-thumb.link-size-large {
 	width: 100px !important;
 	height: 100px !important;
 	object-fit: cover !important;
 }
 
 /* For horizontal layouts, let large items span full width of horizontal carousel */
-.glance-feed-item.layout-horizontal.size-large {
+.glance-feed-item.layout-horizontal.link-size-large {
 	flex: 0 0 100% !important;
 	width: 100% !important;
 	flex-direction: row !important;
@@ -3637,23 +3638,156 @@ body.is-resize-dragging {
 }
 
 /* Reddit & Bookmarks - span horizontally the length of the block */
-.glance-bookmark-banner.size-large {
+.glance-bookmark-banner.link-size-large {
 	grid-column: 1 / -1 !important;
 	width: 100% !important;
 	padding: 14px 18px !important;
 }
 
-.glance-bookmark-banner.size-large .bookmark-banner-accent {
+.glance-bookmark-banner.link-size-large .bookmark-banner-accent {
 	width: 42px !important;
 	height: 42px !important;
 	font-size: 1rem !important;
 }
 
-.glance-bookmark-banner.size-large .bookmark-banner-name {
+.glance-bookmark-banner.link-size-large .bookmark-banner-name {
 	font-size: 1rem !important;
 }
 
-.glance-bookmark-banner.size-large .bookmark-banner-desc {
+.glance-bookmark-banner.link-size-large .bookmark-banner-desc {
 	font-size: 0.8rem !important;
+}
+
+/* --- FEATUREING WIDGET STYLE --- */
+.widget-featuring {
+	grid-column: 1 / -1 !important;
+	background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.12), rgba(var(--accent-2-rgb), 0.05)), var(--panel-bg);
+	border: 1px solid rgba(var(--accent-rgb), 0.3);
+}
+
+.glance-featuring-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 16px;
+	width: 100%;
+}
+
+.glance-featuring-banner {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	background: var(--panel-strong);
+	border: 1px solid rgba(var(--accent-rgb), 0.12);
+	border-radius: 6px;
+	text-decoration: none;
+	color: var(--text-main);
+	overflow: hidden;
+	transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+	min-height: 140px;
+}
+
+.glance-featuring-banner:hover {
+	background: rgba(var(--accent-rgb), 0.06);
+	border-color: rgba(var(--accent-rgb), 0.4);
+	transform: translateY(-3px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.featuring-banner-visual {
+	width: 110px;
+	background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent-2-rgb), 0.1));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border-right: 1px solid rgba(var(--accent-rgb), 0.12);
+}
+
+.featuring-banner-visual span {
+	font-size: 2.2rem;
+	font-weight: 900;
+	color: var(--accent);
+	text-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4);
+}
+
+.featuring-banner-details {
+	display: flex;
+	flex-direction: column;
+	padding: 16px;
+	flex-grow: 1;
+	justify-content: space-between;
+	min-width: 0;
+}
+
+.featuring-banner-title {
+	font-size: 1.15rem;
+	font-weight: 900;
+	color: var(--text-main);
+	margin-bottom: 4px;
+}
+
+.featuring-banner-description {
+	font-size: 0.82rem;
+	color: var(--text-muted);
+	line-height: 1.4;
+	margin: 0 0 8px 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.featuring-banner-action {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.75rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	color: var(--accent);
+	letter-spacing: 0.5px;
+}
+
+.featuring-banner-arrow {
+	transition: transform 0.2s ease;
+}
+
+.glance-featuring-banner:hover .featuring-banner-arrow {
+	transform: translateX(4px);
+}
+
+/* Responsive breakpoint for featuring cards on smaller screens */
+@media (max-width: 640px) {
+	.glance-featuring-banner {
+		flex-direction: column;
+		min-height: auto;
+	}
+	.featuring-banner-visual {
+		width: 100%;
+		height: 80px;
+		border-right: none;
+		border-bottom: 1px solid rgba(var(--accent-rgb), 0.12);
+	}
+}
+
+/* --- Widget Card Sizing (Grid Column Spans) --- */
+.glance-card.card-size-small {
+	grid-column: span 1;
+}
+
+@media (min-width: 768px) {
+	.glance-card.card-size-medium {
+		grid-column: span 2;
+	}
+}
+
+.glance-card.card-size-large {
+	grid-column: 1 / -1 !important;
+}
+
+/* Ensure horizontal layouts of bookmark grids inside full-width blocks are properly bound and use border-box */
+.glance-bookmarks-banners-grid.link-size-large {
+	width: 100%;
+	box-sizing: border-box;
 }
 

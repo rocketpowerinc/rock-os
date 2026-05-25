@@ -42,6 +42,37 @@ func TestScriptRunRequestAllowedAcceptsSameOrigin(t *testing.T) {
 	}
 }
 
+func TestValidatePublicFetchURLBlocksLocalAndPrivateTargets(t *testing.T) {
+	tests := []string{
+		"http://localhost/feed.xml",
+		"http://127.0.0.1/feed.xml",
+		"http://0.0.0.0/feed.xml",
+		"http://10.0.0.5/feed.xml",
+		"http://172.16.0.5/feed.xml",
+		"http://172.31.255.255/feed.xml",
+		"http://192.168.1.2/feed.xml",
+		"http://169.254.169.254/latest/meta-data",
+		"http://[::1]/feed.xml",
+		"http://[fe80::1]/feed.xml",
+		"http://[fc00::1]/feed.xml",
+		"file:///etc/passwd",
+	}
+
+	for _, rawURL := range tests {
+		t.Run(rawURL, func(t *testing.T) {
+			if err := validatePublicFetchURL(rawURL); err == nil {
+				t.Fatalf("expected %q to be blocked", rawURL)
+			}
+		})
+	}
+}
+
+func TestValidatePublicFetchURLAllowsPublicIPTarget(t *testing.T) {
+	if err := validatePublicFetchURL("https://8.8.8.8/feed.xml"); err != nil {
+		t.Fatalf("expected public URL to be allowed, got: %v", err)
+	}
+}
+
 func TestResolveSiteRootFindsWebsiteFromRepoRoot(t *testing.T) {
 	repoRoot := t.TempDir()
 	websiteRoot := filepath.Join(repoRoot, "Website")

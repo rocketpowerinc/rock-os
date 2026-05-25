@@ -186,6 +186,7 @@ const REDDIT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3
 const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMzUsMTggNTAsMjUgMzUsMzIiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=';
 const PODCAST_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMzciIHk9IjIwIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzQ2ODJCNCIvPjxwYXRoIGQ9Ik0gMzQgMjIgQSA4IDggMCAwIDAgNDYgMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjQwIiB5MT0iMzAiIHgyPSI0MCIgeTI9IjM2IiBzdHJva2U9IiM0NjgyQjQiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIzNSIgeTE9IjM2IiB4Mj0iNDUiIHkyPSIzNiIgc3Ryb2tlPSIjNDY4MkI0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
 const SPOTIFY_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjUiIHI9IjEyIiBmaWxsPSIjMWRiOTU0Ii8+PHBhdGggZD0iTSAzMiAyNCBDIDM3IDIxIDQzIDIxIDQ4IDI0IE0gMzQgMjcgQyAzOCAyNSA0MiAyNSA0NiAyNyBNIDM2IDMwIEMgMzkgMjkgNDEgMjkgNDQgMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzEyMTIxMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==';
+const NEWS_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjE1IiB5PSIxNSIgd2lkdGg9IjgwIiBoZWlnaHQ9IjIwIiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMjAiIHkxPSIyMCIgeDI9Ijg1IiB5Mj0iMjAiIHN0cm9rZT0iIzQ2QjhEMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjIwIiB5MT0iMjUiIHgyPSI2MCIgeTI9IjI1IiBzdHJva2U9IiM0NkI4RDMiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyMCIgeTE9IjMwIiB4Mj0iNTUiIHkyPSIzMCIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
 
 async function fetchRedditFeed(subreddit, urls, fallback) {
     try {
@@ -296,6 +297,33 @@ async function fetchSpotifyFeed(urls, limit, fallback) {
     }
 }
 
+async function fetchNewsFeed(urls, limit, fallback) {
+    try {
+        const url = new URL('/api/feeds/news', window.location.origin);
+        if (Array.isArray(urls)) {
+            urls.forEach(u => url.searchParams.append('url', u));
+        } else if (urls) {
+            url.searchParams.append('url', urls);
+        }
+        if (limit) {
+            url.searchParams.append('limit', limit);
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) throw new Error();
+        return items.map(item => ({
+            title: item.title,
+            url: item.url,
+            date: item.created || 'News',
+            thumbnail: item.thumbnail || NEWS_PLACEHOLDER
+        }));
+    } catch (e) {
+        console.warn(`Could not fetch live News feed. Loading fallback.`);
+        return fallback;
+    }
+}
+
 function renderDashboard(profile, config, feeds) {
     if (!config || !Array.isArray(config.widgets)) return;
     feeds = feeds || {};
@@ -330,21 +358,51 @@ function renderDashboard(profile, config, feeds) {
             </div>
             <div class="glance-dashboard">
                 ${config.widgets.map((w, idx) => {
+                    if (w.type === 'featuring') {
+                        return `
+                            <div class="glance-card widget-featuring card-size-${w.card_size}">
+                                <div class="glance-card-header">
+                                    <h2>${escapeHtml(w.title)}</h2>
+                                    <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                </div>
+                                <div class="glance-featuring-grid">
+                                    ${w.bookmarks.flatMap(section => section.items).map(item => {
+                                        const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '★';
+                                        return `
+                                            <a class="glance-featuring-banner" href="${escapeHtml(item.url)}" target="_blank">
+                                                <div class="featuring-banner-visual">
+                                                    <span>${escapeHtml(initials)}</span>
+                                                </div>
+                                                <div class="featuring-banner-details">
+                                                    <span class="featuring-banner-title">${escapeHtml(item.name)}</span>
+                                                    <p class="featuring-banner-description">${escapeHtml(item.desc)}</p>
+                                                    <div class="featuring-banner-action">
+                                                        <span>Explore Now</span>
+                                                        <span class="featuring-banner-arrow">➔</span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
                     if (w.type === 'bookmarks') {
                         const layout = w.layout || 'vertical';
                         const size = w.size || 'medium';
                         if (layout === 'horizontal' || layout === 'banners') {
                             return `
-                                <div class="glance-card widget-bookmarks banners-layout size-${size}">
+                                <div class="glance-card widget-bookmarks banners-layout card-size-${w.card_size} link-size-${w.link_size}">
                                     <div class="glance-card-header">
                                         <h2>${escapeHtml(w.title)}</h2>
                                         <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                     </div>
-                                    <div class="glance-bookmarks-banners-grid size-${size}">
+                                    <div class="glance-bookmarks-banners-grid link-size-${w.link_size}">
                                         ${w.bookmarks.flatMap(section => section.items).map(item => {
                                             const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '★';
                                             return `
-                                                <a class="glance-bookmark-banner size-${size}" href="${escapeHtml(item.url)}" target="_blank">
+                                                <a class="glance-bookmark-banner link-size-${w.link_size}" href="${escapeHtml(item.url)}" target="_blank">
                                                     <div class="bookmark-banner-accent">
                                                         <span>${escapeHtml(initials)}</span>
                                                     </div>
@@ -361,7 +419,7 @@ function renderDashboard(profile, config, feeds) {
                             `;
                         }
                         return `
-                            <div class="glance-card widget-bookmarks size-${size}">
+                            <div class="glance-card widget-bookmarks card-size-${w.card_size} link-size-${w.link_size}">
                                 <div class="glance-card-header">
                                     <h2>${escapeHtml(w.title)}</h2>
                                     <span class="glance-badge">${escapeHtml(w.badge)}</span>
@@ -370,7 +428,7 @@ function renderDashboard(profile, config, feeds) {
                                     <div class="glance-bookmark-sec" style="${section !== w.bookmarks[0] ? 'margin-top: 8px;' : ''}">
                                         <div class="glance-bookmark-title">${escapeHtml(section.section)}</div>
                                         ${section.items.map(item => `
-                                            <a class="glance-bookmark-item size-${size}" href="${escapeHtml(item.url)}" target="_blank">
+                                            <a class="glance-bookmark-item link-size-${w.link_size}" href="${escapeHtml(item.url)}" target="_blank">
                                                 <div class="glance-bookmark-info">
                                                     <span class="glance-bookmark-name">${escapeHtml(item.name)}</span>
                                                     <span class="glance-bookmark-desc">${escapeHtml(item.desc)}</span>
@@ -384,7 +442,7 @@ function renderDashboard(profile, config, feeds) {
                         `;
                     }
                     return `
-                        <div class="glance-card" id="widget-${idx}">
+                        <div class="glance-card widget-${w.type} card-size-${w.card_size} link-size-${w.link_size}" id="widget-${idx}">
                             <div class="glance-card-header">
                                 <h2>${escapeHtml(w.title)}</h2>
                                 <span class="glance-badge">${escapeHtml(w.badge)}</span>
@@ -409,15 +467,15 @@ function renderDashboard(profile, config, feeds) {
 
             if (w.type === 'reddit') {
                 fetchRedditFeed(w.subreddit, w.urls, w.fallback).then(posts => {
-                    const size = w.size || 'medium';
+                    const linkSize = w.link_size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list layout-${layout} size-${size}">
+                        <ul class="glance-feed-list layout-${layout} link-size-${linkSize}">
                             ${posts.map(post => `
-                                <li class="glance-feed-item layout-${layout} size-${size}">
-                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
-                                    <div class="glance-feed-content layout-${layout} size-${size}">
-                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
-                                        <div class="glance-feed-meta layout-${layout} size-${size}">
+                                <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
+                                    <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
+                                    <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(post.author)}</span>
                                             <span>${escapeHtml(post.created)}</span>
                                         </div>
@@ -429,15 +487,15 @@ function renderDashboard(profile, config, feeds) {
                 });
             } else if (w.type === 'youtube') {
                 fetchYouTubeFeed(w.channels, w.playlists, w.urls, w.limit, w.fallback).then(videos => {
-                    const size = w.size || 'medium';
+                    const linkSize = w.link_size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list layout-${layout} size-${size}">
+                        <ul class="glance-feed-list layout-${layout} link-size-${linkSize}">
                             ${videos.map(video => `
-                                <li class="glance-feed-item layout-${layout} size-${size}">
-                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
-                                    <div class="glance-feed-content layout-${layout} size-${size}">
-                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
-                                        <div class="glance-feed-meta layout-${layout} size-${size}">
+                                <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
+                                    <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
+                                    <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(video.date)}</span>
                                         </div>
@@ -450,15 +508,15 @@ function renderDashboard(profile, config, feeds) {
             } else if (w.type === 'podcast') {
                 const feedUrl = (w.urls && w.urls.length > 0) ? w.urls[0] : w.feedUrl;
                 fetchPodcastFeed(feedUrl, w.limit, w.fallback).then(episodes => {
-                    const size = w.size || 'medium';
+                    const linkSize = w.link_size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list layout-${layout} size-${size}">
+                        <ul class="glance-feed-list layout-${layout} link-size-${linkSize}">
                             ${episodes.map(episode => `
-                                <li class="glance-feed-item layout-${layout} size-${size}">
-                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
-                                    <div class="glance-feed-content layout-${layout} size-${size}">
-                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
-                                        <div class="glance-feed-meta layout-${layout} size-${size}">
+                                <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
+                                    <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
+                                    <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(episode.date)}</span>
                                         </div>
@@ -470,17 +528,37 @@ function renderDashboard(profile, config, feeds) {
                 });
             } else if (w.type === 'spotify') {
                 fetchSpotifyFeed(w.urls, w.limit, w.fallback).then(tracks => {
-                    const size = w.size || 'medium';
+                    const linkSize = w.link_size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list layout-${layout} size-${size}">
+                        <ul class="glance-feed-list layout-${layout} link-size-${linkSize}">
                             ${tracks.map(track => `
-                                <li class="glance-feed-item layout-${layout} size-${size}">
-                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(track.thumbnail)}" onerror="this.src='${SPOTIFY_PLACEHOLDER}';" alt="Spotify Art">
-                                    <div class="glance-feed-content layout-${layout} size-${size}">
-                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(track.url)}" target="_blank">${escapeHtml(track.title)}</a>
-                                        <div class="glance-feed-meta layout-${layout} size-${size}">
+                                <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
+                                    <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(track.thumbnail)}" onerror="this.src='${SPOTIFY_PLACEHOLDER}';" alt="Spotify Art">
+                                    <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(track.url)}" target="_blank">${escapeHtml(track.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(track.date)}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                });
+            } else if (w.type === 'news') {
+                fetchNewsFeed(w.urls, w.limit, w.fallback).then(headlines => {
+                    const linkSize = w.link_size || 'medium';
+                    container.innerHTML = `
+                        <ul class="glance-feed-list layout-${layout} link-size-${linkSize}">
+                            ${headlines.map(headline => `
+                                <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
+                                    <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(headline.thumbnail)}" onerror="this.src='${NEWS_PLACEHOLDER}';" alt="News Thumbnail">
+                                    <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(headline.url)}" target="_blank">${escapeHtml(headline.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
+                                            <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                            <span>${escapeHtml(headline.date)}</span>
                                         </div>
                                     </div>
                                 </li>
@@ -617,7 +695,7 @@ async function startProfiles() {
                     if (f.type === 'videos' || f.type === 'music') {
                         targetType = 'youtube';
                     }
-                    if (targetType === 'bookmarks') {
+                    if (targetType === 'bookmarks' || targetType === 'featuring') {
                         const items = (f.urls || []).map(uStr => {
                             const parts = uStr.split('|');
                             if (parts.length >= 3) {
@@ -646,12 +724,14 @@ async function startProfiles() {
                             }
                         });
                         return {
-                            type: 'bookmarks',
+                            type: targetType,
                             feedKey: f.feedKey,
                             title: f.title || f.feedKey,
-                            badge: f.badge || 'Links',
-                            layout: f.layout || 'horizontal', // Default to horizontal for nice banners
+                            badge: f.badge || (targetType === 'featuring' ? 'Featured' : 'Links'),
+                            layout: f.layout || 'horizontal',
                             size: f.size || 'medium',
+                            card_size: f.card_size || f.size || 'medium',
+                            link_size: f.link_size || f.size || 'medium',
                             bookmarks: [
                                 {
                                     section: f.title || f.feedKey,
@@ -664,10 +744,12 @@ async function startProfiles() {
                         type: targetType,
                         feedKey: f.feedKey,
                         title: f.title || f.feedKey,
-                        badge: f.badge || 'RSS',
+                        badge: f.badge || (targetType === 'news' ? 'News' : 'RSS'),
                         limit: f.limit || 5,
                         layout: f.layout || 'vertical',
                         size: f.size || 'medium',
+                        card_size: f.card_size || f.size || 'medium',
+                        link_size: f.link_size || f.size || 'medium',
                         channels: [],
                         playlists: [],
                         urls: f.urls || [],

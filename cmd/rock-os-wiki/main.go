@@ -14,6 +14,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"os"
 	"os/exec"
@@ -244,6 +245,7 @@ func main() {
 	mux.HandleFunc("/api/feeds/youtube", feedYoutubeHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/podcast", feedPodcastHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/spotify", feedSpotifyHandler(siteRoot))
+	mux.HandleFunc("/api/feeds/news", feedNewsHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -2980,6 +2982,134 @@ type feedItem struct {
 	PublishTime time.Time `json:"-"`
 }
 
+var blockedServerFetchPrefixes = []netip.Prefix{
+	netip.MustParsePrefix("0.0.0.0/8"),
+	netip.MustParsePrefix("10.0.0.0/8"),
+	netip.MustParsePrefix("100.64.0.0/10"),
+	netip.MustParsePrefix("127.0.0.0/8"),
+	netip.MustParsePrefix("169.254.0.0/16"),
+	netip.MustParsePrefix("172.16.0.0/12"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+	netip.MustParsePrefix("192.0.2.0/24"),
+	netip.MustParsePrefix("192.168.0.0/16"),
+	netip.MustParsePrefix("198.18.0.0/15"),
+	netip.MustParsePrefix("198.51.100.0/24"),
+	netip.MustParsePrefix("203.0.113.0/24"),
+	netip.MustParsePrefix("224.0.0.0/4"),
+	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("::/128"),
+	netip.MustParsePrefix("::1/128"),
+	netip.MustParsePrefix("64:ff9b::/96"),
+	netip.MustParsePrefix("100::/64"),
+	netip.MustParsePrefix("2001::/23"),
+	netip.MustParsePrefix("2001:2::/48"),
+	netip.MustParsePrefix("2001:db8::/32"),
+	netip.MustParsePrefix("fc00::/7"),
+	netip.MustParsePrefix("fe80::/10"),
+	netip.MustParsePrefix("ff00::/8"),
+}
+
+func newPublicFetchClient(timeout time.Duration) *http.Client {
+	dialer := &net.Dialer{Timeout: timeout}
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: func(ctx context.Context, network string, address string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(address)
+			if err != nil {
+				return nil, err
+			}
+
+			ips, err := resolvePublicFetchHost(ctx, host)
+			if err != nil {
+				return nil, err
+			}
+			if len(ips) == 0 {
+				return nil, fmt.Errorf("could not resolve feed host %s", host)
+			}
+
+			return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+		},
+	}
+
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return http.ErrUseLastResponse
+			}
+			return validatePublicFetchURL(req.URL.String())
+		},
+	}
+}
+
+func validatePublicFetchURL(rawURL string) error {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return fmt.Errorf("url is required")
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return fmt.Errorf("invalid feed URL: %s", rawURL)
+	}
+	if parsed.User != nil {
+		return fmt.Errorf("feed URL userinfo is not allowed")
+	}
+
+	_, err = resolvePublicFetchHost(context.Background(), parsed.Hostname())
+	return err
+}
+
+func resolvePublicFetchHost(ctx context.Context, host string) ([]net.IP, error) {
+	host = strings.TrimSuffix(strings.ToLower(strings.TrimSpace(host)), ".")
+	if host == "" {
+		return nil, fmt.Errorf("feed URL host is required")
+	}
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") {
+		return nil, fmt.Errorf("access to local network is restricted: %s", host)
+	}
+
+	if addr, err := netip.ParseAddr(host); err == nil {
+		if err := validatePublicFetchAddr(addr, host); err != nil {
+			return nil, err
+		}
+		return []net.IP{net.ParseIP(host)}, nil
+	}
+
+	resolved, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, fmt.Errorf("could not resolve feed host %s: %w", host, err)
+	}
+	if len(resolved) == 0 {
+		return nil, fmt.Errorf("could not resolve feed host %s", host)
+	}
+
+	ips := make([]net.IP, 0, len(resolved))
+	for _, resolvedIP := range resolved {
+		addr, ok := netip.AddrFromSlice(resolvedIP.IP)
+		if !ok {
+			return nil, fmt.Errorf("could not parse resolved IP for %s", host)
+		}
+		if err := validatePublicFetchAddr(addr, host); err != nil {
+			return nil, err
+		}
+		ips = append(ips, resolvedIP.IP)
+	}
+
+	return ips, nil
+}
+
+func validatePublicFetchAddr(addr netip.Addr, host string) error {
+	addr = addr.Unmap()
+	for _, prefix := range blockedServerFetchPrefixes {
+		if prefix.Contains(addr) {
+			return fmt.Errorf("access to local network is restricted: %s", host)
+		}
+	}
+	return nil
+}
+
 type redditChild struct {
 	Data struct {
 		Title      string  `json:"title"`
@@ -3079,7 +3209,7 @@ func feedRedditHandler(siteRoot string) http.HandlerFunc {
 
 func fetchLiveRedditFeed(subreddit string) ([]feedItem, error) {
 	urlStr := fmt.Sprintf("https://www.reddit.com/r/%s/new.json?limit=5", subreddit)
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := newPublicFetchClient(5 * time.Second)
 	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
 		return nil, err
@@ -3283,7 +3413,7 @@ func fetchCombinedYoutubeFeed(channelIDs []string, playlistIDs []string, limit i
 }
 
 func fetchSingleYoutubeFeed(urlStr string) ([]feedItem, error) {
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := newPublicFetchClient(5 * time.Second)
 	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
 		return nil, err
@@ -3411,17 +3541,8 @@ func feedPodcastHandler(siteRoot string) http.HandlerFunc {
 		}
 
 		feedURL = resolvePodcastURLToFeed(feedURL, siteRoot)
-
-		u, err := url.Parse(feedURL)
-		if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-			http.Error(w, "invalid url parameter", http.StatusBadRequest)
-			return
-		}
-
-		// Block SSRF to local interfaces
-		host := u.Hostname()
-		if host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || strings.HasPrefix(host, "192.168.") || strings.HasPrefix(host, "10.") {
-			http.Error(w, "access to local network is restricted", http.StatusForbidden)
+		if err := validatePublicFetchURL(feedURL); err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 
@@ -3458,7 +3579,7 @@ func feedPodcastHandler(siteRoot string) http.HandlerFunc {
 }
 
 func fetchLivePodcastFeed(feedURL string) ([]feedItem, error) {
-	client := &http.Client{Timeout: 8 * time.Second}
+	client := newPublicFetchClient(8 * time.Second)
 	req, err := http.NewRequest("GET", feedURL, nil)
 	if err != nil {
 		return nil, err
@@ -3617,7 +3738,7 @@ func resolveYoutubeURLToID(inputURL string, siteRoot string) (paramType string, 
 
 	// 5. Resolve handle/user or search query page
 	if strings.Contains(inputURL, "youtube.com/@") || strings.Contains(inputURL, "youtube.com/user/") || strings.Contains(inputURL, "/results?search_query=") || strings.Contains(inputURL, "youtu.be/") {
-		client := &http.Client{Timeout: 5 * time.Second}
+		client := newPublicFetchClient(5 * time.Second)
 		req, err := http.NewRequest("GET", inputURL, nil)
 		if err != nil {
 			return "", ""
@@ -3690,7 +3811,7 @@ func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
 
 	// 3. Request iTunes Lookup API
 	lookupURL := fmt.Sprintf("https://itunes.apple.com/lookup?id=%s", podcastID)
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := newPublicFetchClient(5 * time.Second)
 	resp, err := client.Get(lookupURL)
 	if err == nil {
 		defer resp.Body.Close()
@@ -3710,6 +3831,209 @@ func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
 					_ = os.WriteFile(cachePath, data, 0644)
 				}
 				return feedURL
+			}
+		}
+	}
+
+	return inputURL
+}
+
+func fetchNewsFeedWithCache(feedURL string, siteRoot string) ([]feedItem, error) {
+	if err := validatePublicFetchURL(feedURL); err != nil {
+		return nil, err
+	}
+
+	resolvedFeedURL := resolveNewsURLToFeed(feedURL)
+	if err := validatePublicFetchURL(resolvedFeedURL); err != nil {
+		return nil, err
+	}
+
+	// Cache path based on hash of the resolved feed URL
+	hasher := sha256.New()
+	hasher.Write([]byte(resolvedFeedURL))
+	cacheFilename := fmt.Sprintf("news_%x.json", hasher.Sum(nil))
+	cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
+	cachePath := filepath.Join(cacheDir, cacheFilename)
+
+	// Try to fetch live feed
+	items, err := fetchLiveNewsFeed(resolvedFeedURL)
+	if err == nil {
+		// Save to cache
+		_ = os.MkdirAll(cacheDir, 0755)
+		if data, err := json.Marshal(items); err == nil {
+			_ = os.WriteFile(cachePath, data, 0644)
+		}
+		return items, nil
+	}
+
+	// Fallback to cache
+	if data, err := os.ReadFile(cachePath); err == nil {
+		var cachedItems []feedItem
+		if err := json.Unmarshal(data, &cachedItems); err == nil {
+			return cachedItems, nil
+		}
+	}
+
+	return nil, err
+}
+
+func feedNewsHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		feedURLs := r.URL.Query()["url"]
+		if len(feedURLs) == 0 {
+			http.Error(w, "url parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		limitStr := r.URL.Query().Get("limit")
+		limit := 5
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+				limit = l
+			}
+		}
+
+		var allItems []feedItem
+		for _, feedURL := range feedURLs {
+			items, err := fetchNewsFeedWithCache(feedURL, siteRoot)
+			if err == nil {
+				allItems = append(allItems, items...)
+			}
+		}
+
+		// Sort by Created date descending (newest first)
+		sort.Slice(allItems, func(i, j int) bool {
+			return allItems[i].Created > allItems[j].Created
+		})
+
+		// Limit the results
+		if len(allItems) > limit {
+			allItems = allItems[:limit]
+		}
+
+		writeJSON(w, allItems)
+	}
+}
+
+func fetchLiveNewsFeed(feedURL string) ([]feedItem, error) {
+	client := newPublicFetchClient(8 * time.Second)
+	req, err := http.NewRequest("GET", feedURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("news RSS returned HTTP %d", resp.StatusCode)
+	}
+
+	var rss rssFeed
+	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
+		return nil, err
+	}
+
+	limit := len(rss.Channel.Items)
+	if limit > 5 {
+		limit = 5
+	}
+
+	items := make([]feedItem, 0, limit)
+	for i := 0; i < limit; i++ {
+		item := rss.Channel.Items[i]
+		dateStr := ""
+		var pubTime time.Time
+		if item.PubDate != "" {
+			pubTime = parseRssDate(item.PubDate)
+			if !pubTime.IsZero() {
+				dateStr = pubTime.Format("2006-01-02")
+			} else {
+				dateStr = item.PubDate
+			}
+		}
+
+		// Try to parse a thumbnail from description (HTML img src) if present
+		thumbnail := ""
+		re := regexp.MustCompile(`(?i)<img[^>]+src=["']([^"']+)["']`)
+		match := re.FindStringSubmatch(item.Description)
+		if len(match) > 1 {
+			thumbnail = match[1]
+		}
+
+		items = append(items, feedItem{
+			Title:     item.Title,
+			URL:       item.Link,
+			Created:   dateStr,
+			Thumbnail: thumbnail,
+		})
+	}
+
+	return items, nil
+}
+
+func resolveNewsURLToFeed(inputURL string) string {
+	u, err := url.Parse(inputURL)
+	if err != nil {
+		return inputURL
+	}
+
+	host := strings.ToLower(u.Hostname())
+
+	// 1. Google News topics/sections translation
+	if strings.Contains(host, "news.google.com") {
+		path := u.Path
+		if strings.HasPrefix(path, "/topics/") {
+			u.Path = "/rss/topics/" + strings.TrimPrefix(path, "/topics/")
+			return u.String()
+		}
+		if strings.HasPrefix(path, "/sections/") {
+			u.Path = "/rss/sections/" + strings.TrimPrefix(path, "/sections/")
+			return u.String()
+		}
+		if path == "" || path == "/" {
+			u.Path = "/rss"
+			return u.String()
+		}
+		return inputURL
+	}
+
+	if err := validatePublicFetchURL(inputURL); err != nil {
+		return inputURL
+	}
+
+	// 3. General RSS Auto-Discovery
+	client := newPublicFetchClient(5 * time.Second)
+	resp, err := client.Get(inputURL)
+	if err == nil {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err == nil {
+			re := regexp.MustCompile(`(?i)<link[^>]+type=["']application/rss\+xml["'][^>]+href=["']([^"']+)["']`)
+			match := re.FindStringSubmatch(string(body))
+			if len(match) > 1 {
+				href := match[1]
+				// Resolve relative URL
+				if strings.HasPrefix(href, "/") {
+					u.Path = href
+					u.RawQuery = ""
+					u.Fragment = ""
+					return u.String()
+				}
+				if !strings.HasPrefix(href, "http") {
+					// Prepend base schema/host
+					return fmt.Sprintf("%s://%s/%s", u.Scheme, u.Hostname(), strings.TrimPrefix(href, "/"))
+				}
+				return href
 			}
 		}
 	}
@@ -3788,7 +4112,7 @@ func feedSpotifyHandler(siteRoot string) http.HandlerFunc {
 func fetchSpotifyOEmbed(spotifyURL string) (feedItem, error) {
 	apiURL := fmt.Sprintf("https://embed.spotify.com/oembed/?url=%s", url.QueryEscape(spotifyURL))
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := newPublicFetchClient(5 * time.Second)
 	resp, err := client.Get(apiURL)
 	if err != nil {
 		return feedItem{}, err

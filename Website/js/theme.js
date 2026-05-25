@@ -21,9 +21,17 @@ function normalizeTheme(theme) {
     return defaultTheme;
 }
 
+function getAssetPrefix() {
+    if (window.location.pathname.includes('/profiles/')) {
+        return '../../';
+    }
+    return '';
+}
+
 function applyTheme(theme) {
     const nextTheme = normalizeTheme(theme);
-    const themeImage = themeImages[nextTheme] || themeImages[defaultTheme];
+    const prefix = getAssetPrefix();
+    const themeImage = prefix + (themeImages[nextTheme] || themeImages[defaultTheme]);
 
     document.documentElement.dataset.theme = nextTheme;
 
@@ -31,7 +39,7 @@ function applyTheme(theme) {
         .forEach(image => {
             image.onerror = () => {
                 image.onerror = null;
-                image.src = themeImages[defaultTheme];
+                image.src = prefix + themeImages[defaultTheme];
             };
             image.src = themeImage;
         });
