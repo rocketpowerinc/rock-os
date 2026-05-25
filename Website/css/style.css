@@ -1084,6 +1084,17 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
+.linux-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/Linux/assets/linux.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
 .glance-header-text h1 {
 	margin:0 0 6px 0;
 	color:var(--profile-banner-title);
@@ -1437,6 +1448,11 @@ color:#88ff88;
 
 .profiles-card[data-profile="Windows"] .profile-card-icon {
 	background-image:url('../dashboards/Windows/assets/windows.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="Linux"] .profile-card-icon {
+	background-image:url('../dashboards/Linux/assets/linux.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
