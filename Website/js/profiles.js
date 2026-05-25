@@ -182,107 +182,91 @@ async function loadProfilesLanding() {
     }
 }
 
-async function fetchRedditPreppers() {
+const REDDIT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjUiIHI9IjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjQ1MDAiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSI0MCIgeTE9IjE1IiB4Mj0iNDMiIHkyPSIxMCIgc3Ryb2tlPSIjZmY0NTAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI0MyIgY3k9IjEwIiByPSIyIiBmaWxsPSIjZmY0NTAwIi8+PGNpcmNsZSBjeD0iMzYiIGN5PSIyNSIgcj0iMS41IiBmaWxsPSIjZmY0NTAwIi8+PGNpcmNsZSBjeD0iNDQiIGN5PSIyNSIgcj0iMS41IiBmaWxsPSIjZmY0NTAwIi8+PHBhdGggZD0iTSAzNSAyOSBRIDQwIDMzIDQ1IDI5IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjQ1MDAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PC9zdmc+';
+
+const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMzUsMTggNTAsMjUgMzUsMzIiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=';
+const PODCAST_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMzciIHk9IjIwIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzQ2ODJCNCIvPjxwYXRoIGQ9Ik0gMzQgMjIgQSA4IDggMCAwIDAgNDYgMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjQwIiB5MT0iMzAiIHgyPSI0MCIgeTI9IjM2IiBzdHJva2U9IiM0NjgyQjQiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIzNSIgeTE9IjM2IiB4Mj0iNDUiIHkyPSIzNiIgc3Ryb2tlPSIjNDY4MkI0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
+
+async function fetchRedditFeed(subreddit, fallback) {
     try {
-        const res = await fetch('https://www.reddit.com/r/preppers/new.json?limit=5');
+        const res = await fetch(`/api/feeds/reddit?subreddit=${encodeURIComponent(subreddit)}`);
         if (!res.ok) throw new Error();
-        const data = await res.json();
-        return data.data.children.map(child => ({
-            title: child.data.title,
-            url: 'https://www.reddit.com' + child.data.permalink,
-            created: new Date(child.data.created_utc * 1000).toLocaleDateString(),
-            author: 'u/' + child.data.author
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) throw new Error();
+        return items.map(item => ({
+            title: item.title,
+            url: item.url,
+            created: item.created || 'Today',
+            author: item.author || 'u/anonymous',
+            thumbnail: item.thumbnail || REDDIT_PLACEHOLDER
         }));
     } catch (e) {
-        console.warn('Could not fetch real-time Reddit r/preppers feed. Loading fallback cached feed.');
-        return [
-            {
-                title: "Water purification best practices for long-term storage",
-                url: "https://www.reddit.com/r/preppers/comments/water_purification_best_practices/",
-                created: "Today",
-                author: "u/SurvivalSage"
-            },
-            {
-                title: "Top 5 solar generators for grid outages - hands-on review",
-                url: "https://www.reddit.com/r/preppers/comments/top_5_solar_generators/",
-                created: "Yesterday",
-                author: "u/GridDownAdapter"
-            },
-            {
-                title: "HAM vs GMRS radio communication range test in dense woods",
-                url: "https://www.reddit.com/r/preppers/comments/radio_communication_range_test/",
-                created: "2 days ago",
-                author: "u/SignalPrepper"
-            },
-            {
-                title: "Food rotation 101: Keeping a 12-month pantry fresh",
-                url: "https://www.reddit.com/r/preppers/comments/food_rotation_101/",
-                created: "3 days ago",
-                author: "u/PantryManager"
-            },
-            {
-                title: "Bug-out vehicle build: Essential tools to keep under the seat",
-                url: "https://www.reddit.com/r/preppers/comments/bug_out_vehicle_build/",
-                created: "4 days ago",
-                author: "u/OffGridRover"
-            }
-        ];
+        console.warn(`Could not fetch real-time Reddit r/${subreddit} feed. Loading fallback cached feed.`);
+        return fallback;
     }
 }
 
-async function fetchYouTubeVideos() {
+async function fetchYouTubeFeed(channels, playlists, urls, limit, fallback) {
     try {
-        const rssUrl = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=UC4p10g47S0n4_bcf9_p8K2w');
-        const res = await fetch(`https://api.allorigins.win/get?url=${rssUrl}`);
-        if (!res.ok) throw new Error();
-        const json = await res.json();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(json.contents, 'application/xml');
-        const entries = doc.querySelectorAll('entry');
-        if (entries.length === 0) throw new Error();
-
-        const videos = [];
-        for (let i = 0; i < Math.min(entries.length, 5); i++) {
-            const entry = entries[i];
-            const title = entry.querySelector('title')?.textContent || '';
-            const link = entry.querySelector('link')?.getAttribute('href') || 'https://www.youtube.com/@CanadianPrepper';
-            const published = new Date(entry.querySelector('published')?.textContent || Date.now()).toLocaleDateString();
-            videos.push({ title, url: link, date: published });
+        const url = new URL('/api/feeds/youtube', window.location.origin);
+        if (Array.isArray(channels)) {
+            channels.forEach(id => url.searchParams.append('channel_id', id));
+        } else if (channels) {
+            url.searchParams.append('channel_id', channels);
         }
-        return videos;
+        if (Array.isArray(playlists)) {
+            playlists.forEach(id => url.searchParams.append('playlist_id', id));
+        } else if (playlists) {
+            url.searchParams.append('playlist_id', playlists);
+        }
+        if (Array.isArray(urls)) {
+            urls.forEach(u => url.searchParams.append('url', u));
+        } else if (urls) {
+            url.searchParams.append('url', urls);
+        }
+        if (limit) {
+            url.searchParams.append('limit', limit);
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) throw new Error();
+        return items.map(item => ({
+            title: item.title,
+            url: item.url,
+            date: item.created || 'Today',
+            thumbnail: item.thumbnail || YOUTUBE_PLACEHOLDER
+        }));
     } catch (e) {
-        console.warn('Could not fetch live YouTube channel feed. Loading fallback cached videos.');
-        return [
-            {
-                title: "Prepping for the Next 72 Hours: Crucial Steps Most People Miss",
-                url: "https://www.youtube.com/watch?v=mock1",
-                date: "Today"
-            },
-            {
-                title: "This Shocking Off-Grid Tech Will Change Survivalism Forever",
-                url: "https://www.youtube.com/watch?v=mock2",
-                date: "Yesterday"
-            },
-            {
-                title: "Top 10 Survival Items You Can Buy at a Local Hardware Store",
-                url: "https://www.youtube.com/watch?v=mock3",
-                date: "3 days ago"
-            },
-            {
-                title: "The Emergency Comms Plan Every Neighborhood Needs",
-                url: "https://www.youtube.com/watch?v=mock4",
-                date: "5 days ago"
-            },
-            {
-                title: "Gear Review: Testing the Toughest Water Filters in the Wild",
-                url: "https://www.youtube.com/watch?v=mock5",
-                date: "1 week ago"
-            }
-        ];
+        console.warn(`Could not fetch live YouTube feed. Loading fallback cached videos.`);
+        return fallback;
     }
 }
 
-function renderPrepperDashboard() {
+async function fetchPodcastFeed(feedUrl, limit, fallback) {
+    try {
+        const url = `/api/feeds/podcast?url=${encodeURIComponent(feedUrl)}&limit=${limit || 5}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) throw new Error();
+        return items.map(item => ({
+            title: item.title,
+            url: item.url,
+            date: item.created || 'Today',
+            thumbnail: item.thumbnail || PODCAST_PLACEHOLDER
+        }));
+    } catch (e) {
+        console.warn(`Could not fetch live Podcast feed. Loading fallback.`);
+        return fallback;
+    }
+}
+
+function renderDashboard(profile, config, feeds) {
+    if (!config || !Array.isArray(config.widgets)) return;
+    feeds = feeds || {};
+
     const sidebar = document.getElementById('sidebar');
     const resizer = document.getElementById('sidebarResizer');
     const expandButton = document.getElementById('expandSidebarBtn');
@@ -293,15 +277,16 @@ function renderPrepperDashboard() {
     if (resizer) resizer.style.display = 'none';
     if (expandButton) expandButton.style.display = 'none';
     if (toc) toc.style.display = 'none';
+
     if (content) {
         content.classList.add('fullwidth');
         content.innerHTML = `
             <div class="glance-header-card">
                 <div class="glance-header-left">
-                    <div class="prepper-avatar-display"></div>
+                    <div class="${config.avatarClass}"></div>
                     <div class="glance-header-text">
-                        <h1>Prepper Dashboard</h1>
-                        <p>Dynamic Control Dashboard // Prepper Monitoring & Off-Grid Resource Center</p>
+                        <h1>${escapeHtml(config.title)}</h1>
+                        <p>${escapeHtml(config.subtitle)}</p>
                     </div>
                 </div>
                 <div class="glance-header-actions">
@@ -311,159 +296,139 @@ function renderPrepperDashboard() {
                 </div>
             </div>
             <div class="glance-dashboard">
-                <!-- Widget 1: Reddit -->
-                <div class="glance-card">
-                    <div class="glance-card-header">
-                        <h2>r/preppers Subreddit</h2>
-                        <span class="glance-badge">Reddit RSS</span>
-                    </div>
-                    <div id="redditFeedContainer">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Syncing feed...</p>
-                    </div>
-                </div>
-
-                <!-- Widget 2: YouTube -->
-                <div class="glance-card">
-                    <div class="glance-card-header">
-                        <h2>Canadian Prepper Feed</h2>
-                        <span class="glance-badge">YouTube RSS</span>
-                    </div>
-                    <div id="youtubeFeedContainer">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Syncing feed...</p>
-                    </div>
-                </div>
-
-                <!-- Widget 3: Bookmarks -->
-                <div class="glance-card">
-                    <div class="glance-card-header">
-                        <h2>Bookmarks</h2>
-                        <span class="glance-badge">Links</span>
-                    </div>
-                    <div class="glance-bookmark-sec">
-                        <div class="glance-bookmark-title">Products</div>
-                        <a class="glance-bookmark-item" href="https://lifestraw.com/" target="_blank">
-                            <div class="glance-bookmark-info">
-                                <span class="glance-bookmark-name">LifeStraw</span>
-                                <span class="glance-bookmark-desc">Personal water filter technology & products</span>
+                ${config.widgets.map((w, idx) => {
+                    if (w.type === 'bookmarks') {
+                        return `
+                            <div class="glance-card widget-bookmarks">
+                                <div class="glance-card-header">
+                                    <h2>${escapeHtml(w.title)}</h2>
+                                    <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                </div>
+                                ${w.bookmarks.map(section => `
+                                    <div class="glance-bookmark-sec" style="${section !== w.bookmarks[0] ? 'margin-top: 8px;' : ''}">
+                                        <div class="glance-bookmark-title">${escapeHtml(section.section)}</div>
+                                        ${section.items.map(item => `
+                                            <a class="glance-bookmark-item" href="${escapeHtml(item.url)}" target="_blank">
+                                                <div class="glance-bookmark-info">
+                                                    <span class="glance-bookmark-name">${escapeHtml(item.name)}</span>
+                                                    <span class="glance-bookmark-desc">${escapeHtml(item.desc)}</span>
+                                                </div>
+                                                <span class="glance-bookmark-arrow">➔</span>
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                `).join('')}
                             </div>
-                            <span class="glance-bookmark-arrow">➔</span>
-                        </a>
-                    </div>
-                    <div class="glance-bookmark-sec" style="margin-top: 8px;">
-                        <div class="glance-bookmark-title">Resources</div>
-                        <a class="glance-bookmark-item" href="https://github.com/Crosstalk-Solutions/project-nomad" target="_blank">
-                            <div class="glance-bookmark-info">
-                                <span class="glance-bookmark-name">Project Nomad</span>
-                                <span class="glance-bookmark-desc">Off-grid communication setup and deployables</span>
+                        `;
+                    }
+                    return `
+                        <div class="glance-card" id="widget-${idx}">
+                            <div class="glance-card-header">
+                                <h2>${escapeHtml(w.title)}</h2>
+                                <span class="glance-badge">${escapeHtml(w.badge)}</span>
                             </div>
-                            <span class="glance-bookmark-arrow">➔</span>
-                        </a>
-                    </div>
-                </div>
+                            <div class="widget-content-container" id="widget-content-${idx}">
+                                <p style="color: var(--text-muted); font-size: 0.9rem;">Syncing feed...</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         `;
+
+        // Async load feed content for non-bookmarks widgets
+        config.widgets.forEach((w, idx) => {
+            if (w.type === 'bookmarks') return;
+
+            const container = document.getElementById(`widget-content-${idx}`);
+            if (!container) return;
+
+            if (w.type === 'reddit') {
+                fetchRedditFeed(w.subreddit, w.fallback).then(posts => {
+                    container.innerHTML = `
+                        <ul class="glance-feed-list">
+                            ${posts.map(post => `
+                                <li class="glance-feed-item">
+                                    <img class="glance-feed-thumb" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
+                                    <div class="glance-feed-content">
+                                        <a class="glance-feed-title" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
+                                        <div class="glance-feed-meta">
+                                            <span class="glance-badge">${escapeHtml(post.author)}</span>
+                                            <span>${escapeHtml(post.created)}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                });
+            } else if (w.type === 'youtube') {
+                const urls = (w.feedKey && feeds[w.feedKey] && feeds[w.feedKey].length > 0) ? feeds[w.feedKey] : null;
+                fetchYouTubeFeed(w.channels, w.playlists, urls, w.limit, w.fallback).then(videos => {
+                    container.innerHTML = `
+                        <ul class="glance-feed-list">
+                            ${videos.map(video => `
+                                <li class="glance-feed-item">
+                                    <img class="glance-feed-thumb" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
+                                    <div class="glance-feed-content">
+                                        <a class="glance-feed-title" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
+                                        <div class="glance-feed-meta">
+                                            <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                            <span>${escapeHtml(video.date)}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                });
+            } else if (w.type === 'podcast') {
+                const feedUrl = (w.feedKey && feeds[w.feedKey] && feeds[w.feedKey][0]) ? feeds[w.feedKey][0] : w.feedUrl;
+                fetchPodcastFeed(feedUrl, w.limit, w.fallback).then(episodes => {
+                    container.innerHTML = `
+                        <ul class="glance-feed-list">
+                            ${episodes.map(episode => `
+                                <li class="glance-feed-item">
+                                    <img class="glance-feed-thumb" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
+                                    <div class="glance-feed-content">
+                                        <a class="glance-feed-title" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
+                                        <div class="glance-feed-meta">
+                                            <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                            <span>${escapeHtml(episode.date)}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                });
+            }
+        });
     }
-
-    // Populate Reddit
-    fetchRedditPreppers().then(posts => {
-        const container = document.getElementById('redditFeedContainer');
-        if (!container) return;
-        container.innerHTML = `
-            <ul class="glance-feed-list">
-                ${posts.map(post => `
-                    <li class="glance-feed-item">
-                        <a class="glance-feed-title" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
-                        <div class="glance-feed-meta">
-                            <span class="glance-badge">${escapeHtml(post.author)}</span>
-                            <span>${escapeHtml(post.created)}</span>
-                        </div>
-                    </li>
-                `).join('')}
-            </ul>
-        `;
-    });
-
-    // Populate YouTube
-    fetchYouTubeVideos().then(videos => {
-        const container = document.getElementById('youtubeFeedContainer');
-        if (!container) return;
-        container.innerHTML = `
-            <ul class="glance-feed-list">
-                ${videos.map(video => `
-                    <li class="glance-feed-item">
-                        <a class="glance-feed-title" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
-                        <div class="glance-feed-meta">
-                            <span class="glance-badge">Video</span>
-                            <span>${escapeHtml(video.date)}</span>
-                        </div>
-                    </li>
-                `).join('')}
-            </ul>
-        `;
-    });
 
     // Toggle button handler
     const viewNotesBtn = document.getElementById('viewNotesBtn');
     if (viewNotesBtn) {
         viewNotesBtn.addEventListener('click', () => {
-            // Restore standard sidebar and layout elements
-            if (sidebar) sidebar.style.display = '';
-            if (resizer) resizer.style.display = '';
-            if (toc) toc.style.display = '';
-            if (content) {
-                content.classList.remove('fullwidth');
-                content.innerHTML = `
-                    <h1>${escapeHtml('Prepper')}</h1>
-                    <p>Select a profile document.</p>
-                `;
-            }
-
-            createMarkdownTabApp({
-                key: `profiles-Prepper`,
-                label: 'Prepper',
-                emptyLabel: 'profile files',
-                searchStatusId: 'profilesSearchStatus',
-                searchInputId: 'profilesSearchInput',
-                refreshButtonId: 'refreshProfilesBtn',
-                indexUrl: `profiles-index.json?profile=${encodeURIComponent('Prepper')}`,
-                docApiUrl: '/api/profiles/doc',
-                searchApiUrl: `/api/profiles/search?profile=${encodeURIComponent('Prepper')}`,
-                pathPrefix: `profiles/Prepper`,
-                directOpenPageName: 'profiles.html'
-            });
+            renderNotesViewer(profile);
         });
     }
 }
 
-async function startProfiles() {
+function renderNotesViewer(profile) {
+    const sidebar = document.getElementById('sidebar');
+    const resizer = document.getElementById('sidebarResizer');
+    const expandButton = document.getElementById('expandSidebarBtn');
+    const toc = document.getElementById('wikiToc');
+    const content = document.getElementById('content');
 
-    if (await profilesAreLocked()) {
-        renderLockedProfiles();
-        return;
-    }
+    if (sidebar) sidebar.style.display = '';
+    if (resizer) resizer.style.display = '';
+    if (expandButton) expandButton.style.display = 'none';
+    if (toc) toc.style.display = '';
 
-    const profile =
-        currentProfileName();
-
-    if (!profile) {
-        await loadProfilesLanding();
-        return;
-    }
-
-    document.title =
-        `Rock-OS ${profile}`;
-
-    if (profile === 'Prepper') {
-        renderPrepperDashboard();
-        return;
-    }
-
-    const heading =
-        document.querySelector('.sidebar-header h3');
-    const search =
-        document.getElementById('profilesSearchInput');
-    const content =
-        document.getElementById('content');
+    const heading = document.querySelector('.sidebar-header h3');
+    const search = document.getElementById('profilesSearchInput');
 
     if (heading) {
         heading.textContent = profile;
@@ -473,6 +438,7 @@ async function startProfiles() {
         search.setAttribute('aria-label', `Search ${profile}`);
     }
     if (content) {
+        content.classList.remove('fullwidth');
         content.innerHTML = `
             <h1>${escapeHtml(profile)}</h1>
             <p>Select a profile document.</p>
@@ -492,6 +458,62 @@ async function startProfiles() {
         pathPrefix: `profiles/${profile}`,
         directOpenPageName: 'profiles.html'
     });
+}
+
+async function loadFeedsConfig() {
+    try {
+        const res = await fetch(`profiles/feeds.txt?nocache=${Date.now()}`);
+        if (!res.ok) return {};
+        const text = await res.text();
+        const sections = {};
+        let currentSection = null;
+        const lines = text.split('\n');
+        for (let line of lines) {
+            line = line.trim();
+            if (!line || line.startsWith('#')) continue;
+            if (line.startsWith('[') && line.endsWith(']')) {
+                currentSection = line.slice(1, -1).trim();
+                sections[currentSection] = [];
+            } else if (currentSection) {
+                sections[currentSection].push(line);
+            }
+        }
+        return sections;
+    } catch (e) {
+        console.warn('Could not load or parse profiles/feeds.txt', e);
+        return {};
+    }
+}
+
+async function startProfiles() {
+    if (await profilesAreLocked()) {
+        renderLockedProfiles();
+        return;
+    }
+
+    const profile = currentProfileName();
+    if (!profile) {
+        await loadProfilesLanding();
+        return;
+    }
+
+    document.title = `Rock-OS ${profile}`;
+
+    // Try loading profile-specific dashboard config dynamically
+    try {
+        const res = await fetch(`profiles/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
+        if (res.ok) {
+            const config = await res.json();
+            const feeds = await loadFeedsConfig();
+            renderDashboard(profile, config, feeds);
+            return;
+        }
+    } catch (e) {
+        console.warn(`No dashboard configuration found for profile "${profile}". Falling back to notes viewer.`, e);
+    }
+
+    // Default: notes viewer
+    renderNotesViewer(profile);
 }
 
 startProfiles();

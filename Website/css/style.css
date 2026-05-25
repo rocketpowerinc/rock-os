@@ -1042,6 +1042,36 @@ color:#88ff88;
 :root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../assets/users/Prepper-Rugged.svg'); }
 :root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../assets/users/Prepper-Blue-Grass.svg'); }
 
+.kids-avatar-display {
+	width:80px;
+	height:80px;
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+:root[data-theme="cyberpunk"] .kids-avatar-display { background-image:url('../assets/users/Kids-Cyberpunk.svg'); }
+:root[data-theme="steel"] .kids-avatar-display { background-image:url('../assets/users/Kids-Steel.svg'); }
+:root[data-theme="rugged"] .kids-avatar-display { background-image:url('../assets/users/Kids-Rugged.svg'); }
+:root[data-theme="blue-grass"] .kids-avatar-display { background-image:url('../assets/users/Kids-Blue-Grass.svg'); }
+
+.rocket-avatar-display {
+	width:80px;
+	height:80px;
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+:root[data-theme="cyberpunk"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Cyberpunk.svg'); }
+:root[data-theme="steel"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Steel.svg'); }
+:root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Rugged.svg'); }
+:root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Blue-Grass.svg'); }
+
 .glance-header-text h1 {
 	margin:0 0 6px 0;
 	font-size:1.8rem;
@@ -1130,10 +1160,29 @@ color:#88ff88;
 
 .glance-feed-item {
 	display:flex;
-	flex-direction:column;
-	gap:4px;
+	flex-direction:row;
+	gap:12px;
+	align-items:flex-start;
 	padding-bottom:10px;
 	border-bottom:1px dashed rgba(var(--accent-rgb), .1);
+}
+
+.glance-feed-thumb {
+	width:96px;
+	height:54px;
+	object-fit:cover;
+	border-radius:4px;
+	border:1px solid rgba(var(--accent-rgb), .15);
+	background:var(--panel-bg);
+	flex-shrink:0;
+	margin-top:2px;
+}
+
+.glance-feed-content {
+	display:flex;
+	flex-direction:column;
+	gap:4px;
+	flex-grow:1;
 }
 
 .glance-feed-item:last-child {

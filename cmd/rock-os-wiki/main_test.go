@@ -896,3 +896,47 @@ func TestProfilesHandlersRejectLockedContent(t *testing.T) {
 		})
 	}
 }
+
+func TestFeedHandlers(t *testing.T) {
+	siteRoot := t.TempDir()
+
+	// 1. Test reddit handler with invalid/malicious subreddit parameter
+	{
+		req := httptest.NewRequest(http.MethodGet, "/api/feeds/reddit?subreddit=../../bad", nil)
+		recorder := httptest.NewRecorder()
+		feedRedditHandler(siteRoot).ServeHTTP(recorder, req)
+		if recorder.Code != http.StatusBadRequest {
+			t.Errorf("expected Bad Request for invalid subreddit, got %d", recorder.Code)
+		}
+	}
+
+	// 2. Test reddit handler with empty subreddit parameter
+	{
+		req := httptest.NewRequest(http.MethodGet, "/api/feeds/reddit", nil)
+		recorder := httptest.NewRecorder()
+		feedRedditHandler(siteRoot).ServeHTTP(recorder, req)
+		if recorder.Code != http.StatusBadRequest {
+			t.Errorf("expected Bad Request for empty subreddit, got %d", recorder.Code)
+		}
+	}
+
+	// 3. Test youtube handler with invalid channel_id parameter
+	{
+		req := httptest.NewRequest(http.MethodGet, "/api/feeds/youtube?channel_id=../../bad", nil)
+		recorder := httptest.NewRecorder()
+		feedYoutubeHandler(siteRoot).ServeHTTP(recorder, req)
+		if recorder.Code != http.StatusBadRequest {
+			t.Errorf("expected Bad Request for invalid channel_id, got %d", recorder.Code)
+		}
+	}
+
+	// 4. Test youtube handler with empty channel_id parameter
+	{
+		req := httptest.NewRequest(http.MethodGet, "/api/feeds/youtube", nil)
+		recorder := httptest.NewRecorder()
+		feedYoutubeHandler(siteRoot).ServeHTTP(recorder, req)
+		if recorder.Code != http.StatusBadRequest {
+			t.Errorf("expected Bad Request for empty channel_id, got %d", recorder.Code)
+		}
+	}
+}

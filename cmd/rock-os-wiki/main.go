@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -16,6 +19,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -236,6 +240,9 @@ func main() {
 	mux.HandleFunc("/api/profiles/doc", profilesDocHandler(siteRoot))
 	mux.HandleFunc("/api/profiles/search", profilesSearchHandler(siteRoot))
 	mux.HandleFunc("/profiles-index.json", profilesIndexHandler(siteRoot))
+	mux.HandleFunc("/api/feeds/reddit", feedRedditHandler(siteRoot))
+	mux.HandleFunc("/api/feeds/youtube", feedYoutubeHandler(siteRoot))
+	mux.HandleFunc("/api/feeds/podcast", feedPodcastHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -2961,4 +2968,738 @@ func writeProfilesIndex(siteRoot string) (bool, error) {
 
 func collectProfilesFiles(siteRoot string) ([]markdownIndexEntry, error) {
 	return collectMarkdownFilesWithCache(siteRoot, profilesDir, globalProfilesIndexCache)
+}
+
+type feedItem struct {
+	Title       string    `json:"title"`
+	URL         string    `json:"url"`
+	Created     string    `json:"created"`
+	Author      string    `json:"author,omitempty"`
+	Thumbnail   string    `json:"thumbnail"`
+	PublishTime time.Time `json:"-"`
+}
+
+type redditChild struct {
+	Data struct {
+		Title      string  `json:"title"`
+		Permalink  string  `json:"permalink"`
+		CreatedUTC float64 `json:"created_utc"`
+		Author     string  `json:"author"`
+		Thumbnail  string  `json:"thumbnail"`
+	} `json:"data"`
+}
+
+type redditResponse struct {
+	Data struct {
+		Children []redditChild `json:"children"`
+	} `json:"data"`
+}
+
+type ytFeed struct {
+	XMLName xml.Name  `xml:"feed"`
+	Entries []ytEntry `xml:"entry"`
+}
+
+type ytEntry struct {
+	Title     string `xml:"title"`
+	VideoID   string `xml:"videoId"`
+	Published string `xml:"published"`
+	Link      ytLink `xml:"link"`
+}
+
+type ytLink struct {
+	Href string `xml:"href,attr"`
+}
+
+func feedRedditHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		subreddit := r.URL.Query().Get("subreddit")
+		if subreddit == "" {
+			http.Error(w, "subreddit parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		// Sanitize subreddit: alphanumeric and underscores only, max 50 chars
+		for _, char := range subreddit {
+			if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '_') {
+				http.Error(w, "invalid subreddit parameter", http.StatusBadRequest)
+				return
+			}
+		}
+		if len(subreddit) > 50 {
+			http.Error(w, "subreddit parameter is too long", http.StatusBadRequest)
+			return
+		}
+
+		cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
+		cachePath := filepath.Join(cacheDir, fmt.Sprintf("reddit_%s.json", subreddit))
+
+		// Try to fetch live feed
+		items, err := fetchLiveRedditFeed(subreddit)
+		if err == nil {
+			// Save to cache
+			_ = os.MkdirAll(cacheDir, 0755)
+			if data, err := json.Marshal(items); err == nil {
+				_ = os.WriteFile(cachePath, data, 0644)
+			}
+			writeJSON(w, items)
+			return
+		}
+
+		// Fallback to cache
+		if data, err := os.ReadFile(cachePath); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(data)
+			return
+		}
+
+		// No cache and offline/failed - return empty list so frontend fallback can load
+		writeJSON(w, []feedItem{})
+	}
+}
+
+func fetchLiveRedditFeed(subreddit string) ([]feedItem, error) {
+	urlStr := fmt.Sprintf("https://www.reddit.com/r/%s/new.json?limit=5", subreddit)
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("reddit API returned HTTP %d", resp.StatusCode)
+	}
+
+	var redditRes redditResponse
+	if err := json.NewDecoder(resp.Body).Decode(&redditRes); err != nil {
+		return nil, err
+	}
+
+	items := make([]feedItem, 0, len(redditRes.Data.Children))
+	for _, child := range redditRes.Data.Children {
+		createdStr := ""
+		if child.Data.CreatedUTC > 0 {
+			t := time.Unix(int64(child.Data.CreatedUTC), 0)
+			createdStr = t.Format("2006-01-02")
+		}
+
+		thumb := child.Data.Thumbnail
+		if thumb == "" || !strings.HasPrefix(thumb, "http") {
+			thumb = ""
+		}
+
+		items = append(items, feedItem{
+			Title:     child.Data.Title,
+			URL:       "https://www.reddit.com" + child.Data.Permalink,
+			Created:   createdStr,
+			Author:    "u/" + child.Data.Author,
+			Thumbnail: thumb,
+		})
+	}
+
+	return items, nil
+}
+
+func feedYoutubeHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		channelIDs := r.URL.Query()["channel_id"]
+		playlistIDs := r.URL.Query()["playlist_id"]
+		urls := r.URL.Query()["url"]
+
+		for _, rawURL := range urls {
+			t, val := resolveYoutubeURLToID(rawURL, siteRoot)
+			if t == "channel_id" {
+				channelIDs = append(channelIDs, val)
+			} else if t == "playlist_id" {
+				playlistIDs = append(playlistIDs, val)
+			}
+		}
+
+		limitStr := r.URL.Query().Get("limit")
+
+		if len(channelIDs) == 0 && len(playlistIDs) == 0 {
+			http.Error(w, "at least one channel_id, playlist_id, or url parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		limit := 5
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+				limit = l
+			}
+		}
+
+		// Sanitize all IDs
+		for _, id := range channelIDs {
+			if !isValidFeedID(id) {
+				http.Error(w, "invalid channel_id parameter", http.StatusBadRequest)
+				return
+			}
+		}
+		for _, id := range playlistIDs {
+			if !isValidFeedID(id) {
+				http.Error(w, "invalid playlist_id parameter", http.StatusBadRequest)
+				return
+			}
+		}
+
+		// Cache path based on hash of the sorted IDs to ensure consistent caching
+		sortedIDs := make([]string, len(channelIDs)+len(playlistIDs))
+		copy(sortedIDs, channelIDs)
+		copy(sortedIDs[len(channelIDs):], playlistIDs)
+		sort.Strings(sortedIDs)
+
+		hasher := sha256.New()
+		for _, id := range sortedIDs {
+			hasher.Write([]byte(id))
+		}
+		cacheFilename := fmt.Sprintf("youtube_%x_l%d.json", hasher.Sum(nil), limit)
+		cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
+		cachePath := filepath.Join(cacheDir, cacheFilename)
+
+		// Try to fetch live feed
+		items, err := fetchCombinedYoutubeFeed(channelIDs, playlistIDs, limit)
+		if err == nil {
+			// Save to cache
+			_ = os.MkdirAll(cacheDir, 0755)
+			if data, err := json.Marshal(items); err == nil {
+				_ = os.WriteFile(cachePath, data, 0644)
+			}
+			writeJSON(w, items)
+			return
+		}
+
+		// Fallback to cache
+		if data, err := os.ReadFile(cachePath); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(data)
+			return
+		}
+
+		// Return empty list on failure
+		writeJSON(w, []feedItem{})
+	}
+}
+
+func isValidFeedID(id string) bool {
+	if len(id) == 0 || len(id) > 100 {
+		return false
+	}
+	for _, char := range id {
+		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '_' || char == '-') {
+			return false
+		}
+	}
+	return true
+}
+
+func fetchCombinedYoutubeFeed(channelIDs []string, playlistIDs []string, limit int) ([]feedItem, error) {
+	type result struct {
+		items []feedItem
+		err   error
+	}
+
+	totalFeeds := len(channelIDs) + len(playlistIDs)
+	ch := make(chan result, totalFeeds)
+
+	for _, id := range channelIDs {
+		go func(id string) {
+			urlStr := fmt.Sprintf("https://www.youtube.com/feeds/videos.xml?channel_id=%s", id)
+			items, err := fetchSingleYoutubeFeed(urlStr)
+			ch <- result{items, err}
+		}(id)
+	}
+
+	for _, id := range playlistIDs {
+		go func(id string) {
+			urlStr := fmt.Sprintf("https://www.youtube.com/feeds/videos.xml?playlist_id=%s", id)
+			items, err := fetchSingleYoutubeFeed(urlStr)
+			ch <- result{items, err}
+		}(id)
+	}
+
+	var combined []feedItem
+	var firstErr error
+
+	for i := 0; i < totalFeeds; i++ {
+		res := <-ch
+		if res.err != nil {
+			if firstErr == nil {
+				firstErr = res.err
+			}
+		} else {
+			combined = append(combined, res.items...)
+		}
+	}
+
+	if len(combined) == 0 && firstErr != nil {
+		return nil, firstErr
+	}
+
+	// Sort combined feed items by PublishTime descending (newest first)
+	sort.Slice(combined, func(i, j int) bool {
+		return combined[i].PublishTime.After(combined[j].PublishTime)
+	})
+
+	// Slice to limit
+	if len(combined) > limit {
+		combined = combined[:limit]
+	}
+
+	return combined, nil
+}
+
+func fetchSingleYoutubeFeed(urlStr string) ([]feedItem, error) {
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("youtube API returned HTTP %d", resp.StatusCode)
+	}
+
+	var yt ytFeed
+	if err := xml.NewDecoder(resp.Body).Decode(&yt); err != nil {
+		return nil, err
+	}
+
+	items := make([]feedItem, 0, len(yt.Entries))
+	for _, entry := range yt.Entries {
+		var pubTime time.Time
+		dateStr := ""
+		if entry.Published != "" {
+			if t, err := time.Parse(time.RFC3339, entry.Published); err == nil {
+				pubTime = t
+				dateStr = t.Format("2006-01-02")
+			} else {
+				dateStr = entry.Published
+			}
+		}
+
+		videoID := entry.VideoID
+		if videoID == "" && entry.Link.Href != "" {
+			videoID = extractYoutubeVideoID(entry.Link.Href)
+		}
+
+		thumb := ""
+		if videoID != "" {
+			thumb = fmt.Sprintf("https://i.ytimg.com/vi/%s/mqdefault.jpg", videoID)
+		}
+
+		linkURL := entry.Link.Href
+		if linkURL == "" && videoID != "" {
+			linkURL = fmt.Sprintf("https://www.youtube.com/watch?v=%s", videoID)
+		}
+
+		items = append(items, feedItem{
+			Title:       entry.Title,
+			URL:         linkURL,
+			Created:     dateStr,
+			Thumbnail:   thumb,
+			PublishTime: pubTime,
+		})
+	}
+
+	return items, nil
+}
+
+func extractYoutubeVideoID(urlStr string) string {
+	if strings.Contains(urlStr, "v=") {
+		parts := strings.Split(urlStr, "v=")
+		if len(parts) > 1 {
+			subparts := strings.Split(parts[1], "&")
+			return subparts[0]
+		}
+	}
+	if strings.Contains(urlStr, "youtu.be/") {
+		parts := strings.Split(urlStr, "youtu.be/")
+		if len(parts) > 1 {
+			subparts := strings.Split(parts[1], "?")
+			return subparts[0]
+		}
+	}
+	if strings.Contains(urlStr, "embed/") {
+		parts := strings.Split(urlStr, "embed/")
+		if len(parts) > 1 {
+			subparts := strings.Split(parts[1], "?")
+			return subparts[0]
+		}
+	}
+	return ""
+}
+
+type rssFeed struct {
+	XMLName xml.Name   `xml:"rss"`
+	Channel rssChannel `xml:"channel"`
+}
+
+type rssChannel struct {
+	Title       string      `xml:"title"`
+	Image       rssImage    `xml:"image"`
+	ItunesImage itunesImage `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd image"`
+	Items       []rssItem   `xml:"item"`
+}
+
+type rssImage struct {
+	URL string `xml:"url"`
+}
+
+type itunesImage struct {
+	Href string `xml:"href,attr"`
+}
+
+type rssItem struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	PubDate     string `xml:"pubDate"`
+	Description string `xml:"description"`
+}
+
+func feedPodcastHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		feedURL := r.URL.Query().Get("url")
+		if feedURL == "" {
+			http.Error(w, "url parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		feedURL = resolvePodcastURLToFeed(feedURL, siteRoot)
+
+		u, err := url.Parse(feedURL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+			http.Error(w, "invalid url parameter", http.StatusBadRequest)
+			return
+		}
+
+		// Block SSRF to local interfaces
+		host := u.Hostname()
+		if host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || strings.HasPrefix(host, "192.168.") || strings.HasPrefix(host, "10.") {
+			http.Error(w, "access to local network is restricted", http.StatusForbidden)
+			return
+		}
+
+		// Cache path based on hash of the feed URL
+		hasher := sha256.New()
+		hasher.Write([]byte(feedURL))
+		cacheFilename := fmt.Sprintf("podcast_%x.json", hasher.Sum(nil))
+		cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
+		cachePath := filepath.Join(cacheDir, cacheFilename)
+
+		// Try to fetch live feed
+		items, err := fetchLivePodcastFeed(feedURL)
+		if err == nil {
+			// Save to cache
+			_ = os.MkdirAll(cacheDir, 0755)
+			if data, err := json.Marshal(items); err == nil {
+				_ = os.WriteFile(cachePath, data, 0644)
+			}
+			writeJSON(w, items)
+			return
+		}
+
+		// Fallback to cache
+		if data, err := os.ReadFile(cachePath); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(data)
+			return
+		}
+
+		// Return empty list on failure
+		writeJSON(w, []feedItem{})
+	}
+}
+
+func fetchLivePodcastFeed(feedURL string) ([]feedItem, error) {
+	client := &http.Client{Timeout: 8 * time.Second}
+	req, err := http.NewRequest("GET", feedURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("podcast RSS returned HTTP %d", resp.StatusCode)
+	}
+
+	var rss rssFeed
+	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
+		return nil, err
+	}
+
+	channelThumb := rss.Channel.Image.URL
+	if channelThumb == "" {
+		channelThumb = rss.Channel.ItunesImage.Href
+	}
+
+	limit := len(rss.Channel.Items)
+	if limit > 5 {
+		limit = 5
+	}
+
+	items := make([]feedItem, 0, limit)
+	for i := 0; i < limit; i++ {
+		item := rss.Channel.Items[i]
+		dateStr := ""
+		var pubTime time.Time
+		if item.PubDate != "" {
+			pubTime = parseRssDate(item.PubDate)
+			if !pubTime.IsZero() {
+				dateStr = pubTime.Format("2006-01-02")
+			} else {
+				dateStr = item.PubDate
+			}
+		}
+
+		items = append(items, feedItem{
+			Title:       item.Title,
+			URL:         item.Link,
+			Created:     dateStr,
+			Thumbnail:   channelThumb,
+			PublishTime: pubTime,
+		})
+	}
+
+	return items, nil
+}
+
+func parseRssDate(dateStr string) time.Time {
+	dateStr = strings.TrimSpace(dateStr)
+	// Try RFC1123
+	t, err := time.Parse(time.RFC1123, dateStr)
+	if err == nil {
+		return t
+	}
+	// Try RFC1123Z
+	t, err = time.Parse(time.RFC1123Z, dateStr)
+	if err == nil {
+		return t
+	}
+	// Try common layouts
+	formats := []string{
+		"Mon, _2 Jan 2006 15:04:05 MST",
+		"Mon, _2 Jan 2006 15:04:05 -0700",
+		"Mon, _2 Jan 2006 15:04:05 Z",
+		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02 15:04:05",
+		"2006-01-02",
+	}
+	for _, format := range formats {
+		t, err = time.Parse(format, dateStr)
+		if err == nil {
+			return t
+		}
+	}
+	return time.Time{}
+}
+
+var (
+	channelIDRegex  = regexp.MustCompile(`/channel/(UC[a-zA-Z0-9_-]{22})`)
+	itemPropRegex   = regexp.MustCompile(`<meta itemprop="channelId" content="(UC[a-zA-Z0-9_-]{22})">`)
+	jsonChanIDRegex = regexp.MustCompile(`"channelId":"(UC[a-zA-Z0-9_-]{22})"`)
+)
+
+func resolveYoutubeURLToID(inputURL string, siteRoot string) (paramType string, paramVal string) {
+	inputURL = strings.TrimSpace(inputURL)
+	if inputURL == "" {
+		return "", ""
+	}
+
+	// 1. Try to extract from local cache
+	cachePath := filepath.Join(siteRoot, ".gocache", "resolved_urls.json")
+	type CacheEntry struct {
+		Type string `json:"type"`
+		Val  string `json:"val"`
+	}
+	var cache map[string]CacheEntry
+
+	if data, err := os.ReadFile(cachePath); err == nil {
+		_ = json.Unmarshal(data, &cache)
+	}
+	if cache == nil {
+		cache = make(map[string]CacheEntry)
+	}
+
+	if entry, ok := cache[inputURL]; ok {
+		return entry.Type, entry.Val
+	}
+
+	// Helper to save to cache
+	saveCache := func(t, v string) {
+		cache[inputURL] = CacheEntry{Type: t, Val: v}
+		_ = os.MkdirAll(filepath.Dir(cachePath), 0755)
+		if data, err := json.Marshal(cache); err == nil {
+			_ = os.WriteFile(cachePath, data, 0644)
+		}
+	}
+
+	// 2. Check if it's already a raw ID
+	if strings.HasPrefix(inputURL, "UC") && len(inputURL) == 24 {
+		return "channel_id", inputURL
+	}
+	if strings.HasPrefix(inputURL, "PL") && len(inputURL) >= 18 {
+		return "playlist_id", inputURL
+	}
+
+	// 3. Direct check for Playlist ID in query params of the URL
+	if u, err := url.Parse(inputURL); err == nil {
+		if playlistID := u.Query().Get("list"); playlistID != "" {
+			saveCache("playlist_id", playlistID)
+			return "playlist_id", playlistID
+		}
+	}
+
+	// 4. Direct check for Channel ID in path
+	if strings.Contains(inputURL, "/channel/") {
+		parts := strings.Split(inputURL, "/channel/")
+		if len(parts) > 1 {
+			id := strings.Split(parts[1], "/")[0]
+			id = strings.Split(id, "?")[0]
+			if strings.HasPrefix(id, "UC") && len(id) == 24 {
+				saveCache("channel_id", id)
+				return "channel_id", id
+			}
+		}
+	}
+
+	// 5. Resolve handle/user or search query page
+	if strings.Contains(inputURL, "youtube.com/@") || strings.Contains(inputURL, "youtube.com/user/") || strings.Contains(inputURL, "/results?search_query=") || strings.Contains(inputURL, "youtu.be/") {
+		client := &http.Client{Timeout: 5 * time.Second}
+		req, err := http.NewRequest("GET", inputURL, nil)
+		if err != nil {
+			return "", ""
+		}
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return "", ""
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err == nil {
+				bodyStr := string(bodyBytes)
+				// Search meta tag first
+				if match := itemPropRegex.FindStringSubmatch(bodyStr); len(match) > 1 {
+					saveCache("channel_id", match[1])
+					return "channel_id", match[1]
+				}
+				// Search JSON channelId
+				if match := jsonChanIDRegex.FindStringSubmatch(bodyStr); len(match) > 1 {
+					saveCache("channel_id", match[1])
+					return "channel_id", match[1]
+				}
+				// Search generic channel URLs in body (especially useful for query search results)
+				if match := channelIDRegex.FindStringSubmatch(bodyStr); len(match) > 1 {
+					saveCache("channel_id", match[1])
+					return "channel_id", match[1]
+				}
+			}
+		}
+	}
+
+	return "", ""
+}
+
+func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
+	inputURL = strings.TrimSpace(inputURL)
+	if inputURL == "" {
+		return ""
+	}
+
+	if !strings.Contains(inputURL, "podcasts.apple.com") {
+		return inputURL // Direct RSS feed URL
+	}
+
+	// 1. Try cache
+	cachePath := filepath.Join(siteRoot, ".gocache", "resolved_podcasts.json")
+	var cache map[string]string
+	if data, err := os.ReadFile(cachePath); err == nil {
+		_ = json.Unmarshal(data, &cache)
+	}
+	if cache == nil {
+		cache = make(map[string]string)
+	}
+
+	if resolved, ok := cache[inputURL]; ok {
+		return resolved
+	}
+
+	// 2. Parse ID from URL e.g. /id284148583
+	re := regexp.MustCompile(`/id(\d+)`)
+	matches := re.FindStringSubmatch(inputURL)
+	if len(matches) < 2 {
+		return inputURL
+	}
+	podcastID := matches[1]
+
+	// 3. Request iTunes Lookup API
+	lookupURL := fmt.Sprintf("https://itunes.apple.com/lookup?id=%s", podcastID)
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(lookupURL)
+	if err == nil {
+		defer resp.Body.Close()
+		type iTunesResult struct {
+			Results []struct {
+				FeedURL string `json:"feedUrl"`
+			} `json:"results"`
+		}
+		var lookup iTunesResult
+		if err := json.NewDecoder(resp.Body).Decode(&lookup); err == nil && len(lookup.Results) > 0 {
+			feedURL := lookup.Results[0].FeedURL
+			if feedURL != "" {
+				// Save to cache
+				cache[inputURL] = feedURL
+				_ = os.MkdirAll(filepath.Dir(cachePath), 0755)
+				if data, err := json.Marshal(cache); err == nil {
+					_ = os.WriteFile(cachePath, data, 0644)
+				}
+				return feedURL
+			}
+		}
+	}
+
+	return inputURL
 }
