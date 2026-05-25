@@ -1,5 +1,41 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 
+const isDashboardsMode =
+    window.location.pathname.includes('/dashboards/') ||
+    window.location.pathname.endsWith('/dashboards.html');
+
+const appMode = isDashboardsMode
+    ? {
+        rootDir: 'dashboards',
+        indexFile: 'dashboards-index.json',
+        apiRoot: 'dashboards',
+        mainPage: 'dashboards.html',
+        pageTitle: 'Dashboards',
+        landingKicker: 'Local Dashboards',
+        landingDescription: 'Choose a dashboard. Each dashboard can keep its own widgets, markdown tree, search, favorites, and document view.',
+        cardDescription: 'Open local dashboard',
+        emptyLabel: 'dashboard files',
+        defaultSelectText: 'Select a dashboard document.',
+        viewNotesText: 'View Dashboard Notes',
+        searchPlaceholder: 'Search dashboards',
+        documentTitlePrefix: 'Rock-OS'
+    }
+    : {
+        rootDir: 'profiles',
+        indexFile: 'profiles-index.json',
+        apiRoot: 'profiles',
+        mainPage: 'profiles.html',
+        pageTitle: 'Profiles',
+        landingKicker: 'Encrypted Profiles',
+        landingDescription: 'Choose a profile dashboard. Each profile keeps its own private markdown tree, search, favorites, and document view.',
+        cardDescription: 'Open private dashboard',
+        emptyLabel: 'profile files',
+        defaultSelectText: 'Select a profile document.',
+        viewNotesText: 'View Private Notes',
+        searchPlaceholder: 'Search profiles',
+        documentTitlePrefix: 'Rock-OS'
+    };
+
 function escapeHtml(value) {
 
     return String(value)
@@ -69,12 +105,49 @@ function renderLockedProfiles() {
     }
 }
 
+function renderDashboardError(message) {
+
+    const sidebar =
+        document.getElementById('sidebar');
+    const resizer =
+        document.getElementById('sidebarResizer');
+    const expandButton =
+        document.getElementById('expandSidebarBtn');
+    const toc =
+        document.getElementById('wikiToc');
+    const content =
+        document.getElementById('content');
+
+    if (sidebar) {
+        sidebar.style.display = 'none';
+    }
+    if (resizer) {
+        resizer.style.display = 'none';
+    }
+    if (expandButton) {
+        expandButton.style.display = 'none';
+    }
+    if (toc) {
+        toc.innerHTML = '';
+    }
+    if (content) {
+        content.classList.add('fullwidth');
+        content.innerHTML = `
+            <section class="profiles-locked-panel" aria-live="polite">
+                <div class="profiles-lock-badge">Unavailable</div>
+                <h1>${escapeHtml(appMode.pageTitle)} Unavailable</h1>
+                <p>${escapeHtml(message)}</p>
+            </section>
+        `;
+    }
+}
+
 function currentProfileName() {
     const params = new URLSearchParams(window.location.search);
-    let profile = params.get('profile') || '';
+    let profile = params.get('profile') || params.get('dashboard') || '';
     if (!profile) {
         const filename = window.location.pathname.split('/').pop();
-        if (filename && filename !== 'profiles.html' && filename.endsWith('.html')) {
+        if (filename && filename !== appMode.mainPage && filename.endsWith('.html')) {
             const name = filename.substring(0, filename.length - 5);
             profile = name.charAt(0).toUpperCase() + name.slice(1);
         }
@@ -85,7 +158,7 @@ function currentProfileName() {
 function profileNameFromPath(path) {
 
     const match =
-        path.match(/^profiles\/([^/]+)\//);
+        path.match(new RegExp(`^${appMode.rootDir}/([^/]+)/`));
 
     return match
         ? decodeURIComponent(match[1])
@@ -93,7 +166,7 @@ function profileNameFromPath(path) {
 }
 
 function profileUrl(profile) {
-    return `/profiles/${profile}/${profile}.html`;
+    return `/${appMode.rootDir}/${profile}/${profile}.html`;
 }
 
 function renderProfilesLanding(files) {
@@ -140,16 +213,16 @@ function renderProfilesLanding(files) {
     content.classList.add('fullwidth');
     content.innerHTML = `
         <section class="profiles-dashboard">
-            <p class="wiki-error-kicker">Encrypted Profiles</p>
-            <h1>Profiles</h1>
-            <p>Choose a profile dashboard. Each profile keeps its own private markdown tree, search, favorites, and document view.</p>
+            <p class="wiki-error-kicker">${escapeHtml(appMode.landingKicker)}</p>
+            <h1>${escapeHtml(appMode.pageTitle)}</h1>
+            <p>${escapeHtml(appMode.landingDescription)}</p>
             <div class="profiles-card-grid">
                 ${profiles.map(profile => `
                     <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}" data-profile="${escapeHtml(profile)}">
                         <div class="profile-card-icon"></div>
                         <div class="profiles-card-info">
                             <span>${escapeHtml(profile)}</span>
-                            <small>Open private dashboard</small>
+                            <small>${escapeHtml(appMode.cardDescription)}</small>
                         </div>
                     </a>
                 `).join('')}
@@ -162,10 +235,10 @@ async function loadProfilesLanding() {
 
     try {
         const response =
-            await fetch('/profiles-index.json?nocache=' + Date.now());
+            await fetch(`/${appMode.indexFile}?nocache=` + Date.now());
 
         if (!response.ok) {
-            throw new Error(`Profiles index failed with HTTP ${response.status}`);
+            throw new Error(`${appMode.pageTitle} index failed with HTTP ${response.status}`);
         }
 
         const files =
@@ -177,6 +250,10 @@ async function loadProfilesLanding() {
     }
     catch (err) {
         console.warn(err);
+        if (isDashboardsMode) {
+            renderDashboardError('The dashboards index could not be loaded. Restart Rock-OS from the latest server source or release binary.');
+            return;
+        }
         renderLockedProfiles();
     }
 }
@@ -364,7 +441,7 @@ function renderDashboard(profile, config, feeds) {
                 </div>
                 <div class="glance-header-actions">
                     <button id="viewNotesBtn" class="glance-btn">
-                        <span>📄</span> View Private Notes
+                        <span>📄</span> ${escapeHtml(appMode.viewNotesText)}
                     </button>
                 </div>
             </div>
@@ -617,28 +694,28 @@ function renderNotesViewer(profile) {
         content.classList.remove('fullwidth');
         content.innerHTML = `
             <h1>${escapeHtml(profile)}</h1>
-            <p>Select a profile document.</p>
+            <p>${escapeHtml(appMode.defaultSelectText)}</p>
         `;
     }
 
     createMarkdownTabApp({
-        key: `profiles-${profile}`,
+        key: `${appMode.apiRoot}-${profile}`,
         label: profile,
-        emptyLabel: 'profile files',
+        emptyLabel: appMode.emptyLabel,
         searchStatusId: 'profilesSearchStatus',
         searchInputId: 'profilesSearchInput',
         refreshButtonId: 'refreshProfilesBtn',
-        indexUrl: `/profiles-index.json?profile=${encodeURIComponent(profile)}`,
-        docApiUrl: '/api/profiles/doc',
-        searchApiUrl: `/api/profiles/search?profile=${encodeURIComponent(profile)}`,
-        pathPrefix: `profiles/${profile}`,
-        directOpenPageName: 'profiles.html'
+        indexUrl: `/${appMode.indexFile}?profile=${encodeURIComponent(profile)}`,
+        docApiUrl: `/api/${appMode.apiRoot}/doc`,
+        searchApiUrl: `/api/${appMode.apiRoot}/search?profile=${encodeURIComponent(profile)}`,
+        pathPrefix: `${appMode.rootDir}/${profile}`,
+        directOpenPageName: appMode.mainPage
     });
 }
 
 async function loadWidgetsConfig(profile) {
     try {
-        const res = await fetch(`/profiles/${encodeURIComponent(profile)}/widgets.txt?nocache=${Date.now()}`);
+        const res = await fetch(`/${appMode.rootDir}/${encodeURIComponent(profile)}/widgets.txt?nocache=${Date.now()}`);
         if (!res.ok) return [];
         const text = await res.text();
         const widgets = [];
@@ -674,13 +751,13 @@ async function loadWidgetsConfig(profile) {
         }
         return widgets;
     } catch (e) {
-        console.warn(`Could not load or parse profiles/${profile}/widgets.txt`, e);
+        console.warn(`Could not load or parse ${appMode.rootDir}/${profile}/widgets.txt`, e);
         return [];
     }
 }
 
 async function startProfiles() {
-    if (await profilesAreLocked()) {
+    if (!isDashboardsMode && await profilesAreLocked()) {
         renderLockedProfiles();
         return;
     }
@@ -691,11 +768,11 @@ async function startProfiles() {
         return;
     }
 
-    document.title = `Rock-OS ${profile}`;
+    document.title = `${appMode.documentTitlePrefix} ${profile}`;
 
-    // Try loading profile-specific dashboard config dynamically
+    // Try loading item-specific dashboard config dynamically
     try {
-        const res = await fetch(`/profiles/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
+        const res = await fetch(`/${appMode.rootDir}/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
         if (res.ok) {
             const config = await res.json();
             const feeds = await loadWidgetsConfig(profile); // Array of parsed widget objects from widgets.txt
@@ -782,7 +859,7 @@ async function startProfiles() {
             return;
         }
     } catch (e) {
-        console.warn(`No dashboard configuration found for profile "${profile}". Falling back to notes viewer.`, e);
+        console.warn(`No dashboard configuration found for "${profile}". Falling back to notes viewer.`, e);
     }
 
     // Default: notes viewer

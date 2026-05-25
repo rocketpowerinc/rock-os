@@ -148,6 +148,13 @@ markdown tabs and shows profile folders such as Rocket, Kids, and Prepper. Each
 profile opens as its own dashboard with its own sidebar, search, favorites, and
 document view.
 
+The top navigation also includes **Dashboards** for always-available local
+command centers that are not encrypted with `git-crypt`. Dashboard folders live
+under `Website/dashboards/`; each folder can have its own `dashboard.json`,
+`widgets.txt`, markdown notes, search, favorites, and document view. Use
+Profiles for sensitive/private notes and Dashboards for public local tools or
+platform-specific launch points.
+
 ### Windows
 
 Install Go with `winget`:
@@ -272,6 +279,7 @@ Website/menu/cheatsheets/ Quick-reference markdown
 Website/menu/dotfiles/ Dotfile notes and configs
 Website/menu/bookmarks/ Bookmark collections and link notes
 Website/profiles/      Encrypted/private profile markdown
+Website/dashboards/    Public local dashboards with widgets and markdown
 Website/menu/scripts/  User-managed runnable scripts
 ```
 

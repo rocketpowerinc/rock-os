@@ -51,6 +51,8 @@ const (
 	bookmarksIndexFile   = "bookmarks-index.json"
 	profilesDir          = "profiles"
 	profilesIndexFile    = "profiles-index.json"
+	dashboardsDir        = "dashboards"
+	dashboardsIndexFile  = "dashboards-index.json"
 )
 
 const (
@@ -155,6 +157,10 @@ var globalProfilesIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
+var globalDashboardsIndexCache = &markdownIndexCache{
+	entries: map[string]markdownIndexCacheEntry{},
+}
+
 var wikiMarkdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
@@ -206,6 +212,9 @@ func main() {
 		if _, err := writeProfilesIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
+		if _, err := writeDashboardsIndex(siteRoot); err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println("Wrote all index.json files")
 		return
@@ -241,6 +250,9 @@ func main() {
 	mux.HandleFunc("/api/profiles/doc", profilesDocHandler(siteRoot))
 	mux.HandleFunc("/api/profiles/search", profilesSearchHandler(siteRoot))
 	mux.HandleFunc("/profiles-index.json", profilesIndexHandler(siteRoot))
+	mux.HandleFunc("/api/dashboards/doc", dashboardsDocHandler(siteRoot))
+	mux.HandleFunc("/api/dashboards/search", dashboardsSearchHandler(siteRoot))
+	mux.HandleFunc("/dashboards-index.json", dashboardsIndexHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/reddit", feedRedditHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/youtube", feedYoutubeHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/podcast", feedPodcastHandler(siteRoot))
@@ -546,7 +558,8 @@ func shouldCompressPath(path string) bool {
 		path == "/cheatsheets-index.json" ||
 		path == "/dotfiles-index.json" ||
 		path == "/bookmarks-index.json" ||
-		path == "/profiles-index.json" {
+		path == "/profiles-index.json" ||
+		path == "/dashboards-index.json" {
 		return true
 	}
 
@@ -1348,6 +1361,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		"bookmarks.html",
 		"scripts.html",
 		"profiles.html",
+		"dashboards.html",
 	}
 
 	for _, file := range requiredFiles {
@@ -1365,6 +1379,7 @@ func siteRootLooksValid(siteRoot string) bool {
 		bookmarksDir,
 		scriptsDir,
 		profilesDir,
+		dashboardsDir,
 		"css",
 		"js",
 	}
@@ -2971,6 +2986,233 @@ func writeProfilesIndex(siteRoot string) (bool, error) {
 
 func collectProfilesFiles(siteRoot string) ([]markdownIndexEntry, error) {
 	return collectMarkdownFilesWithCache(siteRoot, profilesDir, globalProfilesIndexCache)
+}
+
+func dashboardsIndexHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		files, err := collectDashboardsFiles(siteRoot)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		files = filterDashboardFiles(files, r.URL.Query().Get("profile"))
+
+		writeJSON(w, files)
+	}
+}
+
+func dashboardsDocHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		docPath, path, err := resolveDashboardsDoc(siteRoot, r.URL.Query().Get("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "dashboard document not found", http.StatusNotFound)
+				return
+			}
+
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var rendered bytes.Buffer
+		if err := wikiMarkdown.Convert(content, &rendered); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := wikiDocResponse{
+			Path: docPath,
+			HTML: rendered.String(),
+		}
+
+		if info, err := os.Stat(path); err == nil {
+			response.LastEdited = info.ModTime().Format(time.RFC3339)
+		}
+
+		writeJSON(w, response)
+	}
+}
+
+func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, error) {
+	normalized := filepath.ToSlash(
+		filepath.Clean(
+			strings.ReplaceAll(docPath, "\\", "/"),
+		),
+	)
+	normalized = strings.TrimPrefix(normalized, "/")
+
+	if normalized == "." || normalized == "" || strings.Contains(normalized, "\x00") {
+		return "", "", fmt.Errorf("dashboard document path is required")
+	}
+
+	if !strings.HasPrefix(normalized, dashboardsDir+"/") {
+		return "", "", fmt.Errorf("dashboard document path must start with %s/", dashboardsDir)
+	}
+
+	if !strings.EqualFold(filepath.Ext(normalized), ".md") {
+		return "", "", fmt.Errorf("dashboard document must be a .md file")
+	}
+
+	dashboardsRoot, err := filepath.Abs(filepath.Join(siteRoot, dashboardsDir))
+	if err != nil {
+		return "", "", err
+	}
+
+	target, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(normalized)))
+	if err != nil {
+		return "", "", err
+	}
+
+	relativeTarget, err := filepath.Rel(dashboardsRoot, target)
+	if err != nil {
+		return "", "", err
+	}
+
+	if strings.HasPrefix(relativeTarget, "..") || relativeTarget == "." {
+		return "", "", fmt.Errorf("dashboard document must stay inside %s", dashboardsDir)
+	}
+
+	return normalized, target, nil
+}
+
+func dashboardsSearchHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := strings.TrimSpace(r.URL.Query().Get("q"))
+		if query == "" {
+			writeJSON(w, wikiSearchResponse{
+				Results: []wikiSearchResult{},
+			})
+			return
+		}
+
+		results, err := searchDashboards(siteRoot, query, r.URL.Query().Get("profile"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, wikiSearchResponse{
+			Results: results,
+		})
+	}
+}
+
+func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSearchResult, error) {
+	files, err := collectDashboardsFiles(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+	files = filterDashboardFiles(files, dashboard)
+
+	normalizedQuery := strings.ToLower(query)
+	results := []wikiSearchResult{}
+
+	for _, file := range files {
+		title := fileTitle(file.Path)
+		searchablePath := strings.ToLower(file.Path)
+		searchableTitle := strings.ToLower(title)
+
+		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
+			strings.Contains(searchableTitle, normalizedQuery)
+
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
+		}
+
+		text := string(content)
+		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
+		if !pathMatch && !contentMatch {
+			continue
+		}
+
+		result := wikiSearchResult{
+			Path:  file.Path,
+			Title: title,
+		}
+		if contentMatch {
+			result.Snippet = searchSnippet(text, normalizedQuery)
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func filterDashboardFiles(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
+	dashboard = strings.Trim(strings.ReplaceAll(dashboard, "\\", "/"), "/")
+	if dashboard == "" || strings.Contains(dashboard, "/") || strings.Contains(dashboard, "\x00") {
+		if dashboard == "" {
+			return files
+		}
+		return []markdownIndexEntry{}
+	}
+
+	prefix := dashboardsDir + "/" + dashboard + "/"
+	filtered := []markdownIndexEntry{}
+	for _, file := range files {
+		if strings.HasPrefix(file.Path, prefix) {
+			filtered = append(filtered, file)
+		}
+	}
+	return filtered
+}
+
+func writeDashboardsIndex(siteRoot string) (bool, error) {
+	files, err := collectDashboardsFiles(siteRoot)
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON, err := json.MarshalIndent(files, "", "  ")
+	if err != nil {
+		return false, err
+	}
+
+	nextJSON = append(nextJSON, '\n')
+
+	indexPath := filepath.Join(siteRoot, dashboardsIndexFile)
+	previousJSON, err := os.ReadFile(indexPath)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	if bytes.Equal(previousJSON, nextJSON) {
+		return false, nil
+	}
+
+	return true, os.WriteFile(indexPath, nextJSON, 0o644)
+}
+
+func collectDashboardsFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectMarkdownFilesWithCache(siteRoot, dashboardsDir, globalDashboardsIndexCache)
 }
 
 type feedItem struct {

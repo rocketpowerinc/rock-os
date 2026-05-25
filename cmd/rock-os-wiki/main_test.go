@@ -493,13 +493,13 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, profilesDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, profilesDir, dashboardsDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "profiles.html"} {
+	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "profiles.html", "dashboards.html"} {
 		if err := os.WriteFile(filepath.Join(siteRoot, file), []byte(file), 0o644); err != nil {
 			t.Fatal(err)
 		}

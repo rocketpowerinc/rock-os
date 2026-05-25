@@ -136,6 +136,20 @@ content is still encrypted.
 - Remember that GitHub ZIP downloads are not real Git clones and cannot unlock
   `git-crypt` content.
 
+## Dashboards
+
+Dashboards are public local command-center pages. They live under:
+
+```text
+Website/dashboards/
+```
+
+Dashboards should behave like Profiles from a UI perspective: each dashboard
+folder can have its own landing card, `dashboard.json`, `widgets.txt`,
+markdown notes, sidebar search, favorites, and document view. Unlike Profiles,
+Dashboards are not encrypted with `git-crypt` and should always be available.
+Do not put sensitive private notes in Dashboards.
+
 ## Development Habits
 
 - Use existing project patterns before inventing new ones.

@@ -22,7 +22,8 @@ function normalizeTheme(theme) {
 }
 
 function getAssetPrefix() {
-    if (window.location.pathname.includes('/profiles/')) {
+    if (window.location.pathname.includes('/profiles/') ||
+        window.location.pathname.includes('/dashboards/')) {
         return '../../';
     }
     return '';

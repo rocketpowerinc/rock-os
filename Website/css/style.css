@@ -1073,6 +1073,17 @@ color:#88ff88;
 :root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Rugged.svg'); }
 :root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../assets/users/Rocket-Blue-Grass.svg'); }
 
+.windows-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../assets/dashboards/windows.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
 .glance-header-text h1 {
 	margin:0 0 6px 0;
 	color:var(--profile-banner-title);
@@ -1422,6 +1433,11 @@ color:#88ff88;
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
 	background-image:url('../assets/users/Prepper-Blue-Grass.svg');
+}
+
+.profiles-card[data-profile="Windows"] .profile-card-icon {
+	background-image:url('../assets/dashboards/windows.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .command-hero {

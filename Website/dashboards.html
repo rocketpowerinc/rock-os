@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rock-OS Cheatsheets</title>
+<title>Rock-OS Dashboards</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -50,19 +50,18 @@
 
 <div class="layout">
 
-
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-header">
-		<h3>Cheatsheets</h3>
+		<h3>Dashboards</h3>
 		<div class="sidebar-actions">
-			<button id="refreshCheatsheetsBtn" class="icon-sidebar-btn" aria-label="Refresh Cheatsheets" title="Refresh cheatsheets">&#x21BB;</button>
+			<button id="refreshProfilesBtn" class="icon-sidebar-btn" aria-label="Refresh Dashboards" title="Refresh dashboards">&#x21BB;</button>
 			<button id="toggleAllFoldersBtn" class="icon-sidebar-btn" aria-label="Expand all folders" title="Expand all folders">&#x229E;</button>
 			<button id="collapseSidebarBtn" class="icon-sidebar-btn" aria-label="Collapse Sidebar" title="Collapse sidebar">&#x2630;</button>
 		</div>
 	</div>
 	<div class="wiki-search">
-		<input id="cheatsheetsSearchInput" type="search" placeholder="Search cheatsheets" autocomplete="off" aria-label="Search cheatsheets">
-		<div id="cheatsheetsSearchStatus" class="wiki-search-status"></div>
+		<input id="profilesSearchInput" type="search" placeholder="Search dashboards" autocomplete="off" aria-label="Search dashboards">
+		<div id="profilesSearchStatus" class="wiki-search-status"></div>
 	</div>
 	<div id="sidebarListContainer"></div>
 </div>
@@ -71,9 +70,9 @@
 
 <div class="content" id="content">
 
-<h1>Cheatsheets</h1>
+<h1>Dashboards</h1>
 
-<p>Select a cheatsheet document.</p>
+<p>Select a dashboard document.</p>
 
 </div>
 
@@ -81,15 +80,13 @@
 
 </div>
 
-
 <script src="js/vendor/highlight.min.js"></script>
 <script src="js/vendor/languages/bash.min.js"></script>
 <script src="js/vendor/languages/powershell.min.js"></script>
 <script src="js/theme.js"></script>
-<script type="module" src="js/cheatsheets.js"></script>
+<script type="module" src="js/profiles.js"></script>
 <script src="js/sidebar-resizer.js"></script>
 <script>
-// Sidebar collapse/expand logic
 const sidebar = document.getElementById('sidebar');
 const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
 const expandSidebarBtn = document.getElementById('expandSidebarBtn');

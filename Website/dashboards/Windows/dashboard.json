@@ -1,0 +1,33 @@
+{
+  "title": "Windows Command Center",
+  "subtitle": "Local workstation maintenance, recovery, updates, and setup notes.",
+  "avatarClass": "windows-dashboard-avatar-display",
+  "widgets": [
+    {
+      "type": "bookmarks",
+      "title": "Windows Launch Points",
+      "badge": "Local",
+      "layout": "horizontal",
+      "size": "medium",
+      "card_size": "medium",
+      "link_size": "medium",
+      "bookmarks": [
+        {
+          "section": "Windows",
+          "items": [
+            {
+              "name": "Windows Update Script",
+              "desc": "Open the scripts dashboard for native Windows maintenance tools.",
+              "url": "/scripts.html"
+            },
+            {
+              "name": "Windows Notes",
+              "desc": "View the dashboard markdown tree for Windows-specific docs.",
+              "url": "/dashboards/Windows/Windows.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

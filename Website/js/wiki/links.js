@@ -8,7 +8,8 @@ const tabIndexes = {
     cheatsheets: '/cheatsheets-index.json',
     dotfiles: '/dotfiles-index.json',
     bookmarks: '/bookmarks-index.json',
-    profiles: '/profiles-index.json'
+    profiles: '/profiles-index.json',
+    dashboards: '/dashboards-index.json'
 };
 
 function normalizeIndexFiles(payload) {
@@ -44,6 +45,10 @@ async function loadTabIndex(tab) {
     if (!indexUrl && tab.startsWith('profiles-')) {
         const profileName = tab.replace('profiles-', '');
         indexUrl = `/profiles-index.json?profile=${encodeURIComponent(profileName)}`;
+    }
+    if (!indexUrl && tab.startsWith('dashboards-')) {
+        const dashboardName = tab.replace('dashboards-', '');
+        indexUrl = `/dashboards-index.json?profile=${encodeURIComponent(dashboardName)}`;
     }
 
     if (!indexUrl) {
@@ -100,7 +105,7 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^profiles\//.test(pathOnly)) {
+    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^(profiles|dashboards)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
@@ -126,6 +131,10 @@ export function wikiDocHref(path) {
         const parts = path.split('/');
         const profile = parts.length > 1 ? parts[1] : '';
         targetPage = profile ? `/profiles/${profile}/${profile}.html` : '/profiles.html';
+    } else if (path.startsWith('dashboards/')) {
+        const parts = path.split('/');
+        const dashboard = parts.length > 1 ? parts[1] : '';
+        targetPage = dashboard ? `/dashboards/${dashboard}/${dashboard}.html` : '/dashboards.html';
     } else if (path.startsWith('menu/guides/')) {
         targetPage = '/guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
@@ -152,6 +161,11 @@ function getTabForPath(path) {
         const profile = parts.length > 1 ? parts[1] : '';
         return `profiles-${profile}`;
     }
+    if (path.startsWith('dashboards/')) {
+        const parts = path.split('/');
+        const dashboard = parts.length > 1 ? parts[1] : '';
+        return `dashboards-${dashboard}`;
+    }
     if (path.startsWith('menu/guides/')) return 'guides';
     if (path.startsWith('menu/cheatsheets/')) return 'cheatsheets';
     if (path.startsWith('menu/dotfiles/')) return 'dotfiles';
@@ -167,14 +181,22 @@ function getCurrentTab() {
         const profile = params.get('profile') || '';
         return `profiles-${profile}`;
     }
+    if (path.includes('dashboards.html') || path.endsWith('/dashboards')) {
+        const params = new URLSearchParams(window.location.search);
+        const dashboard = params.get('profile') || params.get('dashboard') || '';
+        return `dashboards-${dashboard}`;
+    }
 
-    // Support individual profile pages (e.g. rocket.html, prepper.html, kids.html)
-    const standardPages = ['wiki.html', 'guides.html', 'cheatsheets.html', 'dotfiles.html', 'bookmarks.html', 'scripts.html', 'index.html'];
+    // Support individual profile/dashboard pages (e.g. rocket.html, windows.html)
+    const standardPages = ['wiki.html', 'guides.html', 'cheatsheets.html', 'dotfiles.html', 'bookmarks.html', 'scripts.html', 'index.html', 'dashboards.html'];
     const filename = path.split('/').pop();
     if (filename && filename.endsWith('.html') && !standardPages.includes(filename) && filename !== 'profiles.html') {
-        const profileName = filename.replace('.html', '');
-        const formattedProfile = profileName.charAt(0).toUpperCase() + profileName.slice(1);
-        return `profiles-${formattedProfile}`;
+        const itemName = filename.replace('.html', '');
+        const formattedName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+        if (path.includes('/dashboards/')) {
+            return `dashboards-${formattedName}`;
+        }
+        return `profiles-${formattedName}`;
     }
 
     if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
