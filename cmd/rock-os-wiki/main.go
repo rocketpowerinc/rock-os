@@ -4078,6 +4078,10 @@ func resolveNewsURLToFeed(inputURL string) string {
 			u.Path = "/rss/sections/" + strings.TrimPrefix(path, "/sections/")
 			return u.String()
 		}
+		if strings.HasPrefix(path, "/search") {
+			u.Path = "/rss/search"
+			return u.String()
+		}
 		if path == "" || path == "/" {
 			u.Path = "/rss"
 			return u.String()
