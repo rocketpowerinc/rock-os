@@ -3,12 +3,12 @@ import { normalizeDocPath } from './utils.js';
 const tabIndexCache = new Map();
 
 const tabIndexes = {
-    wiki: 'wiki-index.json',
-    guides: 'guides-index.json',
-    cheatsheets: 'cheatsheets-index.json',
-    dotfiles: 'dotfiles-index.json',
-    bookmarks: 'bookmarks-index.json',
-    profiles: 'profiles-index.json'
+    wiki: '/wiki-index.json',
+    guides: '/guides-index.json',
+    cheatsheets: '/cheatsheets-index.json',
+    dotfiles: '/dotfiles-index.json',
+    bookmarks: '/bookmarks-index.json',
+    profiles: '/profiles-index.json'
 };
 
 function normalizeIndexFiles(payload) {
@@ -43,7 +43,7 @@ async function loadTabIndex(tab) {
     let indexUrl = tabIndexes[tab];
     if (!indexUrl && tab.startsWith('profiles-')) {
         const profileName = tab.replace('profiles-', '');
-        indexUrl = `profiles-index.json?profile=${encodeURIComponent(profileName)}`;
+        indexUrl = `/profiles-index.json?profile=${encodeURIComponent(profileName)}`;
     }
 
     if (!indexUrl) {
@@ -121,30 +121,25 @@ export function resolveMarkdownLink(
 
 export function wikiDocHref(path) {
 
-    let targetPage = 'wiki.html';
+    let targetPage = '/wiki.html';
     if (path.startsWith('profiles/')) {
-        targetPage = 'profiles.html';
+        const parts = path.split('/');
+        const profile = parts.length > 1 ? parts[1] : '';
+        targetPage = profile ? `/profiles/${profile}/${profile}.html` : '/profiles.html';
     } else if (path.startsWith('menu/guides/')) {
-        targetPage = 'guides.html';
+        targetPage = '/guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
-        targetPage = 'cheatsheets.html';
+        targetPage = '/cheatsheets.html';
     } else if (path.startsWith('menu/dotfiles/')) {
-        targetPage = 'dotfiles.html';
+        targetPage = '/dotfiles.html';
     } else if (path.startsWith('menu/bookmarks/')) {
-        targetPage = 'bookmarks.html';
+        targetPage = '/bookmarks.html';
     }
 
     const url =
-        new URL(targetPage, window.location.href);
+        new URL(targetPage, window.location.origin);
 
     url.searchParams.set('doc', path);
-
-    if (path.startsWith('profiles/')) {
-        const parts = path.split('/');
-        if (parts.length > 1) {
-            url.searchParams.set('profile', parts[1]);
-        }
-    }
 
     return `${url.pathname}${url.search}`;
 }
@@ -172,6 +167,16 @@ function getCurrentTab() {
         const profile = params.get('profile') || '';
         return `profiles-${profile}`;
     }
+
+    // Support individual profile pages (e.g. rocket.html, prepper.html, kids.html)
+    const standardPages = ['wiki.html', 'guides.html', 'cheatsheets.html', 'dotfiles.html', 'bookmarks.html', 'scripts.html', 'index.html'];
+    const filename = path.split('/').pop();
+    if (filename && filename.endsWith('.html') && !standardPages.includes(filename) && filename !== 'profiles.html') {
+        const profileName = filename.replace('.html', '');
+        const formattedProfile = profileName.charAt(0).toUpperCase() + profileName.slice(1);
+        return `profiles-${formattedProfile}`;
+    }
+
     if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
     if (path.includes('cheatsheets.html') || path.endsWith('/cheatsheets')) return 'cheatsheets';
     if (path.includes('dotfiles.html') || path.endsWith('/dotfiles')) return 'dotfiles';

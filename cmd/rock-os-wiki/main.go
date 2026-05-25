@@ -243,6 +243,7 @@ func main() {
 	mux.HandleFunc("/api/feeds/reddit", feedRedditHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/youtube", feedYoutubeHandler(siteRoot))
 	mux.HandleFunc("/api/feeds/podcast", feedPodcastHandler(siteRoot))
+	mux.HandleFunc("/api/feeds/spotify", feedSpotifyHandler(siteRoot))
 	mux.Handle("/", fileServer)
 	address := fmt.Sprintf("%s:%d", bindHost, *port)
 	url := fmt.Sprintf("http://%s:%d/", displayHosts[0], *port)
@@ -3019,8 +3020,20 @@ func feedRedditHandler(siteRoot string) http.HandlerFunc {
 		}
 
 		subreddit := r.URL.Query().Get("subreddit")
+		redditURL := r.URL.Query().Get("url")
+
+		if redditURL != "" {
+			if u, err := url.Parse(redditURL); err == nil {
+				path := strings.Trim(u.Path, "/")
+				parts := strings.Split(path, "/")
+				if len(parts) >= 2 && parts[0] == "r" {
+					subreddit = parts[1]
+				}
+			}
+		}
+
 		if subreddit == "" {
-			http.Error(w, "subreddit parameter is required", http.StatusBadRequest)
+			http.Error(w, "subreddit or url parameter is required", http.StatusBadRequest)
 			return
 		}
 
@@ -3702,4 +3715,103 @@ func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
 	}
 
 	return inputURL
+}
+
+func feedSpotifyHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		urls := r.URL.Query()["url"]
+		if len(urls) == 0 {
+			http.Error(w, "url parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		limit := 5
+		if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+				limit = l
+			}
+		}
+
+		// Cache path based on hash of the URLs combined
+		hasher := sha256.New()
+		for _, u := range urls {
+			hasher.Write([]byte(u))
+		}
+		cacheFilename := fmt.Sprintf("spotify_%x.json", hasher.Sum(nil))
+		cacheDir := filepath.Join(siteRoot, ".gocache", "feeds")
+		cachePath := filepath.Join(cacheDir, cacheFilename)
+
+		// Try to fetch live
+		items := []feedItem{}
+		var fetchErr error
+
+		for i, spotifyURL := range urls {
+			if i >= limit {
+				break
+			}
+			item, err := fetchSpotifyOEmbed(spotifyURL)
+			if err != nil {
+				fetchErr = err
+				break
+			}
+			items = append(items, item)
+		}
+
+		if fetchErr == nil && len(items) > 0 {
+			// Save to cache
+			_ = os.MkdirAll(cacheDir, 0755)
+			if data, err := json.Marshal(items); err == nil {
+				_ = os.WriteFile(cachePath, data, 0644)
+			}
+			writeJSON(w, items)
+			return
+		}
+
+		// Fallback to cache
+		if data, err := os.ReadFile(cachePath); err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(data)
+			return
+		}
+
+		// Return empty list on failure
+		writeJSON(w, []feedItem{})
+	}
+}
+
+func fetchSpotifyOEmbed(spotifyURL string) (feedItem, error) {
+	apiURL := fmt.Sprintf("https://embed.spotify.com/oembed/?url=%s", url.QueryEscape(spotifyURL))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		return feedItem{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return feedItem{}, fmt.Errorf("spotify oembed returned status %d", resp.StatusCode)
+	}
+
+	var data struct {
+		Title        string `json:"title"`
+		ThumbnailURL string `json:"thumbnail_url"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return feedItem{}, err
+	}
+
+	return feedItem{
+		Title:     data.Title,
+		URL:       spotifyURL,
+		Created:   "Spotify",
+		Thumbnail: data.ThumbnailURL,
+	}, nil
 }

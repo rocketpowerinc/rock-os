@@ -70,11 +70,16 @@ function renderLockedProfiles() {
 }
 
 function currentProfileName() {
-
-    const params =
-        new URLSearchParams(window.location.search);
-
-    return params.get('profile') || '';
+    const params = new URLSearchParams(window.location.search);
+    let profile = params.get('profile') || '';
+    if (!profile) {
+        const filename = window.location.pathname.split('/').pop();
+        if (filename && filename !== 'profiles.html' && filename.endsWith('.html')) {
+            const name = filename.substring(0, filename.length - 5);
+            profile = name.charAt(0).toUpperCase() + name.slice(1);
+        }
+    }
+    return profile;
 }
 
 function profileNameFromPath(path) {
@@ -88,13 +93,7 @@ function profileNameFromPath(path) {
 }
 
 function profileUrl(profile) {
-
-    const url =
-        new URL('profiles.html', window.location.href);
-
-    url.searchParams.set('profile', profile);
-
-    return `${url.pathname}${url.search}`;
+    return `/profiles/${profile}/${profile}.html`;
 }
 
 function renderProfilesLanding(files) {
@@ -163,7 +162,7 @@ async function loadProfilesLanding() {
 
     try {
         const response =
-            await fetch('profiles-index.json?nocache=' + Date.now());
+            await fetch('/profiles-index.json?nocache=' + Date.now());
 
         if (!response.ok) {
             throw new Error(`Profiles index failed with HTTP ${response.status}`);
@@ -186,10 +185,17 @@ const REDDIT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3
 
 const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMzUsMTggNTAsMjUgMzUsMzIiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=';
 const PODCAST_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMzciIHk9IjIwIiB3aWR0aD0iNiIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzQ2ODJCNCIvPjxwYXRoIGQ9Ik0gMzQgMjIgQSA4IDggMCAwIDAgNDYgMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzQ2ODJCNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjQwIiB5MT0iMzAiIHgyPSI0MCIgeTI9IjM2IiBzdHJva2U9IiM0NjgyQjQiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIzNSIgeTE9IjM2IiB4Mj0iNDUiIHkyPSIzNiIgc3Ryb2tlPSIjNDY4MkI0IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
+const SPOTIFY_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMjUiIHI9IjEyIiBmaWxsPSIjMWRiOTU0Ii8+PHBhdGggZD0iTSAzMiAyNCBDIDM3IDIxIDQzIDIxIDQ4IDI0IE0gMzQgMjcgQyAzOCAyNSA0MiAyNSA0NiAyNyBNIDM2IDMwIEMgMzkgMjkgNDEgMjkgNDQgMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzEyMTIxMiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==';
 
-async function fetchRedditFeed(subreddit, fallback) {
+async function fetchRedditFeed(subreddit, urls, fallback) {
     try {
-        const res = await fetch(`/api/feeds/reddit?subreddit=${encodeURIComponent(subreddit)}`);
+        let urlStr = '/api/feeds/reddit';
+        if (urls && urls.length > 0) {
+            urlStr += `?url=${encodeURIComponent(urls[0])}`;
+        } else {
+            urlStr += `?subreddit=${encodeURIComponent(subreddit)}`;
+        }
+        const res = await fetch(urlStr);
         if (!res.ok) throw new Error();
         const items = await res.json();
         if (!Array.isArray(items) || items.length === 0) throw new Error();
@@ -263,6 +269,33 @@ async function fetchPodcastFeed(feedUrl, limit, fallback) {
     }
 }
 
+async function fetchSpotifyFeed(urls, limit, fallback) {
+    try {
+        const url = new URL('/api/feeds/spotify', window.location.origin);
+        if (Array.isArray(urls)) {
+            urls.forEach(u => url.searchParams.append('url', u));
+        } else if (urls) {
+            url.searchParams.append('url', urls);
+        }
+        if (limit) {
+            url.searchParams.append('limit', limit);
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) throw new Error();
+        return items.map(item => ({
+            title: item.title,
+            url: item.url,
+            date: item.created || 'Spotify',
+            thumbnail: item.thumbnail || SPOTIFY_PLACEHOLDER
+        }));
+    } catch (e) {
+        console.warn(`Could not fetch live Spotify feed. Loading fallback.`);
+        return fallback;
+    }
+}
+
 function renderDashboard(profile, config, feeds) {
     if (!config || !Array.isArray(config.widgets)) return;
     feeds = feeds || {};
@@ -298,8 +331,37 @@ function renderDashboard(profile, config, feeds) {
             <div class="glance-dashboard">
                 ${config.widgets.map((w, idx) => {
                     if (w.type === 'bookmarks') {
+                        const layout = w.layout || 'vertical';
+                        const size = w.size || 'medium';
+                        if (layout === 'horizontal' || layout === 'banners') {
+                            return `
+                                <div class="glance-card widget-bookmarks banners-layout size-${size}">
+                                    <div class="glance-card-header">
+                                        <h2>${escapeHtml(w.title)}</h2>
+                                        <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                    </div>
+                                    <div class="glance-bookmarks-banners-grid size-${size}">
+                                        ${w.bookmarks.flatMap(section => section.items).map(item => {
+                                            const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '★';
+                                            return `
+                                                <a class="glance-bookmark-banner size-${size}" href="${escapeHtml(item.url)}" target="_blank">
+                                                    <div class="bookmark-banner-accent">
+                                                        <span>${escapeHtml(initials)}</span>
+                                                    </div>
+                                                    <div class="bookmark-banner-info">
+                                                        <span class="bookmark-banner-name">${escapeHtml(item.name)}</span>
+                                                        <span class="bookmark-banner-desc">${escapeHtml(item.desc)}</span>
+                                                    </div>
+                                                    <span class="bookmark-banner-arrow">➔</span>
+                                                </a>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
                         return `
-                            <div class="glance-card widget-bookmarks">
+                            <div class="glance-card widget-bookmarks size-${size}">
                                 <div class="glance-card-header">
                                     <h2>${escapeHtml(w.title)}</h2>
                                     <span class="glance-badge">${escapeHtml(w.badge)}</span>
@@ -308,7 +370,7 @@ function renderDashboard(profile, config, feeds) {
                                     <div class="glance-bookmark-sec" style="${section !== w.bookmarks[0] ? 'margin-top: 8px;' : ''}">
                                         <div class="glance-bookmark-title">${escapeHtml(section.section)}</div>
                                         ${section.items.map(item => `
-                                            <a class="glance-bookmark-item" href="${escapeHtml(item.url)}" target="_blank">
+                                            <a class="glance-bookmark-item size-${size}" href="${escapeHtml(item.url)}" target="_blank">
                                                 <div class="glance-bookmark-info">
                                                     <span class="glance-bookmark-name">${escapeHtml(item.name)}</span>
                                                     <span class="glance-bookmark-desc">${escapeHtml(item.desc)}</span>
@@ -343,16 +405,19 @@ function renderDashboard(profile, config, feeds) {
             const container = document.getElementById(`widget-content-${idx}`);
             if (!container) return;
 
+            const layout = w.layout || 'vertical';
+
             if (w.type === 'reddit') {
-                fetchRedditFeed(w.subreddit, w.fallback).then(posts => {
+                fetchRedditFeed(w.subreddit, w.urls, w.fallback).then(posts => {
+                    const size = w.size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list">
+                        <ul class="glance-feed-list layout-${layout} size-${size}">
                             ${posts.map(post => `
-                                <li class="glance-feed-item">
-                                    <img class="glance-feed-thumb" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
-                                    <div class="glance-feed-content">
-                                        <a class="glance-feed-title" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
-                                        <div class="glance-feed-meta">
+                                <li class="glance-feed-item layout-${layout} size-${size}">
+                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
+                                    <div class="glance-feed-content layout-${layout} size-${size}">
+                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} size-${size}">
                                             <span class="glance-badge">${escapeHtml(post.author)}</span>
                                             <span>${escapeHtml(post.created)}</span>
                                         </div>
@@ -363,16 +428,16 @@ function renderDashboard(profile, config, feeds) {
                     `;
                 });
             } else if (w.type === 'youtube') {
-                const urls = (w.feedKey && feeds[w.feedKey] && feeds[w.feedKey].length > 0) ? feeds[w.feedKey] : null;
-                fetchYouTubeFeed(w.channels, w.playlists, urls, w.limit, w.fallback).then(videos => {
+                fetchYouTubeFeed(w.channels, w.playlists, w.urls, w.limit, w.fallback).then(videos => {
+                    const size = w.size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list">
+                        <ul class="glance-feed-list layout-${layout} size-${size}">
                             ${videos.map(video => `
-                                <li class="glance-feed-item">
-                                    <img class="glance-feed-thumb" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
-                                    <div class="glance-feed-content">
-                                        <a class="glance-feed-title" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
-                                        <div class="glance-feed-meta">
+                                <li class="glance-feed-item layout-${layout} size-${size}">
+                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
+                                    <div class="glance-feed-content layout-${layout} size-${size}">
+                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} size-${size}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(video.date)}</span>
                                         </div>
@@ -383,18 +448,39 @@ function renderDashboard(profile, config, feeds) {
                     `;
                 });
             } else if (w.type === 'podcast') {
-                const feedUrl = (w.feedKey && feeds[w.feedKey] && feeds[w.feedKey][0]) ? feeds[w.feedKey][0] : w.feedUrl;
+                const feedUrl = (w.urls && w.urls.length > 0) ? w.urls[0] : w.feedUrl;
                 fetchPodcastFeed(feedUrl, w.limit, w.fallback).then(episodes => {
+                    const size = w.size || 'medium';
                     container.innerHTML = `
-                        <ul class="glance-feed-list">
+                        <ul class="glance-feed-list layout-${layout} size-${size}">
                             ${episodes.map(episode => `
-                                <li class="glance-feed-item">
-                                    <img class="glance-feed-thumb" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
-                                    <div class="glance-feed-content">
-                                        <a class="glance-feed-title" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
-                                        <div class="glance-feed-meta">
+                                <li class="glance-feed-item layout-${layout} size-${size}">
+                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
+                                    <div class="glance-feed-content layout-${layout} size-${size}">
+                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} size-${size}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(episode.date)}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                });
+            } else if (w.type === 'spotify') {
+                fetchSpotifyFeed(w.urls, w.limit, w.fallback).then(tracks => {
+                    const size = w.size || 'medium';
+                    container.innerHTML = `
+                        <ul class="glance-feed-list layout-${layout} size-${size}">
+                            ${tracks.map(track => `
+                                <li class="glance-feed-item layout-${layout} size-${size}">
+                                    <img class="glance-feed-thumb layout-${layout} size-${size}" src="${escapeHtml(track.thumbnail)}" onerror="this.src='${SPOTIFY_PLACEHOLDER}';" alt="Spotify Art">
+                                    <div class="glance-feed-content layout-${layout} size-${size}">
+                                        <a class="glance-feed-title layout-${layout} size-${size}" href="${escapeHtml(track.url)}" target="_blank">${escapeHtml(track.title)}</a>
+                                        <div class="glance-feed-meta layout-${layout} size-${size}">
+                                            <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                            <span>${escapeHtml(track.date)}</span>
                                         </div>
                                     </div>
                                 </li>
@@ -452,7 +538,7 @@ function renderNotesViewer(profile) {
         searchStatusId: 'profilesSearchStatus',
         searchInputId: 'profilesSearchInput',
         refreshButtonId: 'refreshProfilesBtn',
-        indexUrl: `profiles-index.json?profile=${encodeURIComponent(profile)}`,
+        indexUrl: `/profiles-index.json?profile=${encodeURIComponent(profile)}`,
         docApiUrl: '/api/profiles/doc',
         searchApiUrl: `/api/profiles/search?profile=${encodeURIComponent(profile)}`,
         pathPrefix: `profiles/${profile}`,
@@ -460,28 +546,46 @@ function renderNotesViewer(profile) {
     });
 }
 
-async function loadFeedsConfig() {
+async function loadWidgetsConfig(profile) {
     try {
-        const res = await fetch(`profiles/feeds.txt?nocache=${Date.now()}`);
-        if (!res.ok) return {};
+        const res = await fetch(`/profiles/${encodeURIComponent(profile)}/widgets.txt?nocache=${Date.now()}`);
+        if (!res.ok) return [];
         const text = await res.text();
-        const sections = {};
-        let currentSection = null;
+        const widgets = [];
+        let currentWidget = null;
         const lines = text.split('\n');
         for (let line of lines) {
             line = line.trim();
-            if (!line || line.startsWith('#')) continue;
+            if (!line || line.startsWith('#') || line.startsWith(';')) continue;
             if (line.startsWith('[') && line.endsWith(']')) {
-                currentSection = line.slice(1, -1).trim();
-                sections[currentSection] = [];
-            } else if (currentSection) {
-                sections[currentSection].push(line);
+                if (currentWidget) {
+                    widgets.push(currentWidget);
+                }
+                const name = line.slice(1, -1).trim();
+                currentWidget = {
+                    feedKey: name,
+                    urls: []
+                };
+            } else if (currentWidget && line.includes('=')) {
+                const parts = line.split('=');
+                const key = parts[0].trim().toLowerCase();
+                const value = parts.slice(1).join('=').trim();
+                if (key === 'url') {
+                    currentWidget.urls.push(value);
+                } else if (key === 'limit') {
+                    currentWidget.limit = parseInt(value, 10) || 5;
+                } else {
+                    currentWidget[key] = value;
+                }
             }
         }
-        return sections;
+        if (currentWidget) {
+            widgets.push(currentWidget);
+        }
+        return widgets;
     } catch (e) {
-        console.warn('Could not load or parse profiles/feeds.txt', e);
-        return {};
+        console.warn(`Could not load or parse profiles/${profile}/widgets.txt`, e);
+        return [];
     }
 }
 
@@ -501,11 +605,86 @@ async function startProfiles() {
 
     // Try loading profile-specific dashboard config dynamically
     try {
-        const res = await fetch(`profiles/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
+        const res = await fetch(`/profiles/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
         if (res.ok) {
             const config = await res.json();
-            const feeds = await loadFeedsConfig();
-            renderDashboard(profile, config, feeds);
+            const feeds = await loadWidgetsConfig(profile); // Array of parsed widget objects from widgets.txt
+
+            if (feeds.length > 0) {
+                // Generate dynamic widgets
+                const dynamicWidgets = feeds.map(f => {
+                    let targetType = f.type;
+                    if (f.type === 'videos' || f.type === 'music') {
+                        targetType = 'youtube';
+                    }
+                    if (targetType === 'bookmarks') {
+                        const items = (f.urls || []).map(uStr => {
+                            const parts = uStr.split('|');
+                            if (parts.length >= 3) {
+                                return {
+                                    name: parts[0].trim(),
+                                    desc: parts[1].trim(),
+                                    url: parts.slice(2).join('|').trim()
+                                };
+                            } else if (parts.length === 2) {
+                                return {
+                                    name: parts[0].trim(),
+                                    desc: '',
+                                    url: parts[1].trim()
+                                };
+                            } else {
+                                const rawUrl = parts[0].trim();
+                                let name = rawUrl;
+                                try {
+                                    name = new URL(rawUrl).hostname;
+                                } catch {}
+                                return {
+                                    name: name,
+                                    desc: '',
+                                    url: rawUrl
+                                };
+                            }
+                        });
+                        return {
+                            type: 'bookmarks',
+                            feedKey: f.feedKey,
+                            title: f.title || f.feedKey,
+                            badge: f.badge || 'Links',
+                            layout: f.layout || 'horizontal', // Default to horizontal for nice banners
+                            size: f.size || 'medium',
+                            bookmarks: [
+                                {
+                                    section: f.title || f.feedKey,
+                                    items: items
+                                }
+                            ]
+                        };
+                    }
+                    return {
+                        type: targetType,
+                        feedKey: f.feedKey,
+                        title: f.title || f.feedKey,
+                        badge: f.badge || 'RSS',
+                        limit: f.limit || 5,
+                        layout: f.layout || 'vertical',
+                        size: f.size || 'medium',
+                        channels: [],
+                        playlists: [],
+                        urls: f.urls || [],
+                        fallback: []
+                    };
+                });
+
+                // Append bookmarks if it was in the original JSON config and not overridden by widgets.txt
+                const bookmarksWidget = config.widgets.find(w => w.type === 'bookmarks');
+                const hasWidgetsTxtBookmarks = dynamicWidgets.some(w => w.type === 'bookmarks');
+                if (bookmarksWidget && !hasWidgetsTxtBookmarks) {
+                    dynamicWidgets.push(bookmarksWidget);
+                }
+                config.widgets = dynamicWidgets;
+            }
+
+            renderDashboard(profile, config);
             return;
         }
     } catch (e) {
