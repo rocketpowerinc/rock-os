@@ -176,6 +176,10 @@ dashboard folder. Shared widget/feed fallback icons live under
 - Keep changes scoped to the user request.
 - Update `README.md` when adding user-facing features, dependencies, or workflow
   changes. Do not update it for ordinary additions under `Website/menu/scripts/`.
+- When creating a new Codex skill for this project, install the active skill in
+  the user's personal skills folder and also keep a repo backup copy under
+  `dev/codex-skills/<skill-name>/`. The repo copy is archival only and should
+  not be treated as the active loaded skill.
 - Do not commit, stash, push, or open pull requests for the user unless they
   explicitly ask for that action.
 - Do not stage files unless the user explicitly asks. The user prefers to review
