@@ -18,6 +18,8 @@ Use this skill when the user says `/dashboard-new`, asks to create a new dashboa
 If missing, ask briefly for:
 
 - Dashboard name, such as `Windows`, `Linux`, `Homelab`, or `Recovery`.
+  Tell the user the name should be one word so URLs, folder names, CSS selectors,
+  and dashboard routing stay clean.
 - Icon/image URL to download for the dashboard icon.
 
 If the user gives only the name, ask for the icon URL before editing files. If the user gives only the icon URL, ask for the dashboard name.
@@ -39,10 +41,16 @@ Website/dashboards/<DashboardName>/
 Rules:
 
 - Use PascalCase or clean title case for `<DashboardName>` unless the user specifies exact casing.
+- Prefer one-word dashboard names. If the user provides multiple words, warn
+  that one word is preferred and ask whether they want a one-word version before
+  scaffolding.
 - Keep dashboard-specific assets inside `Website/dashboards/<DashboardName>/assets/`.
 - Do not place dashboard icons under `Website/assets/`.
 - Shared widget/feed fallback icons live under `Website/assets/widget-icons/` and are not dashboard-specific.
 - Internal Rock-OS links open in the same tab. External links open in a new tab through existing app behavior.
+- Dashboard/Profile landing cards should show only the item title and icon. Do not add subtitle text such as `Open local dashboard`.
+- The Dashboards landing kicker should read `UNENCRYPTED DASHBOARDS` in all caps.
+- Do not add descriptive paragraph text below the Profiles or Dashboards landing headings.
 - Do not update `README.md` for every new dashboard unless the dashboard introduces a new convention or feature.
 
 ## Workflow

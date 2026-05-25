@@ -43,6 +43,10 @@ marketing page.
 - Keep visual assets local in `Website/assets`.
 - Internal Rock-OS links should open in the same browser tab. External
   `http`/`https` links should open in a new tab with `rel="noopener noreferrer"`.
+- Profiles and Dashboards landing cards should stay clean: icon plus title
+  only, no secondary subtitle such as "Open local dashboard". The Dashboards
+  landing kicker should read `UNENCRYPTED DASHBOARDS`, and neither landing page
+  needs an explanatory paragraph under the heading.
 - Keep wiki frontend code organized as native browser modules under
   `Website/js/wiki/` when adding reusable rendering, navigation, search, or UI
   helpers. Do not add a frontend build step unless the user explicitly asks.
@@ -151,6 +155,9 @@ folder can have its own landing card, `dashboard.json`, `widgets.txt`,
 markdown notes, sidebar search, favorites, and document view. Unlike Profiles,
 Dashboards are not encrypted with `git-crypt` and should always be available.
 Do not put sensitive private notes in Dashboards.
+Dashboard names should preferably be one word so URLs, folder names, CSS
+selectors, and routing stay simple. If the user proposes a multi-word dashboard
+name, warn them and ask whether they want a one-word version before scaffolding.
 
 Profiles and Dashboards should use matching folder conventions. Each item
 folder should use `index.html` as the entry page, with `dashboard.json`,

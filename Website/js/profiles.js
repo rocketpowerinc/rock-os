@@ -11,9 +11,9 @@ const appMode = isDashboardsMode
         apiRoot: 'dashboards',
         mainPage: 'dashboards.html',
         pageTitle: 'Dashboards',
-        landingKicker: 'Local Dashboards',
-        landingDescription: 'Choose a dashboard. Each dashboard can keep its own widgets, markdown tree, search, favorites, and document view.',
-        cardDescription: 'Open local dashboard',
+        landingKicker: 'UNENCRYPTED DASHBOARDS',
+        landingDescription: '',
+        cardDescription: '',
         emptyLabel: 'dashboard files',
         defaultSelectText: 'Select a dashboard document.',
         viewNotesText: 'View Dashboard Notes',
@@ -27,8 +27,8 @@ const appMode = isDashboardsMode
         mainPage: 'profiles.html',
         pageTitle: 'Profiles',
         landingKicker: 'Encrypted Profiles',
-        landingDescription: 'Choose a profile dashboard. Each profile keeps its own private markdown tree, search, favorites, and document view.',
-        cardDescription: 'Open private dashboard',
+        landingDescription: '',
+        cardDescription: '',
         emptyLabel: 'profile files',
         defaultSelectText: 'Select a profile document.',
         viewNotesText: 'View Private Notes',
@@ -240,14 +240,14 @@ function renderProfilesLanding(files) {
         <section class="profiles-dashboard">
             <p class="wiki-error-kicker">${escapeHtml(appMode.landingKicker)}</p>
             <h1>${escapeHtml(appMode.pageTitle)}</h1>
-            <p>${escapeHtml(appMode.landingDescription)}</p>
+            ${appMode.landingDescription ? `<p>${escapeHtml(appMode.landingDescription)}</p>` : ''}
             <div class="profiles-card-grid">
                 ${profiles.map(profile => `
                     <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}" data-profile="${escapeHtml(profile)}">
                         <div class="profile-card-icon"></div>
                         <div class="profiles-card-info">
                             <span>${escapeHtml(profile)}</span>
-                            <small>${escapeHtml(appMode.cardDescription)}</small>
+                            ${appMode.cardDescription ? `<small>${escapeHtml(appMode.cardDescription)}</small>` : ''}
                         </div>
                     </a>
                 `).join('')}
