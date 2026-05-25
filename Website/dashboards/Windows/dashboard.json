@@ -23,7 +23,7 @@
             {
               "name": "Windows Notes",
               "desc": "View the dashboard markdown tree for Windows-specific docs.",
-              "url": "/dashboards/Windows/"
+              "url": "/dashboards/Windows/?view=notes"
             }
           ]
         }

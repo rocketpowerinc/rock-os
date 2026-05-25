@@ -155,6 +155,11 @@ under `Website/dashboards/`; each folder can have its own `dashboard.json`,
 Profiles for sensitive/private notes and Dashboards for public local tools or
 platform-specific launch points.
 
+| Area | Folder | Encryption | Best For |
+| --- | --- | --- | --- |
+| Profiles | `Website/profiles/` | Encrypted with `git-crypt` | Private notes, personal configs, sensitive references |
+| Dashboards | `Website/dashboards/` | Not encrypted | Public local command centers, platform launch points, shared notes |
+
 Profiles and Dashboards use the same folder convention:
 
 ```text
@@ -174,6 +179,12 @@ Website/dashboards/Windows/assets/windows.png
 ```
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
+
+Internal Rock OS links, such as `/scripts.html` or `/dashboards/Windows/`, open
+in the same browser tab. External web links open in a new tab so the local
+dashboard stays available. Dashboard/profile cards can link directly to their
+markdown tree by using `?view=notes`, for example
+`/dashboards/Windows/?view=notes`.
 
 ### Windows
 

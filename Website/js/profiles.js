@@ -46,6 +46,24 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
+function linkTargetAttrs(href) {
+    try {
+        const url = new URL(href, window.location.origin);
+
+        if (
+            (url.protocol === 'http:' || url.protocol === 'https:') &&
+            url.host !== window.location.host
+        ) {
+            return ' target="_blank" rel="noopener noreferrer"';
+        }
+    }
+    catch {
+        return '';
+    }
+
+    return '';
+}
+
 async function profilesAreLocked() {
 
     try {
@@ -463,7 +481,7 @@ function renderDashboard(profile, config, feeds) {
                                     ${w.bookmarks.flatMap(section => section.items).map(item => {
                                         const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '★';
                                         return `
-                                            <a class="glance-featuring-banner" href="${escapeHtml(item.url)}" target="_blank">
+                                            <a class="glance-featuring-banner" href="${escapeHtml(item.url)}"${linkTargetAttrs(item.url)}>
                                                 <div class="featuring-banner-visual">
                                                     <span>${escapeHtml(initials)}</span>
                                                 </div>
@@ -496,7 +514,7 @@ function renderDashboard(profile, config, feeds) {
                                         ${w.bookmarks.flatMap(section => section.items).map(item => {
                                             const initials = item.name ? item.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : '★';
                                             return `
-                                                <a class="glance-bookmark-banner link-size-${w.link_size}" href="${escapeHtml(item.url)}" target="_blank">
+                                                <a class="glance-bookmark-banner link-size-${w.link_size}" href="${escapeHtml(item.url)}"${linkTargetAttrs(item.url)}>
                                                     <div class="bookmark-banner-accent">
                                                         <span>${escapeHtml(initials)}</span>
                                                     </div>
@@ -522,7 +540,7 @@ function renderDashboard(profile, config, feeds) {
                                     <div class="glance-bookmark-sec" style="${section !== w.bookmarks[0] ? 'margin-top: 8px;' : ''}">
                                         <div class="glance-bookmark-title">${escapeHtml(section.section)}</div>
                                         ${section.items.map(item => `
-                                            <a class="glance-bookmark-item link-size-${w.link_size}" href="${escapeHtml(item.url)}" target="_blank">
+                                            <a class="glance-bookmark-item link-size-${w.link_size}" href="${escapeHtml(item.url)}"${linkTargetAttrs(item.url)}>
                                                 <div class="glance-bookmark-info">
                                                     <span class="glance-bookmark-name">${escapeHtml(item.name)}</span>
                                                     <span class="glance-bookmark-desc">${escapeHtml(item.desc)}</span>
@@ -568,7 +586,7 @@ function renderDashboard(profile, config, feeds) {
                                 <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
                                     <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(post.thumbnail)}" onerror="this.src='${REDDIT_PLACEHOLDER}';" alt="Reddit Thumbnail">
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
-                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(post.url)}" target="_blank">${escapeHtml(post.title)}</a>
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(post.url)}"${linkTargetAttrs(post.url)}>${escapeHtml(post.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(post.author)}</span>
                                             <span>${escapeHtml(post.created)}</span>
@@ -588,7 +606,7 @@ function renderDashboard(profile, config, feeds) {
                                 <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
                                     <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(video.thumbnail)}" onerror="this.src='${YOUTUBE_PLACEHOLDER}';" alt="YouTube Thumbnail">
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
-                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(video.url)}" target="_blank">${escapeHtml(video.title)}</a>
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(video.url)}"${linkTargetAttrs(video.url)}>${escapeHtml(video.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(video.date)}</span>
@@ -609,7 +627,7 @@ function renderDashboard(profile, config, feeds) {
                                 <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
                                     <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(episode.thumbnail)}" onerror="this.src='${PODCAST_PLACEHOLDER}';" alt="Podcast Art">
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
-                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(episode.url)}" target="_blank">${escapeHtml(episode.title)}</a>
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(episode.url)}"${linkTargetAttrs(episode.url)}>${escapeHtml(episode.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(episode.date)}</span>
@@ -629,7 +647,7 @@ function renderDashboard(profile, config, feeds) {
                                 <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
                                     <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(track.thumbnail)}" onerror="this.src='${SPOTIFY_PLACEHOLDER}';" alt="Spotify Art">
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
-                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(track.url)}" target="_blank">${escapeHtml(track.title)}</a>
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(track.url)}"${linkTargetAttrs(track.url)}>${escapeHtml(track.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(w.badge)}</span>
                                             <span>${escapeHtml(track.date)}</span>
@@ -649,7 +667,7 @@ function renderDashboard(profile, config, feeds) {
                                 <li class="glance-feed-item layout-${layout} link-size-${linkSize}">
                                     <img class="glance-feed-thumb layout-${layout} link-size-${linkSize}" src="${escapeHtml(headline.thumbnail)}" onerror="this.src='${NEWS_PLACEHOLDER}';" alt="News Thumbnail">
                                     <div class="glance-feed-content layout-${layout} link-size-${linkSize}">
-                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(headline.url)}" target="_blank">${escapeHtml(headline.title)}</a>
+                                        <a class="glance-feed-title layout-${layout} link-size-${linkSize}" href="${escapeHtml(headline.url)}"${linkTargetAttrs(headline.url)}>${escapeHtml(headline.title)}</a>
                                         <div class="glance-feed-meta layout-${layout} link-size-${linkSize}">
                                             <span class="glance-badge">${escapeHtml(headline.source || w.badge)}</span>
                                             <span>${escapeHtml(headline.date)}</span>
@@ -774,6 +792,12 @@ async function startProfiles() {
     }
 
     document.title = `${appMode.documentTitlePrefix} ${profile}`;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'notes') {
+        renderNotesViewer(profile);
+        return;
+    }
 
     // Try loading item-specific dashboard config dynamically
     try {

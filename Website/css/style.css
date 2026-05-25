@@ -3561,6 +3561,7 @@ body.is-resize-dragging {
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
+	min-height: 76px;
 	padding: 10px 12px;
 	background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.12), rgba(var(--accent-2-rgb), 0.04)), var(--panel-strong);
 	border: 1px solid rgba(var(--accent-rgb), 0.18);
@@ -3604,7 +3605,7 @@ body.is-resize-dragging {
 .bookmark-banner-info {
 	display: flex;
 	flex-direction: column;
-	gap: 1px;
+	gap: 4px;
 	flex-grow: 1;
 	min-width: 0;
 }
@@ -3613,17 +3614,17 @@ body.is-resize-dragging {
 	font-size: 0.82rem;
 	font-weight: 800;
 	color: var(--text-main);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	line-height: 1.25;
+	overflow-wrap: break-word;
+	white-space: normal;
 }
 
 .bookmark-banner-desc {
 	font-size: 0.7rem;
 	color: var(--text-muted);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	line-height: 1.35;
+	overflow-wrap: break-word;
+	white-space: normal;
 }
 
 .bookmark-banner-arrow {

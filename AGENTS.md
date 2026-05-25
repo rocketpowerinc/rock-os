@@ -41,6 +41,8 @@ marketing page.
   Blue-Grass.
 - UI changes should stay professional and theme-aware.
 - Keep visual assets local in `Website/assets`.
+- Internal Rock-OS links should open in the same browser tab. External
+  `http`/`https` links should open in a new tab with `rel="noopener noreferrer"`.
 - Keep wiki frontend code organized as native browser modules under
   `Website/js/wiki/` when adding reusable rendering, navigation, search, or UI
   helpers. Do not add a frontend build step unless the user explicitly asks.
