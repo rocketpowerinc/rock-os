@@ -940,7 +940,7 @@ color:#88ff88;
 
 .profiles-card {
 	background:
-		linear-gradient(135deg, rgba(var(--accent-rgb), .10), rgba(var(--accent-2-rgb), .05)),
+		linear-gradient(135deg, rgba(var(--accent-rgb), .10), rgba(var(--profile-card-secondary-rgb), .05)),
 		var(--panel-bg);
 	border:1px solid rgba(var(--accent-rgb), .25);
 	color:var(--text-main);
@@ -2726,6 +2726,7 @@ opacity:.8;
 	--accent-rgb:208,255,0;
 	--accent-2:#ff00cc;
 	--accent-2-rgb:255,0,204;
+	--profile-card-secondary-rgb:255,0,204;
 	--favorite:#ff00cc;
 	--favorite-rgb:255,0,204;
 	--success:#00ff66;
@@ -2757,6 +2758,7 @@ opacity:.8;
 	--accent-rgb:94,231,255;
 	--accent-2:#9b8cff;
 	--accent-2-rgb:155,140,255;
+	--profile-card-secondary-rgb:155,140,255;
 	--favorite:#ffd166;
 	--favorite-rgb:255,209,102;
 	--success:#7cffc4;
@@ -2778,7 +2780,7 @@ opacity:.8;
 	--panel-bg:#fff8eb;
 	--panel-strong:#f0e2cc;
 	--profile-banner-bg:#3a281a;
-	--profile-banner-gradient:linear-gradient(135deg, #3a281a, #704217 56%, #9a3159);
+	--profile-banner-gradient:linear-gradient(135deg, #3a281a, #704217 58%, #9b682a);
 	--profile-banner-title:#fff0d2;
 	--profile-banner-title-shadow:0 1px 0 rgba(0,0,0,.45), 0 0 18px rgba(138,79,18,.24);
 	--profile-banner-subtitle:rgba(255,240,210,.72);
@@ -2786,8 +2788,9 @@ opacity:.8;
 	--text-muted:rgba(33,26,20,.68);
 	--accent:#8a4f12;
 	--accent-rgb:138,79,18;
-	--accent-2:#9a3159;
-	--accent-2-rgb:154,49,89;
+	--accent-2:#9b682a;
+	--accent-2-rgb:155,104,42;
+	--profile-card-secondary-rgb:155,104,42;
 	--favorite:#b45d24;
 	--favorite-rgb:180,93,36;
 	--success:#2f7d42;
@@ -2819,6 +2822,7 @@ opacity:.8;
 	--accent-rgb:79,100,117;
 	--accent-2:#8a949d;
 	--accent-2-rgb:138,148,157;
+	--profile-card-secondary-rgb:138,148,157;
 	--favorite:#b8860b;
 	--favorite-rgb:184,134,11;
 	--success:#3f7f68;
