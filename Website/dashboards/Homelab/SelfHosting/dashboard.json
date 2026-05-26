@@ -1,0 +1,33 @@
+{
+  "title": "Self-Hosting Command Center",
+  "subtitle": "Local services, homelab notes, backups, reverse proxies, and recovery runbooks.",
+  "avatarClass": "selfhosting-dashboard-avatar-display",
+  "widgets": [
+    {
+      "type": "bookmarks",
+      "title": "Self-Hosting Launch Points",
+      "badge": "Homelab",
+      "layout": "horizontal",
+      "size": "medium",
+      "card_size": "medium",
+      "link_size": "medium",
+      "bookmarks": [
+        {
+          "section": "Self-Hosting",
+          "items": [
+            {
+              "name": "Scripts",
+              "desc": "Open local maintenance scripts for services and servers.",
+              "url": "/scripts.html"
+            },
+            {
+              "name": "Self-Hosting Notes",
+              "desc": "View the markdown tree for this dashboard.",
+              "url": "/dashboards/Homelab/SelfHosting/?view=notes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3168,11 +3168,16 @@ func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSe
 
 func filterDashboardFiles(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
 	dashboard = strings.Trim(strings.ReplaceAll(dashboard, "\\", "/"), "/")
-	if dashboard == "" || strings.Contains(dashboard, "/") || strings.Contains(dashboard, "\x00") {
+	if dashboard == "" || strings.Contains(dashboard, "\x00") {
 		if dashboard == "" {
 			return files
 		}
 		return []markdownIndexEntry{}
+	}
+	for _, part := range strings.Split(dashboard, "/") {
+		if part == "" || part == "." || part == ".." {
+			return []markdownIndexEntry{}
+		}
 	}
 
 	prefix := dashboardsDir + "/" + dashboard + "/"

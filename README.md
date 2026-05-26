@@ -150,9 +150,11 @@ document view.
 
 The top navigation also includes **Dashboards** for always-available local
 command centers that are not encrypted with `git-crypt`. Dashboard folders live
-under `Website/dashboards/`; each folder can have its own `dashboard.json`,
-`widgets.txt`, markdown notes, search, favorites, and document view. Use
-Profiles for sensitive/private notes and Dashboards for public local tools or
+under category folders in `Website/dashboards/`; each dashboard can have its
+own `dashboard.json`, `widgets.txt`, markdown notes, search, favorites, and
+document view. The Dashboards page groups items dynamically by their containing
+category folder, so you can add as many categories as you need. Use Profiles for
+sensitive/private notes and Dashboards for public local tools or
 platform-specific launch points.
 
 | Area | Folder | Encryption | Best For |
@@ -164,27 +166,29 @@ Profiles and Dashboards use the same folder convention:
 
 ```text
 Website/profiles/Rocket/index.html
-Website/dashboards/Windows/index.html
+Website/dashboards/OS/Windows/index.html
 ```
 
-The folder name is the dashboard/profile name. The `index.html` file is the
-entry page. Use `Overview.md` for the first note, with `dashboard.json`,
-`widgets.txt`, an optional local `assets/` folder, and additional markdown
-files beside it. Profile and dashboard page icons should live inside that
-item's own folder, for example:
+The profile folder name is the profile name. Dashboard paths use
+`Website/dashboards/<Category>/<DashboardName>/`, where the category becomes a
+section heading on the Dashboards page. The `index.html` file is the entry page.
+Use `Overview.md` for the first note, with `dashboard.json`, `widgets.txt`, an
+optional local `assets/` folder, and additional markdown files beside it.
+Profile and dashboard page icons should live inside that item's own folder, for
+example:
 
 ```text
 Website/profiles/Rocket/assets/Rocket-Steel.svg
-Website/dashboards/Windows/assets/windows.png
+Website/dashboards/OS/Windows/assets/windows.png
 ```
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
 
-Internal Rock OS links, such as `/scripts.html` or `/dashboards/Windows/`, open
+Internal Rock OS links, such as `/scripts.html` or `/dashboards/OS/Windows/`, open
 in the same browser tab. External web links open in a new tab so the local
 dashboard stays available. Dashboard/profile cards can link directly to their
 markdown tree by using `?view=notes`, for example
-`/dashboards/Windows/?view=notes`.
+`/dashboards/OS/Windows/?view=notes`.
 
 ### Windows
 
@@ -310,7 +314,7 @@ Website/menu/cheatsheets/ Quick-reference markdown
 Website/menu/dotfiles/ Dotfile notes and configs
 Website/menu/bookmarks/ Bookmark collections and link notes
 Website/profiles/      Encrypted/private profile markdown
-Website/dashboards/    Public local dashboards with widgets and markdown
+Website/dashboards/    Public local dashboards grouped by category
 Website/menu/scripts/  User-managed runnable scripts
 ```
 

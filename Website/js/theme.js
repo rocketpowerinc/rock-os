@@ -8,10 +8,10 @@ const allowedThemes = [
 ];
 
 const themeImages = {
-    'cyberpunk': 'assets/Rock-OS-Hero-Cyberpunk.png',
-    'rugged': 'assets/Rock-OS-Hero-Rugged.png',
-    'steel': 'assets/Rock-OS-Hero-Steel.png',
-    'blue-grass': 'assets/Rock-OS-Hero-Blue-Grass.png'
+    'cyberpunk': '/assets/Rock-OS-Hero-Cyberpunk.png',
+    'rugged': '/assets/Rock-OS-Hero-Rugged.png',
+    'steel': '/assets/Rock-OS-Hero-Steel.png',
+    'blue-grass': '/assets/Rock-OS-Hero-Blue-Grass.png'
 };
 
 function normalizeTheme(theme) {
@@ -21,18 +21,9 @@ function normalizeTheme(theme) {
     return defaultTheme;
 }
 
-function getAssetPrefix() {
-    if (window.location.pathname.includes('/profiles/') ||
-        window.location.pathname.includes('/dashboards/')) {
-        return '../../';
-    }
-    return '';
-}
-
 function applyTheme(theme) {
     const nextTheme = normalizeTheme(theme);
-    const prefix = getAssetPrefix();
-    const themeImage = prefix + (themeImages[nextTheme] || themeImages[defaultTheme]);
+    const themeImage = themeImages[nextTheme] || themeImages[defaultTheme];
 
     document.documentElement.dataset.theme = nextTheme;
 
@@ -40,7 +31,7 @@ function applyTheme(theme) {
         .forEach(image => {
             image.onerror = () => {
                 image.onerror = null;
-                image.src = prefix + themeImages[defaultTheme];
+                image.src = themeImages[defaultTheme];
             };
             image.src = themeImage;
         });

@@ -938,6 +938,25 @@ color:#88ff88;
 	margin-top:28px;
 }
 
+.dashboard-category {
+	margin-top:30px;
+}
+
+.dashboard-category:first-of-type {
+	margin-top:24px;
+}
+
+.dashboard-category h2 {
+	margin:0 0 14px;
+	color:var(--heading);
+	font-size:clamp(1.05rem, 2vw, 1.35rem);
+	font-weight:900;
+	letter-spacing:.08em;
+	text-transform:uppercase;
+	border-bottom:1px solid var(--border);
+	padding-bottom:10px;
+}
+
 .profiles-card {
 	background:
 		linear-gradient(135deg, rgba(var(--accent-rgb), .10), rgba(var(--profile-card-secondary-rgb), .05)),
@@ -1076,7 +1095,7 @@ color:#88ff88;
 .windows-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Windows/assets/windows.png');
+	background-image:url('../dashboards/OS/Windows/assets/windows.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1087,7 +1106,7 @@ color:#88ff88;
 .linux-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Linux/assets/linux.png');
+	background-image:url('../dashboards/OS/Linux/assets/linux.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1098,7 +1117,29 @@ color:#88ff88;
 .pirating-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Pirating/assets/ship.png');
+	background-image:url('../dashboards/Homelab/Pirating/assets/ship.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+.selfhosting-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+.emulation-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/Gaming/Emulation/assets/emulation.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1458,17 +1499,27 @@ color:#88ff88;
 }
 
 .profiles-card[data-profile="Windows"] .profile-card-icon {
-	background-image:url('../dashboards/Windows/assets/windows.png');
+	background-image:url('../dashboards/OS/Windows/assets/windows.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Linux"] .profile-card-icon {
-	background-image:url('../dashboards/Linux/assets/linux.png');
+	background-image:url('../dashboards/OS/Linux/assets/linux.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Pirating"] .profile-card-icon {
-	background-image:url('../dashboards/Pirating/assets/ship.png');
+	background-image:url('../dashboards/Homelab/Pirating/assets/ship.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="SelfHosting"] .profile-card-icon {
+	background-image:url('../dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="Emulation"] .profile-card-icon {
+	background-image:url('../dashboards/Gaming/Emulation/assets/emulation.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 

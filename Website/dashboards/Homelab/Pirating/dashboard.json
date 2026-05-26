@@ -1,0 +1,38 @@
+{
+  "title": "Pirating Command Center",
+  "subtitle": "Local sea notes, ship references, gear checklists, and route planning.",
+  "avatarClass": "pirating-dashboard-avatar-display",
+  "widgets": [
+    {
+      "type": "bookmarks",
+      "title": "Pirating Launch Points",
+      "badge": "Local",
+      "layout": "horizontal",
+      "size": "medium",
+      "card_size": "medium",
+      "link_size": "medium",
+      "bookmarks": [
+        {
+          "section": "Pirating",
+          "items": [
+            {
+              "name": "Pirating Notes",
+              "desc": "View the dashboard markdown tree for pirating-specific docs.",
+              "url": "/dashboards/Homelab/Pirating/?view=notes"
+            },
+            {
+              "name": "Local Bookmarks",
+              "desc": "Open the shared bookmark dashboard for useful reference links.",
+              "url": "/bookmarks.html"
+            },
+            {
+              "name": "Run Scripts",
+              "desc": "Open local automation tools if this dashboard grows script helpers later.",
+              "url": "/scripts.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

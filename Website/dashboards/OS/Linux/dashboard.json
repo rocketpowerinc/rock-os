@@ -23,7 +23,7 @@
             {
               "name": "Linux Notes",
               "desc": "View the dashboard markdown tree for Linux-specific docs.",
-              "url": "/dashboards/Linux/?view=notes"
+              "url": "/dashboards/OS/Linux/?view=notes"
             },
             {
               "name": "Linux Handbook",

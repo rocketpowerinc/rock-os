@@ -1,11 +1,11 @@
 {
-  "title": "Pirating Command Center",
-  "subtitle": "Local sea notes, ship references, gear checklists, and route planning.",
-  "avatarClass": "pirating-dashboard-avatar-display",
+  "title": "Emulation Command Center",
+  "subtitle": "Local emulator setup, controller maps, BIOS reminders, and retro system notes.",
+  "avatarClass": "emulation-dashboard-avatar-display",
   "widgets": [
     {
       "type": "bookmarks",
-      "title": "Pirating Launch Points",
+      "title": "Emulation Launch Points",
       "badge": "Local",
       "layout": "horizontal",
       "size": "medium",
@@ -13,12 +13,12 @@
       "link_size": "medium",
       "bookmarks": [
         {
-          "section": "Pirating",
+          "section": "Emulation",
           "items": [
             {
-              "name": "Pirating Notes",
-              "desc": "View the dashboard markdown tree for pirating-specific docs.",
-              "url": "/dashboards/Pirating/?view=notes"
+              "name": "Emulation Notes",
+              "desc": "View the dashboard markdown tree for emulation-specific docs.",
+              "url": "/dashboards/Gaming/Emulation/?view=notes"
             },
             {
               "name": "Local Bookmarks",

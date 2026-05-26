@@ -39,6 +39,14 @@ function normalizeIndexFiles(payload) {
         .filter(path => path.toLowerCase().endsWith('.md'));
 }
 
+function encodePathSegments(path) {
+    return String(path || '')
+        .split('/')
+        .filter(Boolean)
+        .map(part => encodeURIComponent(part))
+        .join('/');
+}
+
 async function loadTabIndex(tab) {
 
     let indexUrl = tabIndexes[tab];
@@ -133,8 +141,8 @@ export function wikiDocHref(path) {
         targetPage = profile ? `/profiles/${encodeURIComponent(profile)}/` : '/profiles.html';
     } else if (path.startsWith('dashboards/')) {
         const parts = path.split('/');
-        const dashboard = parts.length > 1 ? parts[1] : '';
-        targetPage = dashboard ? `/dashboards/${encodeURIComponent(dashboard)}/` : '/dashboards.html';
+        const dashboard = parts.length > 2 ? `${parts[1]}/${parts[2]}` : '';
+        targetPage = dashboard ? `/dashboards/${encodePathSegments(dashboard)}/` : '/dashboards.html';
     } else if (path.startsWith('menu/guides/')) {
         targetPage = '/guides.html';
     } else if (path.startsWith('menu/cheatsheets/')) {
@@ -163,7 +171,7 @@ function getTabForPath(path) {
     }
     if (path.startsWith('dashboards/')) {
         const parts = path.split('/');
-        const dashboard = parts.length > 1 ? parts[1] : '';
+        const dashboard = parts.length > 2 ? `${parts[1]}/${parts[2]}` : '';
         return `dashboards-${dashboard}`;
     }
     if (path.startsWith('menu/guides/')) return 'guides';
@@ -174,7 +182,8 @@ function getTabForPath(path) {
 }
 
 function getCurrentTab() {
-    const path = window.location.pathname.toLowerCase();
+    const rawPath = window.location.pathname;
+    const path = rawPath.toLowerCase();
     if (path.includes('wiki.html') || path.endsWith('/wiki')) return 'wiki';
     if (path.includes('profiles.html') || path.endsWith('/profiles')) {
         const params = new URLSearchParams(window.location.search);
@@ -187,7 +196,7 @@ function getCurrentTab() {
         return `dashboards-${dashboard}`;
     }
     if (path.includes('/profiles/')) {
-        const parts = path.split('/').filter(Boolean);
+        const parts = rawPath.split('/').filter(Boolean);
         const lastPart = parts[parts.length - 1] || '';
         const profile = lastPart === 'index.html' && parts.length > 1
             ? parts[parts.length - 2]
@@ -196,13 +205,20 @@ function getCurrentTab() {
         return `profiles-${decodedProfile.charAt(0).toUpperCase() + decodedProfile.slice(1)}`;
     }
     if (path.includes('/dashboards/')) {
-        const parts = path.split('/').filter(Boolean);
-        const lastPart = parts[parts.length - 1] || '';
-        const dashboard = lastPart === 'index.html' && parts.length > 1
-            ? parts[parts.length - 2]
-            : lastPart;
-        const decodedDashboard = decodeURIComponent(dashboard);
-        return `dashboards-${decodedDashboard.charAt(0).toUpperCase() + decodedDashboard.slice(1)}`;
+        const parts = rawPath.split('/').filter(Boolean);
+        const rootIndex = parts.findIndex(part => part.toLowerCase() === 'dashboards');
+        if (rootIndex >= 0) {
+            const dashboardParts =
+                parts
+                    .slice(rootIndex + 1)
+                    .filter(part => part && part.toLowerCase() !== 'index.html')
+                    .slice(0, 2)
+                    .map(part => decodeURIComponent(part));
+
+            if (dashboardParts.length === 2) {
+                return `dashboards-${dashboardParts.join('/')}`;
+            }
+        }
     }
 
     // Support individual profile/dashboard pages (e.g. rocket.html, windows.html)

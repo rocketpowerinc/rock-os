@@ -164,34 +164,148 @@ function currentProfileName() {
     const params = new URLSearchParams(window.location.search);
     let profile = params.get('profile') || params.get('dashboard') || '';
     if (!profile) {
-        const parts = window.location.pathname.split('/').filter(Boolean);
-        const filename = parts.pop() || '';
-        if (filename && filename !== appMode.mainPage && filename.endsWith('.html')) {
-            const name = filename === 'index.html' && parts.length > 0
-                ? parts[parts.length - 1]
-                : filename.substring(0, filename.length - 5);
-            const decodedName = decodeURIComponent(name);
-            profile = decodedName.charAt(0).toUpperCase() + decodedName.slice(1);
-        } else if (filename && parts.includes(appMode.rootDir)) {
-            const decodedName = decodeURIComponent(filename);
-            profile = decodedName.charAt(0).toUpperCase() + decodedName.slice(1);
+        const parts =
+            window.location.pathname
+                .split('/')
+                .filter(Boolean)
+                .map(part => decodeURIComponent(part));
+        const rootIndex =
+            parts.indexOf(appMode.rootDir);
+
+        if (rootIndex >= 0) {
+            const itemParts =
+                parts
+                    .slice(rootIndex + 1)
+                    .filter(part => part && part !== 'index.html');
+
+            profile =
+                isDashboardsMode
+                    ? itemParts.slice(0, 2).join('/')
+                    : itemParts.slice(0, 1).join('/');
         }
     }
     return profile;
 }
 
-function profileNameFromPath(path) {
+function displayNameFromProfile(profile) {
+    const parts =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean);
 
-    const match =
-        path.match(new RegExp(`^${appMode.rootDir}/([^/]+)/`));
-
-    return match
-        ? decodeURIComponent(match[1])
+    return parts.length
+        ? parts[parts.length - 1]
         : '';
 }
 
+function profileItemFromPath(path) {
+    const parts =
+        String(path || '')
+            .split('/')
+            .filter(Boolean);
+
+    if (parts[0] !== appMode.rootDir) {
+        return null;
+    }
+
+    if (isDashboardsMode) {
+        if (parts.length < 3) {
+            return null;
+        }
+
+        return {
+            category: decodeURIComponent(parts[1]),
+            name: decodeURIComponent(parts[2]),
+            profile: `${decodeURIComponent(parts[1])}/${decodeURIComponent(parts[2])}`
+        };
+    }
+
+    if (parts.length < 2) {
+        return null;
+    }
+
+    return {
+        category: '',
+        name: decodeURIComponent(parts[1]),
+        profile: decodeURIComponent(parts[1])
+    };
+}
+
 function profileUrl(profile) {
-    return `/${appMode.rootDir}/${encodeURIComponent(profile)}/`;
+    const path =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean)
+            .map(part => encodeURIComponent(part))
+            .join('/');
+
+    return `/${appMode.rootDir}/${path}/`;
+}
+
+function profileFileUrl(profile, fileName) {
+    const path =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean)
+            .map(part => encodeURIComponent(part))
+            .join('/');
+
+    return `/${appMode.rootDir}/${path}/${fileName}`;
+}
+
+function uniqueProfileItems(files) {
+    const seen = new Map();
+
+    files
+        .map(file => profileItemFromPath(file.path || file))
+        .filter(Boolean)
+        .forEach(item => {
+            if (!seen.has(item.profile)) {
+                seen.set(item.profile, item);
+            }
+        });
+
+    return Array.from(seen.values())
+        .sort((a, b) => {
+            if (isDashboardsMode) {
+                const aIsOS = a.category.toLowerCase() === 'os';
+                const bIsOS = b.category.toLowerCase() === 'os';
+
+                if (aIsOS !== bIsOS) {
+                    return aIsOS ? -1 : 1;
+                }
+            }
+
+            const categoryCompare =
+                a.category.toLowerCase().localeCompare(b.category.toLowerCase());
+
+            if (categoryCompare !== 0) {
+                return categoryCompare;
+            }
+
+            if (isDashboardsMode && a.category.toLowerCase() === 'homelab') {
+                const aIsSelfHosting = a.name.toLowerCase() === 'selfhosting';
+                const bIsSelfHosting = b.name.toLowerCase() === 'selfhosting';
+
+                if (aIsSelfHosting !== bIsSelfHosting) {
+                    return aIsSelfHosting ? -1 : 1;
+                }
+            }
+
+            return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+        });
+}
+
+function renderProfileCard(item) {
+    return `
+        <a class="profiles-card" href="${escapeHtml(profileUrl(item.profile))}" data-profile="${escapeHtml(item.name)}">
+            <div class="profile-card-icon"></div>
+            <div class="profiles-card-info">
+                <span>${escapeHtml(item.name)}</span>
+                ${appMode.cardDescription ? `<small>${escapeHtml(appMode.cardDescription)}</small>` : ''}
+            </div>
+        </a>
+    `;
 }
 
 function renderProfilesLanding(files) {
@@ -223,17 +337,34 @@ function renderProfilesLanding(files) {
         return;
     }
 
-    const profiles =
-        Array.from(
-            new Set(
-                files
-                    .map(file => profileNameFromPath(file.path || file))
-                    .filter(Boolean)
+    const profileItems =
+        uniqueProfileItems(files);
+
+    const cardsHtml =
+        isDashboardsMode
+            ? Array.from(
+                profileItems.reduce((groups, item) => {
+                    if (!groups.has(item.category)) {
+                        groups.set(item.category, []);
+                    }
+                    groups.get(item.category).push(item);
+                    return groups;
+                }, new Map())
             )
-        )
-            .sort((a, b) =>
-                a.toLowerCase().localeCompare(b.toLowerCase())
-            );
+                .map(([category, items]) => `
+                    <section class="dashboard-category">
+                        <h2>${escapeHtml(category)}</h2>
+                        <div class="profiles-card-grid">
+                            ${items.map(renderProfileCard).join('')}
+                        </div>
+                    </section>
+                `)
+                .join('')
+            : `
+                <div class="profiles-card-grid">
+                    ${profileItems.map(renderProfileCard).join('')}
+                </div>
+            `;
 
     content.classList.add('fullwidth');
     content.innerHTML = `
@@ -241,17 +372,7 @@ function renderProfilesLanding(files) {
             <p class="wiki-error-kicker">${escapeHtml(appMode.landingKicker)}</p>
             <h1>${escapeHtml(appMode.pageTitle)}</h1>
             ${appMode.landingDescription ? `<p>${escapeHtml(appMode.landingDescription)}</p>` : ''}
-            <div class="profiles-card-grid">
-                ${profiles.map(profile => `
-                    <a class="profiles-card" href="${escapeHtml(profileUrl(profile))}" data-profile="${escapeHtml(profile)}">
-                        <div class="profile-card-icon"></div>
-                        <div class="profiles-card-info">
-                            <span>${escapeHtml(profile)}</span>
-                            ${appMode.cardDescription ? `<small>${escapeHtml(appMode.cardDescription)}</small>` : ''}
-                        </div>
-                    </a>
-                `).join('')}
-            </div>
+            ${cardsHtml}
         </section>
     `;
 }
@@ -694,6 +815,9 @@ function renderDashboard(profile, config, feeds) {
 }
 
 function renderNotesViewer(profile) {
+    const displayName =
+        displayNameFromProfile(profile);
+
     const sidebar = document.getElementById('sidebar');
     const resizer = document.getElementById('sidebarResizer');
     const expandButton = document.getElementById('expandSidebarBtn');
@@ -709,23 +833,23 @@ function renderNotesViewer(profile) {
     const search = document.getElementById('profilesSearchInput');
 
     if (heading) {
-        heading.textContent = profile;
+        heading.textContent = displayName;
     }
     if (search) {
-        search.placeholder = `Search ${profile}`;
-        search.setAttribute('aria-label', `Search ${profile}`);
+        search.placeholder = `Search ${displayName}`;
+        search.setAttribute('aria-label', `Search ${displayName}`);
     }
     if (content) {
         content.classList.remove('fullwidth');
         content.innerHTML = `
-            <h1>${escapeHtml(profile)}</h1>
+            <h1>${escapeHtml(displayName)}</h1>
             <p>${escapeHtml(appMode.defaultSelectText)}</p>
         `;
     }
 
     createMarkdownTabApp({
-        key: `${appMode.apiRoot}-${profile}`,
-        label: profile,
+        key: `${appMode.apiRoot}-${profile.replace(/[^\w-]+/g, '-')}`,
+        label: displayName,
         emptyLabel: appMode.emptyLabel,
         searchStatusId: 'profilesSearchStatus',
         searchInputId: 'profilesSearchInput',
@@ -740,7 +864,7 @@ function renderNotesViewer(profile) {
 
 async function loadWidgetsConfig(profile) {
     try {
-        const res = await fetch(`/${appMode.rootDir}/${encodeURIComponent(profile)}/widgets.txt?nocache=${Date.now()}`);
+        const res = await fetch(`${profileFileUrl(profile, 'widgets.txt')}?nocache=${Date.now()}`);
         if (!res.ok) return [];
         const text = await res.text();
         const widgets = [];
@@ -793,7 +917,10 @@ async function startProfiles() {
         return;
     }
 
-    document.title = `${appMode.documentTitlePrefix} ${profile}`;
+    const displayName =
+        displayNameFromProfile(profile);
+
+    document.title = `${appMode.documentTitlePrefix} ${displayName}`;
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('view') === 'notes') {
@@ -803,7 +930,7 @@ async function startProfiles() {
 
     // Try loading item-specific dashboard config dynamically
     try {
-        const res = await fetch(`/${appMode.rootDir}/${encodeURIComponent(profile)}/dashboard.json?nocache=${Date.now()}`);
+        const res = await fetch(`${profileFileUrl(profile, 'dashboard.json')}?nocache=${Date.now()}`);
         if (res.ok) {
             const config = await res.json();
             const feeds = await loadWidgetsConfig(profile); // Array of parsed widget objects from widgets.txt

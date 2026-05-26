@@ -155,9 +155,12 @@ folder can have its own landing card, `dashboard.json`, `widgets.txt`,
 markdown notes, sidebar search, favorites, and document view. Unlike Profiles,
 Dashboards are not encrypted with `git-crypt` and should always be available.
 Do not put sensitive private notes in Dashboards.
-Dashboard names should preferably be one word so URLs, folder names, CSS
-selectors, and routing stay simple. If the user proposes a multi-word dashboard
-name, warn them and ask whether they want a one-word version before scaffolding.
+Dashboards are grouped under category folders, and `dashboards.html` should
+render category sections dynamically from those containing folder names. Do not
+hardcode dashboard categories. Dashboard names should preferably be one word so
+URLs, folder names, CSS selectors, and routing stay simple. If the user proposes
+a multi-word dashboard name, warn them and ask whether they want a one-word
+version before scaffolding.
 
 Profiles and Dashboards should use matching folder conventions. Each item
 folder should use `index.html` as the entry page, with `dashboard.json`,
@@ -168,9 +171,9 @@ files beside it:
 Website/profiles/Rocket/index.html
 Website/profiles/Rocket/Overview.md
 Website/profiles/Rocket/assets/Rocket-Steel.svg
-Website/dashboards/Windows/index.html
-Website/dashboards/Windows/Overview.md
-Website/dashboards/Windows/assets/windows.png
+Website/dashboards/OS/Windows/index.html
+Website/dashboards/OS/Windows/Overview.md
+Website/dashboards/OS/Windows/assets/windows.png
 ```
 
 Profile and dashboard page icons should live inside their respective profile or
