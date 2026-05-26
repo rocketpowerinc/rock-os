@@ -1,0 +1,3 @@
+# Optional dashboard widget overrides for the Android dashboard.
+# Keep public Android links and non-sensitive local resources here.
+

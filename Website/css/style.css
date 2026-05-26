@@ -1114,6 +1114,28 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
+.android-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/OS/Android/assets/android.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+.macos-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/OS/MacOS/assets/macos.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
 .pirating-dashboard-avatar-display {
 	width:80px;
 	height:80px;
@@ -1505,6 +1527,16 @@ color:#88ff88;
 
 .profiles-card[data-profile="Linux"] .profile-card-icon {
 	background-image:url('../dashboards/OS/Linux/assets/linux.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="Android"] .profile-card-icon {
+	background-image:url('../dashboards/OS/Android/assets/android.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="MacOS"] .profile-card-icon {
+	background-image:url('../dashboards/OS/MacOS/assets/macos.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
