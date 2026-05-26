@@ -69,7 +69,7 @@ pull_updates
 cd "$REPO_ROOT/Website"
 
 REPO="rocketpowerinc/rock-os"
-VERSION_FILE=".rock-os-wiki-version"
+VERSION_FILE=".rock-os-version"
 BINARY=""
 
 case "$(uname -s)" in
@@ -93,7 +93,7 @@ case "$(uname -m)" in
         ;;
 esac
 
-STABLE_ASSET="rock-os-wiki-$PLATFORM-$ARCH"
+STABLE_ASSET="rock-os-$PLATFORM-$ARCH"
 
 check_go
 
@@ -112,7 +112,7 @@ if [ -n "$latest_tag" ]; then
 
     if [ ! -f "./$STABLE_ASSET" ] || [ "$local_tag" != "$latest_tag" ]; then
         yellow "Downloading Rock-OS $latest_tag for $PLATFORM $ARCH..."
-        VERSIONED_ASSET="rock-os-wiki-$latest_tag-$PLATFORM-$ARCH"
+        VERSIONED_ASSET="rock-os-$latest_tag-$PLATFORM-$ARCH"
         downloaded=""
 
         for ASSET in "$STABLE_ASSET" "$VERSIONED_ASSET"; do
@@ -150,7 +150,7 @@ fi
 if [ -f "./$STABLE_ASSET" ]; then
     BINARY="./$STABLE_ASSET"
 else
-    for FILE in $(find . -maxdepth 1 -type f -name "rock-os-wiki-v*-$PLATFORM-$ARCH" | sort -r); do
+    for FILE in $(find . -maxdepth 1 -type f -name "rock-os-v*-$PLATFORM-$ARCH" | sort -r); do
         BINARY="$FILE"
         break
     done
@@ -171,6 +171,6 @@ else
         exit 1
     fi
     WEBSITE_DIR="$PWD"
-    cd "$REPO_ROOT/cmd/rock-os-wiki"
+    cd "$REPO_ROOT/cmd/rock-os"
     GOCACHE="$WEBSITE_DIR/.gocache" go run . --site-root "$WEBSITE_DIR" --host "$ROCK_OS_HOST"
 fi

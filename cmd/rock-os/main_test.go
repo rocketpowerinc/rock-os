@@ -128,7 +128,7 @@ func TestResolveSiteRootFindsWebsiteFromRepoRoot(t *testing.T) {
 func TestResolveSiteRootFindsWebsiteFromCommandFolder(t *testing.T) {
 	repoRoot := t.TempDir()
 	websiteRoot := filepath.Join(repoRoot, "Website")
-	commandRoot := filepath.Join(repoRoot, "cmd", "rock-os-wiki")
+	commandRoot := filepath.Join(repoRoot, "cmd", "rock-os")
 	createTestWebsiteRoot(t, websiteRoot)
 	if err := os.MkdirAll(commandRoot, 0o755); err != nil {
 		t.Fatal(err)

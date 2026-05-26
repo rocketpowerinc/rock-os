@@ -111,10 +111,10 @@ Markdown notes should be clear, practical, and a little human.
   `START-HERE/Mac/install-rock-os.sh`.
   They should create a `rock-os` terminal command and desktop launcher while using
   the matching platform `start-rock-os` launcher.
-- Go server source lives under `cmd/rock-os-wiki/`; website content lives under
+- Go server source lives under `cmd/rock-os/`; website content lives under
   `Website/`.
-- Run Go server tests from `cmd/rock-os-wiki` with `go test ./...`.
-- If `cmd/rock-os-wiki/main.go` or server behavior changes, remind the user that a new
+- Run Go server tests from `cmd/rock-os` with `go test ./...`.
+- If `cmd/rock-os/main.go` or server behavior changes, remind the user that a new
   release binary should be built and published.
 - Do not require Go when a release binary is available.
 

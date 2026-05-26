@@ -101,18 +101,18 @@ if (-not (Test-Path $releaseDir)) {
 $absoluteReleaseDir = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $releaseDir))
 
 $targets = @(
-    @{ os = "windows"; arch = "amd64"; suffix = ".exe"; name = "rock-os-wiki-windows-amd64.exe" },
-    @{ os = "windows"; arch = "arm64"; suffix = ".exe"; name = "rock-os-wiki-windows-arm64.exe" },
-    @{ os = "linux";   arch = "amd64"; suffix = "";     name = "rock-os-wiki-linux-amd64" },
-    @{ os = "linux";   arch = "arm64"; suffix = "";     name = "rock-os-wiki-linux-arm64" },
-    @{ os = "darwin";  arch = "amd64"; suffix = "";     name = "rock-os-wiki-macos-amd64" },
-    @{ os = "darwin";  arch = "arm64"; suffix = "";     name = "rock-os-wiki-macos-arm64" }
+    @{ os = "windows"; arch = "amd64"; suffix = ".exe"; name = "rock-os-windows-amd64.exe" },
+    @{ os = "windows"; arch = "arm64"; suffix = ".exe"; name = "rock-os-windows-arm64.exe" },
+    @{ os = "linux";   arch = "amd64"; suffix = "";     name = "rock-os-linux-amd64" },
+    @{ os = "linux";   arch = "arm64"; suffix = "";     name = "rock-os-linux-arm64" },
+    @{ os = "darwin";  arch = "amd64"; suffix = "";     name = "rock-os-macos-amd64" },
+    @{ os = "darwin";  arch = "arm64"; suffix = "";     name = "rock-os-macos-arm64" }
 )
 
 $checksums = @()
 
 # Move into module directory to compile with go.mod present
-Push-Location "cmd/rock-os-wiki"
+Push-Location "cmd/rock-os"
 
 foreach ($target in $targets) {
     $os = $target.os
@@ -144,7 +144,7 @@ foreach ($target in $targets) {
 Pop-Location
 
 # Write checksums file
-$checksumFile = Join-Path $releaseDir "rock-os-wiki-$versionName-checksums.txt"
+$checksumFile = Join-Path $releaseDir "rock-os-$versionName-checksums.txt"
 $checksums | Out-File -FilePath $checksumFile -Encoding ascii
 
 # Reset environment variables to default

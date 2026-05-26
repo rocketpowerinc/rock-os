@@ -82,7 +82,7 @@ Rules:
 9. Run sanity checks:
    - `node --check Website\js\profiles.js` if JS changed.
    - `git diff --check`.
-   - If Go server code changes, run `go test ./...` from `cmd/rock-os-wiki` and remind the user a new release binary is needed.
+   - If Go server code changes, run `go test ./...` from `cmd/rock-os` and remind the user a new release binary is needed.
 
 ## Dashboard HTML Template Notes
 

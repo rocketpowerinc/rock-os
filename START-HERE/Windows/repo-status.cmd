@@ -36,17 +36,17 @@ if not defined DIRTY call :ok "Working tree clean."
 
 call :section "Website"
 set "BINARY_FOUND="
-for %%B in (Website\rock-os-wiki-*) do set "BINARY_FOUND=1"
+for %%B in (Website\rock-os-*) do set "BINARY_FOUND=1"
 if defined BINARY_FOUND (
     call :ok "Release binary present. Site can run without Go installed."
 ) else (
     call :warn "No release binary found in Website folder."
 )
 
-if exist "cmd\rock-os-wiki\main.go" (
+if exist "cmd\rock-os\main.go" (
     call :ok "Go server source present for source fallback."
 ) else (
-    call :bad "cmd\rock-os-wiki\main.go missing."
+    call :bad "cmd\rock-os\main.go missing."
 )
 
 where go >nul 2>nul

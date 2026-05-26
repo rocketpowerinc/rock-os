@@ -70,9 +70,9 @@ Website/dotfiles-index.json
 Website/bookmarks-index.json
 Website/profiles-index.json
 Website/dashboards-index.json
-Website/.rock-os-wiki-version
+Website/.rock-os-version
 Website/*.download
-Website/rock-os-wiki-*
+Website/rock-os-*
 Website/.gocache/
 Website/.codex-tmp/
 Website/static-web-server/

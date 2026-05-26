@@ -486,7 +486,7 @@ function renderWikiError(title, message, details = []) {
             <h1>${escapeHtml(title)}</h1>
             <p>${escapeHtml(message)}</p>
             ${detailItems ? `<ul>${detailItems}</ul>` : ''}
-            <pre><code>cd cmd/rock-os-wiki
+            <pre><code>cd cmd/rock-os
 go run .</code></pre>
         </div>
     `;

@@ -8,7 +8,7 @@ set -eu
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 WEBSITE_DIR="$REPO_ROOT/Website"
-SOURCE_DIR="$REPO_ROOT/cmd/rock-os-wiki"
+SOURCE_DIR="$REPO_ROOT/cmd/rock-os"
 
 cd "$WEBSITE_DIR"
 
@@ -27,7 +27,7 @@ case "${1:-}" in
         ;;
 esac
 
-DEV_BINARY="./rock-os-wiki-dev"
+DEV_BINARY="./rock-os-dev"
 
 echo "Building Rock-OS from Go source..."
 cd "$SOURCE_DIR"

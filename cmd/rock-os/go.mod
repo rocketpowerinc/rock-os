@@ -1,4 +1,4 @@
-module rock-os-wiki
+module rock-os
 
 go 1.22
 

@@ -111,20 +111,20 @@ copy and prints a warning.
 ## 5.0 Release Binaries
 
 Prebuilt binaries are available on the
-[Rock-OS v1.0 release page](https://github.com/rocketpowerinc/rock-os/releases/tag/v1.0).
+[Rock-OS releases page](https://github.com/rocketpowerinc/rock-os/releases).
 
 Choose the binary for your system:
 
 | System | Binary |
 | --- | --- |
-| Windows 64-bit Intel/AMD | `rock-os-wiki-windows-amd64.exe` or `rock-os-wiki-v1.0-windows-amd64.exe` |
-| Windows ARM64 | `rock-os-wiki-windows-arm64.exe` or `rock-os-wiki-v1.0-windows-arm64.exe` |
-| Linux 64-bit Intel/AMD | `rock-os-wiki-linux-amd64` or `rock-os-wiki-v1.0-linux-amd64` |
-| Linux ARM64 | `rock-os-wiki-linux-arm64` or `rock-os-wiki-v1.0-linux-arm64` |
-| macOS Intel | `rock-os-wiki-macos-amd64` or `rock-os-wiki-v1.0-macos-amd64` |
-| macOS Apple Silicon | `rock-os-wiki-macos-arm64` or `rock-os-wiki-v1.0-macos-arm64` |
+| Windows 64-bit Intel/AMD | `rock-os-windows-amd64.exe` or `rock-os-vX.Y-windows-amd64.exe` |
+| Windows ARM64 | `rock-os-windows-arm64.exe` or `rock-os-vX.Y-windows-arm64.exe` |
+| Linux 64-bit Intel/AMD | `rock-os-linux-amd64` or `rock-os-vX.Y-linux-amd64` |
+| Linux ARM64 | `rock-os-linux-arm64` or `rock-os-vX.Y-linux-arm64` |
+| macOS Intel | `rock-os-macos-amd64` or `rock-os-vX.Y-macos-amd64` |
+| macOS Apple Silicon | `rock-os-macos-arm64` or `rock-os-vX.Y-macos-arm64` |
 
-The release also includes `rock-os-wiki-v1.0-checksums.txt` for verifying
+The release also includes `rock-os-vX.Y-checksums.txt` for verifying
 downloads.
 
 ## Dependencies
@@ -132,10 +132,10 @@ downloads.
 You can run Rock OS from a release binary without Go installed. Go is only
 needed if you want to run from source or if the start script cannot find a
 matching release binary and falls back to the Go source under
-`cmd/rock-os-wiki`.
+`cmd/rock-os`.
 
 The Go source uses `goldmark` for local server-side markdown rendering. It is
-managed through `cmd/rock-os-wiki/go.mod` and is included automatically when you
+managed through `cmd/rock-os/go.mod` and is included automatically when you
 build or run from source.
 
 `git-crypt` is only needed for unlocking, editing, or re-locking private
@@ -305,7 +305,7 @@ source ~/.bashrc
 ## Project Layout
 
 ```text
-cmd/rock-os-wiki/      Go server source and tests
+cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               HTML, CSS, JS, assets, and media
 Website/menu/wiki/     Public wiki markdown
@@ -324,7 +324,7 @@ For a plain-language guide to the launcher scripts, read
 Run Go tests from the server module:
 
 ```bash
-cd cmd/rock-os-wiki
+cd cmd/rock-os
 go test ./...
 ```
 
@@ -337,23 +337,23 @@ extracting the project. The server serves that folder as the site root.
 
 ```powershell
 cd Website
-.\rock-os-wiki-windows-amd64.exe
+.\rock-os-windows-amd64.exe
 ```
 
 ### Linux
 
 ```bash
 cd Website
-chmod +x ./rock-os-wiki-linux-amd64
-./rock-os-wiki-linux-amd64
+chmod +x ./rock-os-linux-amd64
+./rock-os-linux-amd64
 ```
 
 ### macOS
 
 ```bash
 cd Website
-chmod +x ./rock-os-wiki-macos-arm64
-./rock-os-wiki-macos-arm64
+chmod +x ./rock-os-macos-arm64
+./rock-os-macos-arm64
 ```
 
 ## Running From Source
@@ -361,7 +361,7 @@ chmod +x ./rock-os-wiki-macos-arm64
 Install Go from [go.dev/dl](https://go.dev/dl/), then run:
 
 ```bash
-cd cmd/rock-os-wiki
+cd cmd/rock-os
 go run .
 ```
 
@@ -483,14 +483,14 @@ launch, while Go reports the actual server status, private markdown state,
 folders, host mode, and request activity.
 
 After the update check, the scripts start a stable latest-style binary such as
-`rock-os-wiki-windows-amd64.exe`, `rock-os-wiki-windows-arm64.exe`,
-`rock-os-wiki-linux-amd64`, `rock-os-wiki-linux-arm64`,
-`rock-os-wiki-macos-amd64`, or `rock-os-wiki-macos-arm64`. If that is not
+`rock-os-windows-amd64.exe`, `rock-os-windows-arm64.exe`,
+`rock-os-linux-amd64`, `rock-os-linux-arm64`,
+`rock-os-macos-amd64`, or `rock-os-macos-arm64`. If that is not
 present, they try a versioned binary such as
-`rock-os-wiki-v1.0-windows-amd64.exe`. If no matching binary is present, they
-fall back to the Go source under `cmd/rock-os-wiki`.
+`rock-os-vX.Y-windows-amd64.exe`. If no matching binary is present, they
+fall back to the Go source under `cmd/rock-os`.
 
-When `cmd/rock-os-wiki/main.go` changes, rebuild and publish a new release
+When `cmd/rock-os/main.go` changes, rebuild and publish a new release
 binary. The server binary is what carries LAN binding, port handling, markdown
 rendering, markdown indexing, and other server-side behavior. Markdown, CSS,
 HTML, JavaScript, and asset-only changes do not require a new Go binary.
@@ -536,7 +536,7 @@ on the same network can open.
 ## Server Options
 
 ```bash
-cd cmd/rock-os-wiki
+cd cmd/rock-os
 go run . --host local
 go run . --host 127.0.0.1
 go run . --host 0.0.0.0

@@ -8,7 +8,7 @@ rem Application Control policies block the hidden executable created by go run.
 
 for %%I in ("%~dp0..\..") do set "ROCK_OS_ROOT=%%~fI"
 set "ROCK_OS_WEBSITE=%ROCK_OS_ROOT%\Website"
-set "ROCK_OS_SOURCE=%ROCK_OS_ROOT%\cmd\rock-os-wiki"
+set "ROCK_OS_SOURCE=%ROCK_OS_ROOT%\cmd\rock-os"
 
 cd /d "%ROCK_OS_WEBSITE%"
 
@@ -20,7 +20,7 @@ if /I "%~1"=="0.0.0.0" set "ROCK_OS_HOST=0.0.0.0"
 if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
 
 set "GOCACHE=%CD%\.gocache"
-set "DEV_BINARY=rock-os-wiki-dev.exe"
+set "DEV_BINARY=rock-os-dev.exe"
 echo Building Rock-OS from Go source...
 pushd "%ROCK_OS_SOURCE%"
 go build -o "%ROCK_OS_WEBSITE%\%DEV_BINARY%" .

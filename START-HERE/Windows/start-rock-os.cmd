@@ -38,7 +38,7 @@ call :green "Rock-OS repo is up to date."
 exit /b 0
 
 :check_release_binary
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $repo=$env:ROCK_OS_REPO; $stableAsset=$env:ROCK_OS_STABLE_ASSET; $versionFile=$env:ROCK_OS_VERSION_FILE; $arch=$env:ROCK_OS_ARCH; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $release=Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/releases/latest' -f $repo) -Headers @{'User-Agent'='rock-os-start-script'}; $tag=$release.tag_name; $versionedAsset=('rock-os-wiki-{0}-windows-{1}.exe' -f $tag,$arch); $local=''; if (Test-Path $versionFile) { $local=(Get-Content $versionFile -Raw).Trim() }; if ((-not (Test-Path $stableAsset)) -or ($local -ne $tag)) { Write-Host ('Downloading Rock-OS {0} for Windows {1}...' -f $tag,$arch) -ForegroundColor Yellow; $downloaded=$false; foreach ($asset in @($stableAsset,$versionedAsset)) { $tempFile=('{0}.download' -f $asset); if (Test-Path $tempFile) { Remove-Item $tempFile -Force }; try { Invoke-WebRequest -Uri ('https://github.com/{0}/releases/latest/download/{1}' -f $repo,$asset) -OutFile $tempFile -Headers @{'User-Agent'='rock-os-start-script'}; if ((Test-Path $tempFile) -and ((Get-Item $tempFile).Length -gt 0)) { Move-Item $tempFile $stableAsset -Force; Set-Content -Path $versionFile -Value $tag -NoNewline; Write-Host ('Downloaded Rock-OS {0}.' -f $tag) -ForegroundColor Green; $downloaded=$true; break } } catch { if (Test-Path $tempFile) { Remove-Item $tempFile -Force } } }; if (-not $downloaded) { exit 1 } } else { Write-Host ('Rock-OS binary is current ({0}).' -f $tag) -ForegroundColor Green }" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $repo=$env:ROCK_OS_REPO; $stableAsset=$env:ROCK_OS_STABLE_ASSET; $versionFile=$env:ROCK_OS_VERSION_FILE; $arch=$env:ROCK_OS_ARCH; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $release=Invoke-RestMethod -Uri ('https://api.github.com/repos/{0}/releases/latest' -f $repo) -Headers @{'User-Agent'='rock-os-start-script'}; $tag=$release.tag_name; $versionedAsset=('rock-os-{0}-windows-{1}.exe' -f $tag,$arch); $local=''; if (Test-Path $versionFile) { $local=(Get-Content $versionFile -Raw).Trim() }; if ((-not (Test-Path $stableAsset)) -or ($local -ne $tag)) { Write-Host ('Downloading Rock-OS {0} for Windows {1}...' -f $tag,$arch) -ForegroundColor Yellow; $downloaded=$false; foreach ($asset in @($stableAsset,$versionedAsset)) { $tempFile=('{0}.download' -f $asset); if (Test-Path $tempFile) { Remove-Item $tempFile -Force }; try { Invoke-WebRequest -Uri ('https://github.com/{0}/releases/latest/download/{1}' -f $repo,$asset) -OutFile $tempFile -Headers @{'User-Agent'='rock-os-start-script'}; if ((Test-Path $tempFile) -and ((Get-Item $tempFile).Length -gt 0)) { Move-Item $tempFile $stableAsset -Force; Set-Content -Path $versionFile -Value $tag -NoNewline; Write-Host ('Downloaded Rock-OS {0}.' -f $tag) -ForegroundColor Green; $downloaded=$true; break } } catch { if (Test-Path $tempFile) { Remove-Item $tempFile -Force } } }; if (-not $downloaded) { exit 1 } } else { Write-Host ('Rock-OS binary is current ({0}).' -f $tag) -ForegroundColor Green }" 2>nul
 exit /b %ERRORLEVEL%
 
 :check_go
@@ -87,7 +87,7 @@ if errorlevel 1 (
 )
 
 set "ROCK_OS_REPO=rocketpowerinc/rock-os"
-set "ROCK_OS_VERSION_FILE=.rock-os-wiki-version"
+set "ROCK_OS_VERSION_FILE=.rock-os-version"
 set "ROCK_OS_BINARY="
 
 set "ROCK_OS_ARCH=%PROCESSOR_ARCHITEW6432%"
@@ -98,7 +98,7 @@ if /I "%ROCK_OS_ARCH%"=="ARM64" (
     set "ROCK_OS_ARCH=amd64"
 )
 
-set "ROCK_OS_STABLE_ASSET=rock-os-wiki-windows-%ROCK_OS_ARCH%.exe"
+set "ROCK_OS_STABLE_ASSET=rock-os-windows-%ROCK_OS_ARCH%.exe"
 
 call :check_go
 call :check_release_binary
@@ -109,7 +109,7 @@ if errorlevel 1 (
 if exist ".\%ROCK_OS_STABLE_ASSET%" (
     set "ROCK_OS_BINARY=.\%ROCK_OS_STABLE_ASSET%"
 ) else (
-    for /f "delims=" %%F in ('dir /b /o:-n ".\rock-os-wiki-v*-windows-%ROCK_OS_ARCH%.exe" 2^>nul') do (
+    for /f "delims=" %%F in ('dir /b /o:-n ".\rock-os-v*-windows-%ROCK_OS_ARCH%.exe" 2^>nul') do (
         if not defined ROCK_OS_BINARY (
             set "ROCK_OS_BINARY=.\%%F"
         )
@@ -130,7 +130,7 @@ if defined ROCK_OS_BINARY (
     )
     set "GOCACHE=%CD%\.gocache"
     set "ROCK_OS_WEBSITE=%CD%"
-    pushd "%ROCK_OS_ROOT%\cmd\rock-os-wiki"
+    pushd "%ROCK_OS_ROOT%\cmd\rock-os"
     go run . --site-root "%ROCK_OS_WEBSITE%" --host "%ROCK_OS_HOST%"
     set "ROCK_OS_EXIT=%ERRORLEVEL%"
     popd

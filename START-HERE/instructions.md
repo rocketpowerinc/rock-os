@@ -92,7 +92,7 @@ binaries and run the current Go source.
 
 What it does:
 
-- Builds the Go server from `cmd/rock-os-wiki/`.
+- Builds the Go server from `cmd/rock-os/`.
 - Places a temporary dev binary in `Website/`.
 - Starts that dev binary against the real `Website/` folder.
 

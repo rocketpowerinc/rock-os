@@ -70,13 +70,13 @@ else
 fi
 
 section "Website"
-if find Website -maxdepth 1 -type f -name 'rock-os-wiki-*' | grep -q .; then
+if find Website -maxdepth 1 -type f -name 'rock-os-*' | grep -q .; then
     ok "Release binary present. Site can run without Go installed."
 else
     warn "No release binary found in Website folder."
 fi
 
-[ -f "cmd/rock-os-wiki/main.go" ] && ok "Go server source present for source fallback." || bad "cmd/rock-os-wiki/main.go missing."
+[ -f "cmd/rock-os/main.go" ] && ok "Go server source present for source fallback." || bad "cmd/rock-os/main.go missing."
 
 if command -v go >/dev/null 2>&1; then
     ok "$(go version)"
