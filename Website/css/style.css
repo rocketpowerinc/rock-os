@@ -1117,7 +1117,18 @@ color:#88ff88;
 .android-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/OS/Android/assets/android.png');
+	background-image:url('../dashboards/Mobile/Android/assets/android.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+.ios-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/Mobile/iOS/assets/ios.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1531,7 +1542,12 @@ color:#88ff88;
 }
 
 .profiles-card[data-profile="Android"] .profile-card-icon {
-	background-image:url('../dashboards/OS/Android/assets/android.png');
+	background-image:url('../dashboards/Mobile/Android/assets/android.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="iOS"] .profile-card-icon {
+	background-image:url('../dashboards/Mobile/iOS/assets/ios.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 

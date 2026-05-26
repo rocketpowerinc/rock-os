@@ -1,0 +1,38 @@
+{
+  "title": "Android Command Center",
+  "subtitle": "Mobile setup notes, offline apps, local sync, backups, and recovery workflows.",
+  "avatarClass": "android-dashboard-avatar-display",
+  "widgets": [
+    {
+      "type": "bookmarks",
+      "title": "Android Launch Points",
+      "badge": "Mobile",
+      "layout": "horizontal",
+      "size": "medium",
+      "card_size": "medium",
+      "link_size": "medium",
+      "bookmarks": [
+        {
+          "section": "Android",
+          "items": [
+            {
+              "name": "Scripts",
+              "desc": "Open local scripts for platform tooling and maintenance.",
+              "url": "/scripts.html"
+            },
+            {
+              "name": "Android Notes",
+              "desc": "View the dashboard markdown tree for Android-specific docs.",
+              "url": "/dashboards/Mobile/Android/?view=notes"
+            },
+            {
+              "name": "Wiki",
+              "desc": "Jump back into the main local knowledge base.",
+              "url": "/wiki.html"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

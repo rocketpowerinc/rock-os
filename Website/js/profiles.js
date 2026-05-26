@@ -283,6 +283,18 @@ function uniqueProfileItems(files) {
                 return categoryCompare;
             }
 
+            if (isDashboardsMode && a.category.toLowerCase() === 'os') {
+                const osOrder = ['windows', 'macos', 'linux'];
+                const aIndex = osOrder.indexOf(a.name.toLowerCase());
+                const bIndex = osOrder.indexOf(b.name.toLowerCase());
+                const aRank = aIndex === -1 ? osOrder.length : aIndex;
+                const bRank = bIndex === -1 ? osOrder.length : bIndex;
+
+                if (aRank !== bRank) {
+                    return aRank - bRank;
+                }
+            }
+
             if (isDashboardsMode && a.category.toLowerCase() === 'homelab') {
                 const aIsSelfHosting = a.name.toLowerCase() === 'selfhosting';
                 const bIsSelfHosting = b.name.toLowerCase() === 'selfhosting';

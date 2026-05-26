@@ -1,11 +1,11 @@
 {
-  "title": "Android Command Center",
-  "subtitle": "Mobile setup notes, offline apps, local sync, backups, and recovery workflows.",
-  "avatarClass": "android-dashboard-avatar-display",
+  "title": "iOS Command Center",
+  "subtitle": "iPhone and iPad setup notes, offline apps, local sync, backups, and recovery workflows.",
+  "avatarClass": "ios-dashboard-avatar-display",
   "widgets": [
     {
       "type": "bookmarks",
-      "title": "Android Launch Points",
+      "title": "iOS Launch Points",
       "badge": "Mobile",
       "layout": "horizontal",
       "size": "medium",
@@ -13,7 +13,7 @@
       "link_size": "medium",
       "bookmarks": [
         {
-          "section": "Android",
+          "section": "iOS",
           "items": [
             {
               "name": "Scripts",
@@ -21,9 +21,9 @@
               "url": "/scripts.html"
             },
             {
-              "name": "Android Notes",
-              "desc": "View the dashboard markdown tree for Android-specific docs.",
-              "url": "/dashboards/OS/Android/?view=notes"
+              "name": "iOS Notes",
+              "desc": "View the dashboard markdown tree for iOS-specific docs.",
+              "url": "/dashboards/Mobile/iOS/?view=notes"
             },
             {
               "name": "Wiki",
