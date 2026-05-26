@@ -64,6 +64,21 @@ check_go() {
     fi
 }
 
+read_version_file() {
+    if [ -f "$VERSION_FILE" ]; then
+        sed -n '/^[[:space:]]*#/d; /^[[:space:]]*$/d; s/^[[:space:]]*//; s/[[:space:]]*$//; p; q' "$VERSION_FILE"
+    fi
+}
+
+write_version_file() {
+    {
+        printf '%s\n' "$1"
+        printf '%s\n' "# Local Rock-OS release marker used by START-HERE launchers."
+        printf '%s\n' "# First non-comment line is the downloaded release tag."
+        printf '%s\n' "# If this tag differs from GitHub's latest release, the launcher downloads a fresh binary."
+    } > "$VERSION_FILE"
+}
+
 pull_updates
 
 cd "$REPO_ROOT/Website"
@@ -107,7 +122,7 @@ fi
 if [ -n "$latest_tag" ]; then
     local_tag=""
     if [ -f "$VERSION_FILE" ]; then
-        local_tag="$(cat "$VERSION_FILE")"
+        local_tag="$(read_version_file)"
     fi
 
     if [ ! -f "./$STABLE_ASSET" ] || [ "$local_tag" != "$latest_tag" ]; then
@@ -128,7 +143,7 @@ if [ -n "$latest_tag" ]; then
             if [ -s "$temp_asset" ]; then
                 mv "$temp_asset" "./$STABLE_ASSET"
                 chmod +x "./$STABLE_ASSET"
-                printf '%s' "$latest_tag" > "$VERSION_FILE"
+                write_version_file "$latest_tag"
                 downloaded="true"
                 green "Downloaded Rock-OS $latest_tag."
                 break
