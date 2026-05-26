@@ -3463,7 +3463,7 @@ func fetchLiveRedditFeed(subreddit string) ([]feedItem, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+	req.Header.Set("User-Agent", "Rock-OS/1.0.0 (by rocketpowerinc)")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -3666,7 +3666,7 @@ func fetchSingleYoutubeFeed(urlStr string) ([]feedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+	req.Header.Set("User-Agent", "Rock-OS/1.0.0 (by rocketpowerinc)")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -3847,7 +3847,7 @@ func fetchLivePodcastFeed(feedURL string) ([]feedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+	req.Header.Set("User-Agent", "Rock-OS/1.0.0 (by rocketpowerinc)")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -4184,7 +4184,7 @@ func fetchLiveNewsFeed(feedURL string, limit int) ([]feedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Rock-OS-Wiki/1.0.0 (by rocketpowerinc)")
+	req.Header.Set("User-Agent", "Rock-OS/1.0.0 (by rocketpowerinc)")
 
 	resp, err := client.Do(req)
 	if err != nil {
