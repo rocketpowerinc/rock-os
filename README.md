@@ -9,6 +9,18 @@ to the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
+## License
+
+Rock OS uses a split license:
+
+- Code: GNU Affero General Public License v3.0
+- Documentation and markdown content: Creative Commons
+  Attribution-NonCommercial-ShareAlike 4.0 International
+- Rock-OS name, logos, theme rocks, icons, slogans, and branding assets: all
+  rights reserved unless otherwise stated
+
+See [LICENSE.md](LICENSE.md) for the full project license notice.
+
 ## Connection Modes
 
 Rock OS starts in **Local Mode** by default. In this mode the server binds to
