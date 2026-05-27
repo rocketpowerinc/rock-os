@@ -180,6 +180,34 @@ Profile and dashboard page icons should live inside their respective profile or
 dashboard folder. Shared widget/feed fallback icons live under
 `Website/assets/widget-icons/`.
 
+## Dashboard Conventions
+
+- Dashboards live under `Website/dashboards/<Category>/<DashboardName>/`.
+- Dashboard names should preferably be one word. If the user gives exact casing
+  or punctuation, preserve it and update all path-sensitive references.
+- Dashboard-specific assets belong inside that dashboard folder under `assets/`.
+  Do not place dashboard icons in global `Website/assets/`.
+- `dashboards.html` should order dashboard categories with `OS` first,
+  `Mobile` second, and all remaining categories alphabetically.
+- In the `Homelab` category, keep `SelfHosting` first and sort the remaining
+  dashboards alphabetically.
+- After renaming dashboard folders, update:
+  - dashboard `index.html`
+  - `dashboard.json`
+  - `widgets.txt`
+  - CSS avatar class paths
+  - landing card icon selectors
+  - internal dashboard links
+
+## Version Marker
+
+- `Website/.rock-os-version` is local ignored state used by launchers to detect
+  whether the downloaded release binary matches GitHub's latest release.
+- The first non-comment line is the release tag.
+- Comments in this file are allowed; launchers should ignore empty lines and
+  lines starting with `#`.
+- Do not track this file in Git.
+
 ## Development Habits
 
 - Use existing project patterns before inventing new ones.
