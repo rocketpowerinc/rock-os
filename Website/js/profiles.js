@@ -256,6 +256,21 @@ function profileFileUrl(profile, fileName) {
 function uniqueProfileItems(files) {
     const seen = new Map();
 
+    const dashboardCategoryRank = category => {
+        if (!isDashboardsMode) {
+            return 0;
+        }
+
+        const categoryOrder =
+            ['os', 'mobile'];
+        const index =
+            categoryOrder.indexOf(String(category || '').toLowerCase());
+
+        return index === -1
+            ? categoryOrder.length
+            : index;
+    };
+
     files
         .map(file => profileItemFromPath(file.path || file))
         .filter(Boolean)
@@ -267,13 +282,11 @@ function uniqueProfileItems(files) {
 
     return Array.from(seen.values())
         .sort((a, b) => {
-            if (isDashboardsMode) {
-                const aIsOS = a.category.toLowerCase() === 'os';
-                const bIsOS = b.category.toLowerCase() === 'os';
+            const categoryRankCompare =
+                dashboardCategoryRank(a.category) - dashboardCategoryRank(b.category);
 
-                if (aIsOS !== bIsOS) {
-                    return aIsOS ? -1 : 1;
-                }
+            if (categoryRankCompare !== 0) {
+                return categoryRankCompare;
             }
 
             const categoryCompare =

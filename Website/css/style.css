@@ -1169,6 +1169,17 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
+.artificial-intelligence-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
 .emulation-dashboard-avatar-display {
 	width:80px;
 	height:80px;
@@ -1563,6 +1574,11 @@ color:#88ff88;
 
 .profiles-card[data-profile="SelfHosting"] .profile-card-icon {
 	background-image:url('../dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="Artificial-Intelligence"] .profile-card-icon {
+	background-image:url('../dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
