@@ -129,6 +129,9 @@ if defined ROCK_OS_BINARY (
         exit /b 1
     )
     set "GOCACHE=%CD%\.gocache"
+    set "GOTMPDIR=%CD%\.gotmp"
+    if not exist "%GOCACHE%" mkdir "%GOCACHE%" >nul 2>nul
+    if not exist "%GOTMPDIR%" mkdir "%GOTMPDIR%" >nul 2>nul
     set "ROCK_OS_WEBSITE=%CD%"
     pushd "%ROCK_OS_ROOT%\cmd\rock-os"
     go run . --site-root "%ROCK_OS_WEBSITE%" --host "%ROCK_OS_HOST%"
