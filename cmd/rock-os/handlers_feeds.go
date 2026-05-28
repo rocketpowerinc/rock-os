@@ -190,6 +190,21 @@ func validatePublicFetchAddr(addr netip.Addr, host string) error {
 	return nil
 }
 
+func fetchFeedItemsOnce(key string, fetch func() ([]feedItem, error)) ([]feedItem, error) {
+	value, err := defaultApp.Flights.Feeds.Do(key, func() (any, error) {
+		return fetch()
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	items, ok := value.([]feedItem)
+	if !ok {
+		return nil, fmt.Errorf("unexpected feed result type")
+	}
+	return items, nil
+}
+
 type redditChild struct {
 	Data struct {
 		Title      string  `json:"title"`
@@ -263,7 +278,9 @@ func feedRedditHandler(siteRoot string) http.HandlerFunc {
 		cachePath := filepath.Join(cacheDir, fmt.Sprintf("reddit_%s.json", subreddit))
 
 		// Try to fetch live feed
-		items, err := fetchLiveRedditFeed(subreddit)
+		items, err := fetchFeedItemsOnce("reddit:"+subreddit, func() ([]feedItem, error) {
+			return fetchLiveRedditFeed(subreddit)
+		})
 		if err == nil {
 			// Save to cache
 			_ = os.MkdirAll(cacheDir, 0755)
@@ -410,7 +427,9 @@ func feedYoutubeHandler(siteRoot string) http.HandlerFunc {
 		cachePath := filepath.Join(cacheDir, cacheFilename)
 
 		// Try to fetch live feed
-		items, err := fetchCombinedYoutubeFeed(channelIDs, playlistIDs, limit)
+		items, err := fetchFeedItemsOnce("youtube:"+cacheFilename, func() ([]feedItem, error) {
+			return fetchCombinedYoutubeFeed(channelIDs, playlistIDs, limit)
+		})
 		if err == nil {
 			// Save to cache
 			_ = os.MkdirAll(cacheDir, 0755)
@@ -664,7 +683,9 @@ func feedPodcastHandler(siteRoot string) http.HandlerFunc {
 		cachePath := filepath.Join(cacheDir, cacheFilename)
 
 		// Try to fetch live feed
-		items, err := fetchLivePodcastFeed(feedURL)
+		items, err := fetchFeedItemsOnce("podcast:"+cacheFilename, func() ([]feedItem, error) {
+			return fetchLivePodcastFeed(feedURL)
+		})
 		if err == nil {
 			// Save to cache
 			_ = os.MkdirAll(cacheDir, 0755)
@@ -978,7 +999,9 @@ func fetchNewsFeedWithCache(feedURL string, siteRoot string, limit int) ([]feedI
 	cachePath := filepath.Join(cacheDir, cacheFilename)
 
 	// Try to fetch live feed
-	items, err := fetchLiveNewsFeed(resolvedFeedURL, limit)
+	items, err := fetchFeedItemsOnce("news:"+cacheFilename, func() ([]feedItem, error) {
+		return fetchLiveNewsFeed(resolvedFeedURL, limit)
+	})
 	if err == nil {
 		// Save to cache
 		_ = os.MkdirAll(cacheDir, 0755)
@@ -1272,20 +1295,20 @@ func feedSpotifyHandler(siteRoot string) http.HandlerFunc {
 		cachePath := filepath.Join(cacheDir, cacheFilename)
 
 		// Try to fetch live
-		items := []feedItem{}
-		var fetchErr error
-
-		for i, spotifyURL := range urls {
-			if i >= limit {
-				break
+		items, fetchErr := fetchFeedItemsOnce("spotify:"+cacheFilename, func() ([]feedItem, error) {
+			items := []feedItem{}
+			for i, spotifyURL := range urls {
+				if i >= limit {
+					break
+				}
+				item, err := fetchSpotifyOEmbed(spotifyURL)
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, item)
 			}
-			item, err := fetchSpotifyOEmbed(spotifyURL)
-			if err != nil {
-				fetchErr = err
-				break
-			}
-			items = append(items, item)
-		}
+			return items, nil
+		})
 
 		if fetchErr == nil && len(items) > 0 {
 			// Save to cache

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -89,6 +90,79 @@ func TestAPIRateLimiterRejectsBurstFlood(t *testing.T) {
 
 	if limiter.allow(request) {
 		t.Fatal("request beyond burst limit was allowed")
+	}
+}
+
+func TestMarkdownSearchIndexRefreshesChangedFiles(t *testing.T) {
+	siteRoot := t.TempDir()
+	wikiRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(wikiRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	docPath := filepath.Join(wikiRoot, "Search.md")
+	if err := os.WriteFile(docPath, []byte("# Search\n\nfirst needle\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	files := []markdownIndexEntry{{Path: markdownDir + "/Search.md"}}
+	index := newMarkdownSearchIndex()
+
+	results, err := searchMarkdownIndex(siteRoot, "needle", files, index)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected initial search match, got %d", len(results))
+	}
+
+	time.Sleep(2 * time.Millisecond)
+	if err := os.WriteFile(docPath, []byte("# Search\n\nsecond haystack\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	results, err = searchMarkdownIndex(siteRoot, "needle", files, index)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("expected changed file to leave no matches, got %d", len(results))
+	}
+}
+
+func TestRequestFlightGroupDeduplicatesConcurrentCalls(t *testing.T) {
+	group := newRequestFlightGroup()
+	start := make(chan struct{})
+	var calls int
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			value, err := group.Do("feed", func() (any, error) {
+				mu.Lock()
+				calls++
+				mu.Unlock()
+				time.Sleep(20 * time.Millisecond)
+				return "ok", nil
+			})
+			if err != nil {
+				t.Error(err)
+			}
+			if value != "ok" {
+				t.Errorf("unexpected value: %v", value)
+			}
+		}()
+	}
+
+	close(start)
+	wg.Wait()
+
+	if calls != 1 {
+		t.Fatalf("expected one underlying call, got %d", calls)
 	}
 }
 

@@ -137,7 +137,12 @@ type markdownIndexCache struct {
 }
 
 type App struct {
-	Caches *CacheManager
+	Caches  *CacheManager
+	Flights *FlightManager
+}
+
+type FlightManager struct {
+	Feeds *requestFlightGroup
 }
 
 type CacheManager struct {
@@ -148,6 +153,17 @@ type CacheManager struct {
 	Bookmarks   *markdownIndexCache
 	Profiles    *markdownIndexCache
 	Dashboards  *markdownIndexCache
+	Search      *SearchCacheManager
+}
+
+type SearchCacheManager struct {
+	Markdown    *markdownSearchIndex
+	Guides      *markdownSearchIndex
+	Cheatsheets *markdownSearchIndex
+	Dotfiles    *markdownSearchIndex
+	Bookmarks   *markdownSearchIndex
+	Profiles    *markdownSearchIndex
+	Dashboards  *markdownSearchIndex
 }
 
 func newApp() *App {
@@ -160,6 +176,18 @@ func newApp() *App {
 			Bookmarks:   newMarkdownIndexCache(),
 			Profiles:    newMarkdownIndexCache(),
 			Dashboards:  newMarkdownIndexCache(),
+			Search: &SearchCacheManager{
+				Markdown:    newMarkdownSearchIndex(),
+				Guides:      newMarkdownSearchIndex(),
+				Cheatsheets: newMarkdownSearchIndex(),
+				Dotfiles:    newMarkdownSearchIndex(),
+				Bookmarks:   newMarkdownSearchIndex(),
+				Profiles:    newMarkdownSearchIndex(),
+				Dashboards:  newMarkdownSearchIndex(),
+			},
+		},
+		Flights: &FlightManager{
+			Feeds: newRequestFlightGroup(),
 		},
 	}
 }
