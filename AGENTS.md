@@ -40,7 +40,11 @@ Never break these without an explicit, specific request from the user:
 - Treat mobile access as important — phones and tablets may be local clients.
 - Support Windows, Linux, and macOS wherever practical.
 - Avoid unnecessary dependencies.
-- Before finishing, run a relevant sanity check such as `git diff --check`.
+- All text files use LF line endings, enforced by `.gitattributes`
+  (`* text=auto eol=lf`; git-crypt content is exempt). Never introduce CRLF. If a
+  tool rewrites a file with CRLF, normalize it back to LF before finishing.
+- Before finishing, run a relevant sanity check such as `git diff --check`
+  (it also flags stray CR characters).
 
 ## Website
 
