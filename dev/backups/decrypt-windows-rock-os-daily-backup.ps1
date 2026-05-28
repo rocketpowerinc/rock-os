@@ -1,19 +1,46 @@
 <#
     decrypt-windows-rock-os-daily-backup.ps1
 
-    Decrypts an OpenSSL AES-256-CBC backup created by
-    encrypt-windows-rock-os-daily-backup.ps1.
+    WHAT IT DOES
+      Decrypts a backup created by encrypt-windows-rock-os-daily-backup.ps1
+      (OpenSSL AES-256-CBC, pbkdf2, 600k iterations, sha256) back into a .zip.
+      Unzip the result to get a full copy of the repo, including .git and the
+      git-crypt .key.
 
-    Before decrypting, it verifies the HMAC-SHA256 sidecar (.hmac) if present,
-    so corruption, tampering, or a wrong password is caught up front.
+    INTEGRITY CHECK
+      Before decrypting, it verifies the HMAC-SHA256 sidecar that sits next to
+      the .enc. The sidecar path is just "<your .enc>.hmac", so the .enc and its
+      .enc.hmac must be in the SAME folder with matching names. If the sidecar
+      is present and valid, decryption proceeds; if it does not match, the script
+      refuses to decrypt (wrong password, or corrupted/tampered file). If no
+      .hmac is found, it prints a warning and decrypts anyway - the .enc alone is
+      enough to recover the data, you just lose the early integrity check.
 
-    Supports:
-      - Drag & drop of the .enc file onto the script
-      - Manual path entry if run directly
+    INPUT
+      - Drag & drop the .enc file onto the script (it strips the quotes Windows
+        adds), or
+      - Run it directly and paste/type the path when prompted.
 
-    WARNING:
-    The decrypted ZIP contains the git-crypt .key and decrypted Profiles.
-    Handle with extreme care.
+    OUTPUT
+      Writes "<name>-decrypted-<MMM-d-yyyy_h-mmtt>.zip" next to the .enc. The
+      timestamp guarantees each run is a unique file and never overwrites a
+      previous decryption.
+
+    DEPENDENCIES (install these first)
+      - OpenSSL        (required) - does the decryption.
+                       winget install ShiningLight.OpenSSL.Light
+                       (or the Git for Windows "usr\bin\openssl.exe" on PATH)
+      - PowerShell 5.1+ or PowerShell 7 (required) - ships with Windows 10/11.
+                       The HMAC check uses built-in .NET; no module to install.
+      - git-crypt      (only AFTER restore, if the backed-up Profiles were
+                       locked - run "git-crypt unlock" with the included .key to
+                       make them readable).  winget install AGWA.git-crypt
+      Confirm OpenSSL is on your PATH with "openssl version" in a new terminal.
+
+    WARNING
+      The decrypted ZIP contains the git-crypt .key and (if the backup was made
+      while unlocked) your decrypted Profiles. Handle with extreme care and
+      delete it once you have restored what you need.
 #>
 
 param(

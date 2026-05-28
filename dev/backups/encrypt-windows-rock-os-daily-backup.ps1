@@ -1,21 +1,65 @@
 <#
     encrypt-windows-rock-os-daily-backup.ps1
 
-    Creates a FULL snapshot ZIP of the Rock-OS repo (including the .git folder,
-    the git-crypt .key, and any uncommitted changes) and encrypts it with
-    OpenSSL AES-256-CBC. An HMAC-SHA256 sidecar (.hmac) is written alongside the
-    .enc so the decrypt script can detect corruption or tampering before
-    decrypting.
+    WHAT IT DOES
+      Creates a FULL, encrypted snapshot of the Rock-OS repo that can fully
+      restore the project - including history - on another machine.
 
-    The encrypted backup is written to the user's Downloads folder.
+      The snapshot includes:
+        - Everything Git tracks or sees as new (honors .gitignore, so the
+          multi-GB build/test caches like .gotest-cache, .gocache, dist\ and
+          *.exe are EXCLUDED), capturing any uncommitted changes.
+        - The entire .git folder, preserving commit history, branches, stashes.
+        - Any root *.key file - gitignored, but the whole reason this backup
+          exists, since git-crypt content is unrecoverable without it.
 
-    IMPORTANT:
-    This backup contains the git-crypt .key and your decrypted Profiles.
-    Handle the .enc (and ESPECIALLY any decrypted output) with extreme care.
+      The snapshot is zipped (native .NET System.IO.Compression - no external
+      zip tool needed), encrypted with OpenSSL AES-256-CBC (pbkdf2, 600k
+      iterations, sha256), and an HMAC-SHA256 sidecar (.hmac) is written next to
+      it so the decrypt script can detect corruption/tampering - and a wrong
+      password - BEFORE decrypting.
 
-    NOTE:
-    This script does NOT pull, does NOT require a clean working tree, and does
-    NOT modify the repo in any way. It snapshots whatever is on disk right now.
+    WHERE IT SAVES
+      You are prompted to choose a destination each run:
+        [1] Local:  %USERPROFILE%\Downloads\Rock-OS-backup
+        [2] Drive:  G:\My Drive\Rock-OS\Backups   (Google Drive for Desktop)
+      Each backup gets its own dated subfolder (e.g. May-28-2026_3-02PM)
+      containing three files: the .enc, its .enc.hmac, and a copy of the decrypt
+      script - a self-contained restore bundle. Because the payload is encrypted,
+      saving it to a synced Google Drive folder is safe (Drive only sees
+      ciphertext). The plaintext ZIP is built in %TEMP% and never lands in a
+      synced folder.
+
+    GIT-CRYPT / PROFILES
+      The script runs whether or not git-crypt Profiles are locked, and the
+      backup is restorable either way (it includes both .git and the .key).
+      However, if Profiles are LOCKED it prints a non-fatal heads-up: it is
+      RECOMMENDED to unlock first (START-HERE\Windows\unlock-git-crypt.cmd) so
+      Profiles are captured as readable files rather than git-crypt ciphertext.
+
+    WHAT IT DOES NOT DO
+      Does NOT pull, does NOT require a clean working tree, and does NOT modify
+      the repo. It snapshots whatever is on disk right now.
+
+    DEPENDENCIES (install these first)
+      - Git            (required) - enumerates files and is the thing being
+                       backed up.  winget install Git.Git
+      - OpenSSL        (required) - does the AES-256-CBC encryption.
+                       winget install ShiningLight.OpenSSL.Light
+                       (or the Git for Windows "usr\bin\openssl.exe" on PATH)
+      - PowerShell 5.1+ or PowerShell 7 (required) - ships with Windows 10/11.
+                       The ZIP and HMAC use built-in .NET; no module to install.
+      - git-crypt      (only if you unlock Profiles first, which is recommended).
+                       winget install AGWA.git-crypt
+      - Google Drive for Desktop (only if you pick destination [2]).
+      Make sure git and openssl are on your PATH (run "git --version" and
+      "openssl version" in a new terminal to confirm).
+
+    IMPORTANT
+      This backup contains the git-crypt .key and (when unlocked) your decrypted
+      Profiles. Handle the .enc - and ESPECIALLY any decrypted output - with
+      extreme care. Keep the encryption password somewhere safe; it cannot be
+      recovered.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -29,14 +73,35 @@ if (-not $repoPath -or -not (Test-Path (Join-Path $repoPath '.git'))) {
     exit 1
 }
 
-$timestamp    = Get-Date -Format "MMM-d-yyyy_h-mmtt"
-# Each backup gets its own dated folder under Downloads\Rock-OS-backup, holding
-# the .enc, its .hmac, and a copy of the decrypt script - a self-contained bundle.
-$backupRoot   = Join-Path (Join-Path $env:USERPROFILE "Downloads") "Rock-OS-backup"
+$timestamp = Get-Date -Format "MMM-d-yyyy_h-mmtt"
+
+# Each backup gets its own dated folder holding the .enc, its .hmac, and a copy
+# of the decrypt script - a self-contained bundle. Let the user pick where it goes.
+# The .enc is encrypted, so saving it to a synced Google Drive folder is safe.
+$localRoot = Join-Path (Join-Path $env:USERPROFILE "Downloads") "Rock-OS-backup"
+$driveRoot = "G:\My Drive\Rock-OS\Backups"
+
+Write-Host ""
+Write-Host "Where should this backup be saved?" -ForegroundColor Cyan
+Write-Host "  [1] Local Downloads  ($localRoot)" -ForegroundColor Gray
+Write-Host "  [2] Google Drive     ($driveRoot)" -ForegroundColor Gray
+$choice = Read-Host "Enter 1 or 2 (default 1)"
+
+if ($choice -eq '2') {
+    $backupRoot = $driveRoot
+    $driveQualifier = (Split-Path -Qualifier $driveRoot) + '\'
+    if (-not (Test-Path -LiteralPath $driveQualifier)) {
+        Fail "Google Drive ($driveQualifier) is not available. Start Google Drive for Desktop, or re-run and choose local."
+    }
+} else {
+    $backupRoot = $localRoot
+}
+
 $backupFolder = Join-Path $backupRoot $timestamp
 New-Item -ItemType Directory -Path $backupFolder -Force | Out-Null
 $encPath   = Join-Path $backupFolder "rock-os-backup-$timestamp.zip.enc"
 $macPath   = "$encPath.hmac"
+Write-Host "Saving backup to: $backupFolder" -ForegroundColor Green
 
 # Build the ZIP in a NON-synced temp dir so a plaintext copy never lands in
 # Downloads (which is often cloud-synced by OneDrive/Dropbox). Only the
@@ -52,6 +117,30 @@ function Test-Command($Name) { return [bool](Get-Command $Name -ErrorAction Sile
 if (-not (Test-Command openssl)) { Fail "OpenSSL is not installed or not available in PATH." }
 
 if (-not (Test-Command git)) { Fail "Git is not installed or not available in PATH." }
+
+# Heads-up (non-fatal): detect whether git-crypt Profiles are still locked.
+function Test-ProfilesLocked {
+    $files = & git -C $repoPath ls-files -- 'Website/profiles' 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $files) { return $false }
+    foreach ($file in $files) {
+        $path = Join-Path $repoPath $file
+        if (-not (Test-Path -LiteralPath $path)) { continue }
+        $bytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $path).Path)
+        if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes, 1, 8) -eq 'GITCRYPT') {
+            return $true
+        }
+    }
+    return $false
+}
+
+if (Test-ProfilesLocked) {
+    Write-Host ""
+    Write-Host "NOTE: git-crypt Profiles appear to be LOCKED." -ForegroundColor Yellow
+    Write-Host "      The backup will still be fully restorable (it includes .git and your .key)," -ForegroundColor Yellow
+    Write-Host "      but it is RECOMMENDED to unlock first so Profiles are captured as readable" -ForegroundColor Yellow
+    Write-Host "      files. Run START-HERE\Windows\unlock-git-crypt.cmd, then re-run this backup." -ForegroundColor Yellow
+    Write-Host ""
+}
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
