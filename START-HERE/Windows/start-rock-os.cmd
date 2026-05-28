@@ -28,13 +28,22 @@ if errorlevel 1 (
     exit /b 0
 )
 call :green "Checking for Rock-OS repo updates..."
+set "ROCK_OS_PULL_BEFORE="
+for /f "delims=" %%H in ('git -C "%ROCK_OS_ROOT%" rev-parse HEAD 2^>nul') do set "ROCK_OS_PULL_BEFORE=%%H"
 git -C "%ROCK_OS_ROOT%" pull --ff-only
 if errorlevel 1 (
     call :yellow "Could not update from GitHub. Continuing with local files."
     call :yellow "If you have local changes, commit them before pulling updates."
     exit /b 0
 )
+set "ROCK_OS_PULL_AFTER="
+for /f "delims=" %%H in ('git -C "%ROCK_OS_ROOT%" rev-parse HEAD 2^>nul') do set "ROCK_OS_PULL_AFTER=%%H"
 call :green "Rock-OS repo is up to date."
+if defined ROCK_OS_PULL_BEFORE if defined ROCK_OS_PULL_AFTER if /I not "%ROCK_OS_PULL_BEFORE%"=="%ROCK_OS_PULL_AFTER%" (
+    if not "%ROCK_OS_RESTARTED_AFTER_PULL%"=="1" (
+        exit /b 222
+    )
+)
 exit /b 0
 
 :check_release_binary
@@ -78,6 +87,12 @@ if not exist "%ROCK_OS_ROOT%\.git" (
 )
 
 call :pull_updates
+if "%ERRORLEVEL%"=="222" (
+    call :yellow "Launcher files changed during update. Restarting Rock-OS launcher once..."
+    set "ROCK_OS_RESTARTED_AFTER_PULL=1"
+    call "%~f0" %*
+    exit /b %ERRORLEVEL%
+)
 
 cd /d "%ROCK_OS_ROOT%\Website"
 if errorlevel 1 (

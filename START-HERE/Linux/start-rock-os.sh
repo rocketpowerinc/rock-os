@@ -15,6 +15,7 @@ red() {
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+SELF_SCRIPT="$SCRIPT_DIR/$(basename -- "$0")"
 ROCK_OS_HOST="${ROCK_OS_HOST:-127.0.0.1}"
 
 case "${1:-}" in
@@ -48,8 +49,13 @@ pull_updates() {
     fi
 
     green "Checking for Rock-OS repo updates..."
+    before_head="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true)"
     if git -C "$REPO_ROOT" pull --ff-only; then
+        after_head="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true)"
         green "Rock-OS repo is up to date."
+        if [ -n "$before_head" ] && [ -n "$after_head" ] && [ "$before_head" != "$after_head" ] && [ "${ROCK_OS_RESTARTED_AFTER_PULL:-}" != "1" ]; then
+            return 222
+        fi
     else
         yellow "Could not update from GitHub. Continuing with local files."
         yellow "If you have local changes, commit them before pulling updates."
@@ -79,7 +85,16 @@ write_version_file() {
     } > "$VERSION_FILE"
 }
 
-pull_updates
+if pull_updates; then
+    :
+else
+    status="$?"
+    if [ "$status" -eq 222 ]; then
+        yellow "Launcher files changed during update. Restarting Rock-OS launcher once..."
+        ROCK_OS_RESTARTED_AFTER_PULL=1 exec "$SELF_SCRIPT" "$@"
+    fi
+    exit "$status"
+fi
 
 cd "$REPO_ROOT/Website"
 
