@@ -13,12 +13,15 @@
     the key is never lost.
 #>
 
-# 1. Dynamic Repo Detection (defaults to $env:USERPROFILE\rock-os if outside the clone)
-$scriptRepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..") -ErrorAction SilentlyContinue
-if ($scriptRepoRoot) {
-    $repoPath = $scriptRepoRoot.Path
-} else {
-    $repoPath = Join-Path $env:USERPROFILE "rock-os"
+# This script is meant to run from the development directory of Rock-OS
+# (e.g. dev\backups\ inside your working clone) so it captures uncommitted
+# changes, local branches, and the git-crypt .key file.
+# It resolves dev\backups\..\..\  to the repo root.
+$repoPath = (Resolve-Path (Join-Path $PSScriptRoot "..\..") -ErrorAction SilentlyContinue).Path
+if (-not $repoPath -or -not (Test-Path (Join-Path $repoPath '.git'))) {
+    Write-Host "ERROR: This script must be run from inside the Rock-OS development clone (dev\backups\)." -ForegroundColor Red
+    Write-Host "       It cannot be run from an arbitrary location." -ForegroundColor Red
+    exit 1
 }
 
 $backupDir = Join-Path $env:USERPROFILE "Downloads"
