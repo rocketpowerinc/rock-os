@@ -73,6 +73,83 @@ func TestValidatePublicFetchURLAllowsPublicIPTarget(t *testing.T) {
 	}
 }
 
+func TestClampFeedLimit(t *testing.T) {
+	tests := []struct {
+		name string
+		in   int
+		want int
+	}{
+		{name: "default for zero", in: 0, want: defaultFeedLimit},
+		{name: "default for negative", in: -10, want: defaultFeedLimit},
+		{name: "keeps valid value", in: 12, want: 12},
+		{name: "caps large value", in: 500, want: maxFeedLimit},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := clampFeedLimit(tt.in); got != tt.want {
+				t.Fatalf("expected %d, got %d", tt.want, got)
+			}
+		})
+	}
+}
+
+func TestReadRemoteResponseBodyRejectsOversizedContentLength(t *testing.T) {
+	resp := &http.Response{
+		ContentLength: maxRemoteFeedResponseSize + 1,
+		Body:          io.NopCloser(strings.NewReader("small body")),
+	}
+
+	if _, err := readRemoteResponseBody(resp); err == nil {
+		t.Fatal("expected oversized response to be rejected")
+	}
+}
+
+func TestScanLinkHealthReportsLocalAndExternalLinks(t *testing.T) {
+	siteRoot := t.TempDir()
+	wikiRoot := filepath.Join(siteRoot, markdownDir, "Linux")
+	if err := os.MkdirAll(wikiRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(siteRoot, "assets"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(wikiRoot, "Target.md"), []byte("# Target\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(siteRoot, "assets", "icon.png"), []byte("png"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	source := strings.Join([]string{
+		"[Target](Target.md)",
+		"![Icon](/assets/icon.png)",
+		"[Missing](Missing.md)",
+		"[External](https://example.com)",
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := scanLinkHealth(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if report.Checked != 4 {
+		t.Fatalf("expected 4 checked links, got %d", report.Checked)
+	}
+	if report.OK != 2 {
+		t.Fatalf("expected 2 ok links, got %d", report.OK)
+	}
+	if report.Broken != 1 {
+		t.Fatalf("expected 1 broken link, got %d", report.Broken)
+	}
+	if report.External != 1 {
+		t.Fatalf("expected 1 external link, got %d", report.External)
+	}
+}
+
 func TestNewsItemThumbnailFindsCommonRSSImageFields(t *testing.T) {
 	tests := []struct {
 		name string

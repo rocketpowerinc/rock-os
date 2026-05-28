@@ -110,6 +110,7 @@ copy and prints a warning.
 - Auto-generated table of contents for longer markdown documents
 - Internal markdown links open through the wiki page route
 - Missing internal markdown links are visibly marked as broken
+- Server-side link health scan for internal markdown, page, media, and asset links
 - Backlinks show which markdown files reference the current page
 - Code block copy buttons, inline code click-to-copy, language labels, line numbers, and highlighting
 - Markdown callouts for notes, warnings, tips, errors, and related blocks
@@ -722,6 +723,19 @@ with a `doc` parameter instead of navigating to the raw file directly.
 
 If an internal `.md` link points to a file that is not in the current tab index,
 the wiki marks it as missing so broken links are visible while editing.
+
+Rock OS also includes a `link-health.html` page for viewing broken local links in the
+browser, plus a server-side link health report at:
+
+```text
+/api/health/links
+```
+
+The scanner walks local markdown sources under the public menu folders,
+dashboards, and unlocked profiles. It verifies internal markdown links, local
+HTML pages, dashboard/profile folders, media, and asset paths against the real
+filesystem. External `http` and `https` links are counted but not fetched, so the
+scan stays local-first and does not leak browsing intent to the internet.
 
 Direct wiki URLs look like this:
 

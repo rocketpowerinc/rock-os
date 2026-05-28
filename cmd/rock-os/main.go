@@ -56,6 +56,13 @@ const (
 )
 
 const (
+	defaultFeedLimit          = 5
+	maxFeedLimit              = 20
+	maxFeedURLParams          = 20
+	maxRemoteFeedResponseSize = 5 * 1024 * 1024
+)
+
+const (
 	ansiReset  = "\033[0m"
 	ansiBold   = "\033[1m"
 	ansiDim    = "\033[2m"
@@ -93,6 +100,24 @@ type scriptSearchResult struct {
 	Runnable bool   `json:"runnable"`
 	Platform string `json:"platform"`
 	Snippet  string `json:"snippet,omitempty"`
+}
+
+type linkHealthResponse struct {
+	Checked  int              `json:"checked"`
+	OK       int              `json:"ok"`
+	Broken   int              `json:"broken"`
+	External int              `json:"external"`
+	Skipped  int              `json:"skipped"`
+	Items    []linkHealthItem `json:"items"`
+}
+
+type linkHealthItem struct {
+	Source string `json:"source"`
+	Label  string `json:"label"`
+	Href   string `json:"href"`
+	Status string `json:"status"`
+	Reason string `json:"reason,omitempty"`
+	Target string `json:"target,omitempty"`
 }
 
 type serverStatus struct {
@@ -232,6 +257,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/search", scriptsSearchHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
+	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))
 	mux.HandleFunc("/wiki-index.json", markdownIndexHandler(siteRoot))
@@ -497,6 +523,253 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 			LastSync:     lastCommitTime(siteRoot),
 		})
 	}
+}
+
+func linkHealthHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		report, err := scanLinkHealth(siteRoot)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, report)
+	}
+}
+
+var markdownLinkRegex = regexp.MustCompile(`!?\[([^\]]*)\]\(([^)\r\n]+)\)`)
+
+func scanLinkHealth(siteRoot string) (linkHealthResponse, error) {
+	report := linkHealthResponse{
+		Items: []linkHealthItem{},
+	}
+
+	sourceFiles, err := linkHealthSourceFiles(siteRoot)
+	if err != nil {
+		return report, err
+	}
+
+	for _, source := range sourceFiles {
+		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(source)))
+		if err != nil {
+			report.Skipped++
+			report.Items = append(report.Items, linkHealthItem{
+				Source: source,
+				Status: "skipped",
+				Reason: "could not read source file",
+			})
+			continue
+		}
+
+		for _, match := range markdownLinkRegex.FindAllStringSubmatch(string(content), -1) {
+			label := strings.TrimSpace(match[1])
+			href := cleanMarkdownHref(match[2])
+			if href == "" {
+				continue
+			}
+
+			item := checkLocalLink(siteRoot, source, label, href)
+			report.Checked++
+			switch item.Status {
+			case "ok":
+				report.OK++
+			case "external":
+				report.External++
+			case "skipped":
+				report.Skipped++
+			default:
+				report.Broken++
+			}
+			report.Items = append(report.Items, item)
+		}
+	}
+
+	return report, nil
+}
+
+func linkHealthSourceFiles(siteRoot string) ([]string, error) {
+	scanDirs := []string{
+		markdownDir,
+		guidesDir,
+		cheatsheetsDir,
+		dotfilesDir,
+		bookmarksDir,
+		dashboardsDir,
+	}
+	if privateMarkdownStatus(siteRoot) == "unlocked" {
+		scanDirs = append(scanDirs, profilesDir)
+	}
+
+	files := []string{}
+	for _, dir := range scanDirs {
+		root := filepath.Join(siteRoot, dir)
+		if _, err := os.Stat(root); os.IsNotExist(err) {
+			continue
+		}
+
+		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if entry.IsDir() || !strings.EqualFold(filepath.Ext(entry.Name()), ".md") {
+				return nil
+			}
+
+			relativePath, err := filepath.Rel(siteRoot, path)
+			if err != nil {
+				return err
+			}
+			files = append(files, filepath.ToSlash(relativePath))
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	sort.Strings(files)
+	return files, nil
+}
+
+func cleanMarkdownHref(rawHref string) string {
+	href := strings.TrimSpace(rawHref)
+	if strings.HasPrefix(href, "<") && strings.HasSuffix(href, ">") {
+		href = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(href, "<"), ">"))
+	}
+
+	for _, quote := range []string{` "`, ` '`, "\t\""} {
+		if idx := strings.Index(href, quote); idx >= 0 {
+			href = strings.TrimSpace(href[:idx])
+		}
+	}
+
+	return strings.TrimSpace(href)
+}
+
+func checkLocalLink(siteRoot string, source string, label string, href string) linkHealthItem {
+	item := linkHealthItem{
+		Source: source,
+		Label:  label,
+		Href:   href,
+	}
+
+	lowerHref := strings.ToLower(strings.TrimSpace(href))
+	switch {
+	case strings.HasPrefix(lowerHref, "http://") || strings.HasPrefix(lowerHref, "https://"):
+		item.Status = "external"
+		item.Reason = "external link not fetched"
+		return item
+	case strings.HasPrefix(lowerHref, "mailto:") ||
+		strings.HasPrefix(lowerHref, "tel:") ||
+		strings.HasPrefix(lowerHref, "data:"):
+		item.Status = "skipped"
+		item.Reason = "non-file link"
+		return item
+	case strings.HasPrefix(href, "#"):
+		item.Status = "ok"
+		item.Target = source
+		return item
+	}
+
+	targetPath, reason := resolveLinkTargetPath(siteRoot, source, href)
+	if reason != "" {
+		item.Status = "broken"
+		item.Reason = reason
+		return item
+	}
+
+	relativeTarget, err := filepath.Rel(siteRoot, targetPath)
+	if err == nil {
+		item.Target = filepath.ToSlash(relativeTarget)
+	}
+
+	if linkTargetExists(targetPath) {
+		item.Status = "ok"
+		return item
+	}
+
+	item.Status = "broken"
+	item.Reason = "target file does not exist"
+	return item
+}
+
+func resolveLinkTargetPath(siteRoot string, source string, href string) (string, string) {
+	href = strings.TrimSpace(href)
+	if href == "" {
+		return "", "empty link target"
+	}
+
+	if parsed, err := url.Parse(href); err == nil {
+		href = parsed.Path
+	}
+	if href == "" {
+		return "", ""
+	}
+
+	decodedHref, err := url.PathUnescape(href)
+	if err == nil {
+		href = decodedHref
+	}
+	href = filepath.FromSlash(strings.TrimPrefix(href, "/"))
+
+	var target string
+	if strings.HasPrefix(href, string(os.PathSeparator)) || strings.HasPrefix(href, "/") {
+		target = filepath.Join(siteRoot, strings.TrimPrefix(href, string(os.PathSeparator)))
+	} else if strings.HasPrefix(strings.TrimSpace(href), "index.html") ||
+		strings.HasSuffix(strings.ToLower(href), ".html") {
+		target = filepath.Join(siteRoot, href)
+	} else if strings.HasPrefix(href, "assets"+string(os.PathSeparator)) ||
+		strings.HasPrefix(href, "media"+string(os.PathSeparator)) ||
+		strings.HasPrefix(href, "menu"+string(os.PathSeparator)) ||
+		strings.HasPrefix(href, "profiles"+string(os.PathSeparator)) ||
+		strings.HasPrefix(href, "dashboards"+string(os.PathSeparator)) {
+		target = filepath.Join(siteRoot, href)
+	} else {
+		sourceDir := filepath.Dir(filepath.Join(siteRoot, filepath.FromSlash(source)))
+		target = filepath.Join(sourceDir, href)
+	}
+
+	cleanSiteRoot, err := filepath.Abs(siteRoot)
+	if err != nil {
+		return "", err.Error()
+	}
+	cleanTarget, err := filepath.Abs(target)
+	if err != nil {
+		return "", err.Error()
+	}
+	if cleanTarget != cleanSiteRoot && !strings.HasPrefix(cleanTarget, cleanSiteRoot+string(os.PathSeparator)) {
+		return "", "target escapes Website folder"
+	}
+
+	return cleanTarget, ""
+}
+
+func linkTargetExists(target string) bool {
+	info, err := os.Stat(target)
+	if err == nil {
+		if info.IsDir() {
+			if _, err := os.Stat(filepath.Join(target, "index.html")); err == nil {
+				return true
+			}
+		}
+		return true
+	}
+
+	if filepath.Ext(target) == "" {
+		if _, err := os.Stat(target + ".md"); err == nil {
+			return true
+		}
+		if _, err := os.Stat(filepath.Join(target, "index.html")); err == nil {
+			return true
+		}
+	}
+
+	return false
 }
 
 type loggingResponseWriter struct {
@@ -3291,6 +3564,38 @@ func newPublicFetchClient(timeout time.Duration) *http.Client {
 	}
 }
 
+func clampFeedLimit(limit int) int {
+	if limit <= 0 {
+		return defaultFeedLimit
+	}
+	if limit > maxFeedLimit {
+		return maxFeedLimit
+	}
+	return limit
+}
+
+func remoteResponseBodyReader(resp *http.Response) (io.Reader, error) {
+	if resp.ContentLength > maxRemoteFeedResponseSize {
+		return nil, fmt.Errorf("remote response too large: %d bytes", resp.ContentLength)
+	}
+	return io.LimitReader(resp.Body, maxRemoteFeedResponseSize), nil
+}
+
+func readRemoteResponseBody(resp *http.Response) ([]byte, error) {
+	if resp.ContentLength > maxRemoteFeedResponseSize {
+		return nil, fmt.Errorf("remote response too large: %d bytes", resp.ContentLength)
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxRemoteFeedResponseSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(body)) > maxRemoteFeedResponseSize {
+		return nil, fmt.Errorf("remote response exceeded %d bytes", maxRemoteFeedResponseSize)
+	}
+	return body, nil
+}
+
 func validatePublicFetchURL(rawURL string) error {
 	rawURL = strings.TrimSpace(rawURL)
 	if rawURL == "" {
@@ -3475,8 +3780,13 @@ func fetchLiveRedditFeed(subreddit string) ([]feedItem, error) {
 		return nil, fmt.Errorf("reddit API returned HTTP %d", resp.StatusCode)
 	}
 
+	body, err := remoteResponseBodyReader(resp)
+	if err != nil {
+		return nil, err
+	}
+
 	var redditRes redditResponse
-	if err := json.NewDecoder(resp.Body).Decode(&redditRes); err != nil {
+	if err := json.NewDecoder(body).Decode(&redditRes); err != nil {
 		return nil, err
 	}
 
@@ -3515,6 +3825,10 @@ func feedYoutubeHandler(siteRoot string) http.HandlerFunc {
 		channelIDs := r.URL.Query()["channel_id"]
 		playlistIDs := r.URL.Query()["playlist_id"]
 		urls := r.URL.Query()["url"]
+		if len(urls)+len(channelIDs)+len(playlistIDs) > maxFeedURLParams {
+			http.Error(w, "too many feed parameters", http.StatusBadRequest)
+			return
+		}
 
 		for _, rawURL := range urls {
 			t, val := resolveYoutubeURLToID(rawURL, siteRoot)
@@ -3532,12 +3846,13 @@ func feedYoutubeHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		limit := 5
+		limit := defaultFeedLimit
 		if limitStr != "" {
 			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 				limit = l
 			}
 		}
+		limit = clampFeedLimit(limit)
 
 		// Sanitize all IDs
 		for _, id := range channelIDs {
@@ -3678,8 +3993,13 @@ func fetchSingleYoutubeFeed(urlStr string) ([]feedItem, error) {
 		return nil, fmt.Errorf("youtube API returned HTTP %d", resp.StatusCode)
 	}
 
+	body, err := remoteResponseBodyReader(resp)
+	if err != nil {
+		return nil, err
+	}
+
 	var yt ytFeed
-	if err := xml.NewDecoder(resp.Body).Decode(&yt); err != nil {
+	if err := xml.NewDecoder(body).Decode(&yt); err != nil {
 		return nil, err
 	}
 
@@ -3859,8 +4179,13 @@ func fetchLivePodcastFeed(feedURL string) ([]feedItem, error) {
 		return nil, fmt.Errorf("podcast RSS returned HTTP %d", resp.StatusCode)
 	}
 
+	body, err := remoteResponseBodyReader(resp)
+	if err != nil {
+		return nil, err
+	}
+
 	var rss rssFeed
-	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
+	if err := xml.NewDecoder(body).Decode(&rss); err != nil {
 		return nil, err
 	}
 
@@ -4015,7 +4340,7 @@ func resolveYoutubeURLToID(inputURL string, siteRoot string) (paramType string, 
 		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
-			bodyBytes, err := io.ReadAll(resp.Body)
+			bodyBytes, err := readRemoteResponseBody(resp)
 			if err == nil {
 				bodyStr := string(bodyBytes)
 				// Search meta tag first
@@ -4078,13 +4403,20 @@ func resolvePodcastURLToFeed(inputURL string, siteRoot string) string {
 	resp, err := client.Get(lookupURL)
 	if err == nil {
 		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return inputURL
+		}
+		body, err := remoteResponseBodyReader(resp)
+		if err != nil {
+			return inputURL
+		}
 		type iTunesResult struct {
 			Results []struct {
 				FeedURL string `json:"feedUrl"`
 			} `json:"results"`
 		}
 		var lookup iTunesResult
-		if err := json.NewDecoder(resp.Body).Decode(&lookup); err == nil && len(lookup.Results) > 0 {
+		if err := json.NewDecoder(body).Decode(&lookup); err == nil && len(lookup.Results) > 0 {
 			feedURL := lookup.Results[0].FeedURL
 			if feedURL != "" {
 				// Save to cache
@@ -4152,14 +4484,19 @@ func feedNewsHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, "url parameter is required", http.StatusBadRequest)
 			return
 		}
+		if len(feedURLs) > maxFeedURLParams {
+			http.Error(w, "too many feed parameters", http.StatusBadRequest)
+			return
+		}
 
 		limitStr := r.URL.Query().Get("limit")
-		limit := 5
+		limit := defaultFeedLimit
 		if limitStr != "" {
 			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 				limit = l
 			}
 		}
+		limit = clampFeedLimit(limit)
 
 		var allItems []feedItem
 		for _, feedURL := range feedURLs {
@@ -4196,14 +4533,17 @@ func fetchLiveNewsFeed(feedURL string, limit int) ([]feedItem, error) {
 		return nil, fmt.Errorf("news RSS returned HTTP %d", resp.StatusCode)
 	}
 
-	var rss rssFeed
-	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
+	body, err := remoteResponseBodyReader(resp)
+	if err != nil {
 		return nil, err
 	}
 
-	if limit <= 0 {
-		limit = 5
+	var rss rssFeed
+	if err := xml.NewDecoder(body).Decode(&rss); err != nil {
+		return nil, err
 	}
+
+	limit = clampFeedLimit(limit)
 	if limit > len(rss.Channel.Items) {
 		limit = len(rss.Channel.Items)
 	}
@@ -4345,7 +4685,7 @@ func resolveNewsURLToFeed(inputURL string) string {
 	resp, err := client.Get(inputURL)
 	if err == nil {
 		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
+		body, err := readRemoteResponseBody(resp)
 		if err == nil {
 			re := regexp.MustCompile(`(?i)<link[^>]+type=["']application/rss\+xml["'][^>]+href=["']([^"']+)["']`)
 			match := re.FindStringSubmatch(string(body))
@@ -4382,13 +4722,18 @@ func feedSpotifyHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, "url parameter is required", http.StatusBadRequest)
 			return
 		}
+		if len(urls) > maxFeedURLParams {
+			http.Error(w, "too many feed parameters", http.StatusBadRequest)
+			return
+		}
 
-		limit := 5
+		limit := defaultFeedLimit
 		if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 				limit = l
 			}
 		}
+		limit = clampFeedLimit(limit)
 
 		// Cache path based on hash of the URLs combined
 		hasher := sha256.New()
@@ -4452,12 +4797,17 @@ func fetchSpotifyOEmbed(spotifyURL string) (feedItem, error) {
 		return feedItem{}, fmt.Errorf("spotify oembed returned status %d", resp.StatusCode)
 	}
 
+	body, err := remoteResponseBodyReader(resp)
+	if err != nil {
+		return feedItem{}, err
+	}
+
 	var data struct {
 		Title        string `json:"title"`
 		ThumbnailURL string `json:"thumbnail_url"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := json.NewDecoder(body).Decode(&data); err != nil {
 		return feedItem{}, err
 	}
 

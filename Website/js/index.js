@@ -226,5 +226,55 @@ async function loadServerMode() {
     }
 }
 
+async function loadLinkHealth() {
+    const element =
+        document.getElementById('linkHealthStatus');
+
+    if (!element) {
+        return;
+    }
+
+    try {
+        const response =
+            await fetch('/api/health/links?nocache=' + Date.now());
+
+        if (!response.ok) {
+            throw new Error('Could not load link health');
+        }
+
+        const report =
+            await response.json();
+
+        const broken =
+            Number(report?.broken || 0);
+        const checked =
+            Number(report?.checked || 0);
+
+        if (broken > 0) {
+            element.textContent =
+                `${broken} Broken`;
+            element.style.color =
+                '#ef4444';
+            element.title =
+                `${checked} links checked. Open /api/health/links for details.`;
+        } else {
+            element.textContent =
+                `${checked} OK`;
+            element.style.color =
+                'var(--success)';
+            element.title =
+                `${checked} links checked.`;
+        }
+    }
+    catch (err) {
+        console.warn(err);
+        element.textContent =
+            'Unavailable';
+        element.style.color =
+            'var(--text-muted)';
+    }
+}
+
 loadQuote();
 loadServerMode();
+loadLinkHealth();
