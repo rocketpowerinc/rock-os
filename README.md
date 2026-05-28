@@ -42,6 +42,18 @@ be able to reach Rock OS. Avoid LAN Mode on public Wi-Fi, guest networks, hotels
 schools, coffee shops, or any network you do not control. Keep private markdown
 locked when you do not need it, and stop the server when you are done sharing it.
 
+For safety, script execution stays restricted to the computer running Rock OS by
+default, even in LAN Mode. Other devices on the LAN can browse the site, but they
+cannot launch scripts on the host machine unless Rock OS is started with the
+explicit server flag:
+
+```bash
+--enable-lan-script-runs
+```
+
+Use that flag only on a trusted private network where every connected client is
+allowed to launch scripts on the Rock OS host.
+
 ## Quick Install
 
 These installers clone Rock OS into `~/rock-os`, create a `rock-os` terminal
@@ -446,6 +458,10 @@ For safety, the Go server only exposes scripts from `Website/menu/scripts/` and 
 not provide an arbitrary command prompt. Supported script types are `.cmd`,
 `.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
 on the machine running the Go server.
+
+Script IDs are restricted to ordinary path characters, spaces, dots, dashes,
+underscores, and supported script extensions. Shell metacharacters are rejected
+before a script can be resolved or launched.
 
 Helper scripts are also included:
 

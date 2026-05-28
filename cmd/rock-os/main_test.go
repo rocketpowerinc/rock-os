@@ -15,30 +15,80 @@ import (
 
 func TestScriptRunRequestAllowedRequiresRockOSHeader(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/scripts/run", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
 
-	if scriptRunRequestAllowed(request) {
+	if scriptRunRequestAllowed(request, false) {
 		t.Fatal("script run request without Rock-OS header was allowed")
 	}
 }
 
 func TestScriptRunRequestAllowedRejectsCrossOrigin(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/scripts/run", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
 	request.Header.Set("X-Rock-OS-Requested", "true")
 	request.Header.Set("Origin", "https://example.com")
 
-	if scriptRunRequestAllowed(request) {
+	if scriptRunRequestAllowed(request, false) {
 		t.Fatal("cross-origin script run request was allowed")
 	}
 }
 
-func TestScriptRunRequestAllowedAcceptsSameOrigin(t *testing.T) {
+func TestScriptRunRequestAllowedAcceptsLoopbackSameOrigin(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/scripts/run", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
+	request.Header.Set("X-Rock-OS-Requested", "true")
+	request.Header.Set("Origin", "http://127.0.0.1:8000")
+	request.Header.Set("Referer", "http://127.0.0.1:8000/scripts.html")
+
+	if !scriptRunRequestAllowed(request, false) {
+		t.Fatal("loopback same-origin script run request was rejected")
+	}
+}
+
+func TestScriptRunRequestAllowedRejectsLANByDefault(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "http://192.168.1.2:8000/api/scripts/run", nil)
+	request.RemoteAddr = "192.168.1.50:49200"
 	request.Header.Set("X-Rock-OS-Requested", "true")
 	request.Header.Set("Origin", "http://192.168.1.2:8000")
 	request.Header.Set("Referer", "http://192.168.1.2:8000/scripts.html")
 
-	if !scriptRunRequestAllowed(request) {
-		t.Fatal("same-origin script run request was rejected")
+	if scriptRunRequestAllowed(request, false) {
+		t.Fatal("LAN script run request was allowed by default")
+	}
+}
+
+func TestScriptRunRequestAllowedAcceptsLANWithExplicitOptIn(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "http://192.168.1.2:8000/api/scripts/run", nil)
+	request.RemoteAddr = "192.168.1.50:49200"
+	request.Header.Set("X-Rock-OS-Requested", "true")
+	request.Header.Set("Origin", "http://192.168.1.2:8000")
+	request.Header.Set("Referer", "http://192.168.1.2:8000/scripts.html")
+
+	if !scriptRunRequestAllowed(request, true) {
+		t.Fatal("LAN script run request was rejected after explicit opt-in")
+	}
+}
+
+func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
+	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
+	if err == nil {
+		t.Fatal("script id with shell metacharacter was allowed")
+	}
+}
+
+func TestAPIRateLimiterRejectsBurstFlood(t *testing.T) {
+	limiter := newAPIRateLimiter()
+	request := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:8000/api/wiki/search?q=x", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
+
+	for i := 0; i < apiRateLimitBurst; i++ {
+		if !limiter.allow(request) {
+			t.Fatalf("request %d was rejected before burst was exhausted", i)
+		}
+	}
+
+	if limiter.allow(request) {
+		t.Fatal("request beyond burst limit was allowed")
 	}
 }
 

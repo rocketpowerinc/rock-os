@@ -60,6 +60,8 @@ const (
 	maxFeedLimit              = 20
 	maxFeedURLParams          = 20
 	maxRemoteFeedResponseSize = 5 * 1024 * 1024
+	apiRateLimitBurst         = 120
+	apiRateLimitRefill        = 2.0
 )
 
 const (
@@ -186,6 +188,8 @@ var globalDashboardsIndexCache = &markdownIndexCache{
 	entries: map[string]markdownIndexCacheEntry{},
 }
 
+var safeScriptIDRegex = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 _./-]*\.(sh|ps1|cmd|bat)$`)
+
 var wikiMarkdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
@@ -206,6 +210,7 @@ func main() {
 	open := flag.Bool("open", true, "open the site in your default browser")
 	buildIndex := flag.Bool("build-index", false, "build wiki-index.json and exit")
 	siteRootFlag := flag.String("site-root", "", "path to the Website folder; auto-detected when omitted")
+	allowLanScriptRuns := flag.Bool("enable-lan-script-runs", false, "allow script execution requests from non-loopback LAN clients")
 	flag.Parse()
 
 	workingDir, err := os.Getwd()
@@ -255,7 +260,7 @@ func main() {
 	mux.HandleFunc("/api/scripts", scriptsListHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/content", scriptContentHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/search", scriptsSearchHandler(siteRoot))
-	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot))
+	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot, *allowLanScriptRuns))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
@@ -301,7 +306,7 @@ func main() {
 
 	fmt.Println()
 	fmt.Println(colorize(ansiBold+ansiCyan, "[Rock-OS]"))
-	printStartupStatus(siteRoot, bindHost, address)
+	printStartupStatus(siteRoot, bindHost, address, *allowLanScriptRuns)
 	printStatus("OK", ansiGreen, "Open %s", url)
 	if len(displayHosts) > 1 {
 		fmt.Println("Other local URLs:")
@@ -318,7 +323,7 @@ func main() {
 	}
 
 	server := &http.Server{
-		Handler: logRequests(compressResponses(mux)),
+		Handler: logRequests(compressResponses(rateLimitAPI(mux))),
 	}
 
 	shutdownErrors := make(chan error, 1)
@@ -350,7 +355,7 @@ func main() {
 	}
 }
 
-func printStartupStatus(siteRoot string, bindHost string, address string) {
+func printStartupStatus(siteRoot string, bindHost string, address string, allowLanScriptRuns bool) {
 	printStatus("OK", ansiGreen, "Serving %s", siteRoot)
 	printStatus("OK", ansiGreen, "Listening on %s", address)
 
@@ -358,6 +363,12 @@ func printStartupStatus(siteRoot string, bindHost string, address string) {
 		printStatus("OK", ansiGreen, "Server Mode: Host")
 	} else {
 		printStatus("WARN", ansiYellow, "Server Mode: LAN")
+	}
+
+	if allowLanScriptRuns {
+		printStatus("WARN", ansiYellow, "LAN script runs enabled. Trusted clients on this network can launch scripts.")
+	} else {
+		printStatus("OK", ansiGreen, "Script runs restricted to this computer.")
 	}
 
 	if _, err := os.Stat(filepath.Join(siteRoot, markdownDir)); err == nil {
@@ -772,6 +783,90 @@ func linkTargetExists(target string) bool {
 	return false
 }
 
+type apiRateLimiter struct {
+	mu      sync.Mutex
+	clients map[string]*apiRateLimitClient
+}
+
+type apiRateLimitClient struct {
+	tokens float64
+	last   time.Time
+}
+
+func newAPIRateLimiter() *apiRateLimiter {
+	return &apiRateLimiter{
+		clients: map[string]*apiRateLimitClient{},
+	}
+}
+
+func rateLimitAPI(next http.Handler) http.Handler {
+	limiter := newAPIRateLimiter()
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/api/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if !limiter.allow(r) {
+			http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (limiter *apiRateLimiter) allow(r *http.Request) bool {
+	clientKey := requestClientKey(r)
+	if clientKey == "" {
+		clientKey = "unknown"
+	}
+
+	now := time.Now()
+	limiter.mu.Lock()
+	defer limiter.mu.Unlock()
+
+	client := limiter.clients[clientKey]
+	if client == nil {
+		limiter.clients[clientKey] = &apiRateLimitClient{
+			tokens: apiRateLimitBurst - 1,
+			last:   now,
+		}
+		return true
+	}
+
+	elapsed := now.Sub(client.last).Seconds()
+	client.tokens += elapsed * apiRateLimitRefill
+	if client.tokens > apiRateLimitBurst {
+		client.tokens = apiRateLimitBurst
+	}
+	client.last = now
+
+	if len(limiter.clients) > 512 {
+		for key, value := range limiter.clients {
+			if now.Sub(value.last) > 10*time.Minute {
+				delete(limiter.clients, key)
+			}
+		}
+	}
+
+	if client.tokens < 1 {
+		return false
+	}
+
+	client.tokens--
+	return true
+}
+
+func requestClientKey(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil {
+		return host
+	}
+	return strings.TrimSpace(r.RemoteAddr)
+}
+
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	status int
@@ -1162,14 +1257,14 @@ func scriptsSearchHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func scriptRunHandler(siteRoot string) http.HandlerFunc {
+func scriptRunHandler(siteRoot string, allowLanScriptRuns bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		if !scriptRunRequestAllowed(r) {
+		if !scriptRunRequestAllowed(r, allowLanScriptRuns) {
 			http.Error(w, "unauthorized script request", http.StatusForbidden)
 			return
 		}
@@ -1200,13 +1295,27 @@ func scriptRunHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
-func scriptRunRequestAllowed(r *http.Request) bool {
+func scriptRunRequestAllowed(r *http.Request, allowLanScriptRuns bool) bool {
 	if r.Header.Get("X-Rock-OS-Requested") != "true" {
+		return false
+	}
+
+	if !allowLanScriptRuns && !requestFromLoopback(r) {
 		return false
 	}
 
 	return sameOriginHeaderAllowed(r, "Origin") &&
 		sameOriginHeaderAllowed(r, "Referer")
+}
+
+func requestFromLoopback(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+
+	ip := net.ParseIP(strings.TrimSpace(host))
+	return ip != nil && ip.IsLoopback()
 }
 
 func sameOriginHeaderAllowed(r *http.Request, header string) bool {
@@ -1322,6 +1431,9 @@ func resolveScript(siteRoot string, id string) (scriptEntry, string, error) {
 	id = filepath.ToSlash(strings.TrimSpace(id))
 	if id == "" || strings.Contains(id, "..") || strings.HasPrefix(id, "/") {
 		return scriptEntry{}, "", fmt.Errorf("invalid script id")
+	}
+	if !safeScriptIDRegex.MatchString(id) {
+		return scriptEntry{}, "", fmt.Errorf("script id contains unsupported characters")
 	}
 
 	path := filepath.Join(siteRoot, scriptsDir, filepath.FromSlash(id))
