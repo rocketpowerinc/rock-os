@@ -104,45 +104,7 @@ func searchWiki(siteRoot string, query string) ([]wikiSearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Markdown)
 }
 
 func fileTitle(path string) string {
@@ -534,45 +496,7 @@ func searchGuides(siteRoot string, query string) ([]wikiSearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Guides)
 }
 
 func collectCheatsheetFiles(siteRoot string) ([]markdownIndexEntry, error) {
@@ -797,45 +721,7 @@ func searchCheatsheets(siteRoot string, query string) ([]wikiSearchResult, error
 	if err != nil {
 		return nil, err
 	}
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Cheatsheets)
 }
 
 func collectDotfileFiles(siteRoot string) ([]markdownIndexEntry, error) {
@@ -1060,45 +946,7 @@ func searchDotfiles(siteRoot string, query string) ([]wikiSearchResult, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Dotfiles)
 }
 
 func collectBookmarkFiles(siteRoot string) ([]markdownIndexEntry, error) {
@@ -1323,45 +1171,7 @@ func searchBookmarks(siteRoot string, query string) ([]wikiSearchResult, error) 
 	if err != nil {
 		return nil, err
 	}
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Bookmarks)
 }
 
 func profilesIndexHandler(siteRoot string) http.HandlerFunc {
@@ -1513,45 +1323,7 @@ func searchProfiles(siteRoot string, query string, profile string) ([]wikiSearch
 		return nil, err
 	}
 	files = filterProfilesFiles(files, profile)
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Profiles)
 }
 
 func filterProfilesFiles(files []markdownIndexEntry, profile string) []markdownIndexEntry {
@@ -1740,45 +1512,7 @@ func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSe
 		return nil, err
 	}
 	files = filterDashboardFiles(files, dashboard)
-
-	normalizedQuery := strings.ToLower(query)
-	results := []wikiSearchResult{}
-
-	for _, file := range files {
-		title := fileTitle(file.Path)
-		searchablePath := strings.ToLower(file.Path)
-		searchableTitle := strings.ToLower(title)
-
-		pathMatch := strings.Contains(searchablePath, normalizedQuery) ||
-			strings.Contains(searchableTitle, normalizedQuery)
-
-		content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(file.Path)))
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-
-			return nil, err
-		}
-
-		text := string(content)
-		contentMatch := strings.Contains(strings.ToLower(text), normalizedQuery)
-		if !pathMatch && !contentMatch {
-			continue
-		}
-
-		result := wikiSearchResult{
-			Path:  file.Path,
-			Title: title,
-		}
-		if contentMatch {
-			result.Snippet = searchSnippet(text, normalizedQuery)
-		}
-
-		results = append(results, result)
-	}
-
-	return results, nil
+	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Dashboards)
 }
 
 func filterDashboardFiles(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
