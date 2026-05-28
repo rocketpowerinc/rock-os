@@ -56,8 +56,8 @@ try {
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [IO.File]::WriteAllText($passFile, $plain, $utf8NoBom)
 
-    # Run OpenSSL without putting the password directly on the command line.
-    & openssl enc -d -aes-256-cbc -pbkdf2 -in $EncryptedFile -out $outZip -pass "file:$passFile"
+    # Run OpenSSL with pbkdf2 and explicit sha256 digest
+    & openssl enc -d -aes-256-cbc -pbkdf2 -md sha256 -in $EncryptedFile -out $outZip -pass "file:$passFile"
     if ($LASTEXITCODE -ne 0) {
         if (Test-Path -LiteralPath $outZip) {
             Remove-Item -LiteralPath $outZip -Force
@@ -67,13 +67,14 @@ try {
 }
 finally {
     if (Test-Path -LiteralPath $passFile) {
+        # Overwrite temp password file before deleting
+        [IO.File]::WriteAllText($passFile, "0000000000000000", $utf8NoBom)
         Remove-Item -LiteralPath $passFile -Force
     }
+    # Clear plaintext password from memory
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordBstr)
+    $plain = $null
 }
-
-# Clear plaintext password from memory
-[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordBstr)
-$plain = $null
 
 Write-Host "Decryption complete." -ForegroundColor Green
 Write-Host "Decrypted ZIP saved to: $outZip" -ForegroundColor Yellow

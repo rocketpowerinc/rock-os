@@ -13,11 +13,19 @@
     the key is never lost.
 #>
 
-$repoPath = Join-Path $env:USERPROFILE "rock-os"
+# 1. Dynamic Repo Detection (defaults to $env:USERPROFILE\rock-os if outside the clone)
+$scriptRepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..") -ErrorAction SilentlyContinue
+if ($scriptRepoRoot) {
+    $repoPath = $scriptRepoRoot.Path
+} else {
+    $repoPath = Join-Path $env:USERPROFILE "rock-os"
+}
+
 $backupDir = Join-Path $env:USERPROFILE "Downloads"
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 $zipPath = Join-Path $backupDir "rock-os-backup-$timestamp.zip"
 $encPath = "$zipPath.enc"
+$tempBackupSrc = Join-Path $env:TEMP "rock-os-backup-src-$PID"
 
 function Fail($Message) {
     Write-Host "ERROR: $Message" -ForegroundColor Red
@@ -143,50 +151,110 @@ $ageDays = (New-TimeSpan -Start $lastWrite -End (Get-Date)).Days
 Write-Host "Last modified: $lastWrite ($ageDays days old)" -ForegroundColor Yellow
 Write-Host ""
 
-Write-Host "Creating ZIP archive..." -ForegroundColor Cyan
+# --- Stage files respecting .gitignore ---
+if (Test-Path $tempBackupSrc) { Remove-Item $tempBackupSrc -Recurse -Force }
+New-Item -ItemType Directory -Path $tempBackupSrc -Force | Out-Null
 
-# --- Create ZIP ---
-if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
-Compress-Archive -Path $repoPath -DestinationPath $zipPath
+Write-Host "Staging files (respecting .gitignore)..." -ForegroundColor Cyan
+$gitFiles = & git -C $repoPath ls-files -c -o --exclude-standard
+if ($LASTEXITCODE -ne 0) {
+    Fail "git ls-files failed."
+}
 
-Write-Host "ZIP created at $zipPath" -ForegroundColor Green
+# Convert output to list and explicitly add back any *.key files in root (which are ignored but required)
+$filesToCopy = [System.Collections.Generic.List[string]]::new()
+foreach ($file in $gitFiles) {
+    $filesToCopy.Add($file)
+}
 
-# --- Encrypt ZIP using OpenSSL ---
-Write-Host "Encrypting ZIP with OpenSSL AES-256-CBC..." -ForegroundColor Cyan
+$keyFiles = Get-ChildItem -LiteralPath $repoPath -Filter '*.key' -File -ErrorAction SilentlyContinue
+foreach ($keyFile in $keyFiles) {
+    $relKey = $keyFile.Name
+    if (-not $filesToCopy.Contains($relKey)) {
+        $filesToCopy.Add($relKey)
+    }
+}
 
-# Prompt for password
-$password = Read-Host "Enter encryption password" -AsSecureString
-$passwordBstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
-$plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto($passwordBstr)
+foreach ($file in $filesToCopy) {
+    $srcFile = Join-Path $repoPath $file
+    if (-not (Test-Path -LiteralPath $srcFile)) {
+        continue
+    }
+    $destFile = Join-Path $tempBackupSrc $file
+    $destDir = Split-Path $destFile -Parent
+    if (-not (Test-Path $destDir)) {
+        New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+    }
+    Copy-Item -LiteralPath $srcFile -Destination $destFile -Force
+}
 
-$passFile =
-    Join-Path $env:TEMP "rock-os-backup-pass-$PID.txt"
-
+# --- Wrap operations in try/finally to prevent unencrypted zip leaks ---
 try {
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [IO.File]::WriteAllText($passFile, $plain, $utf8NoBom)
+    Write-Host "Creating clean ZIP archive..." -ForegroundColor Cyan
+    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+    Compress-Archive -Path "$tempBackupSrc\*" -DestinationPath $zipPath
+    Write-Host "ZIP created at $zipPath" -ForegroundColor Green
 
-    # Run OpenSSL without putting the password directly on the command line.
-    & openssl enc -aes-256-cbc -salt -pbkdf2 -in $zipPath -out $encPath -pass "file:$passFile"
-    if ($LASTEXITCODE -ne 0) {
-        Fail "OpenSSL encryption failed."
+    # --- Secure password input with verification ---
+    $match = $false
+    while (-not $match) {
+        $password = Read-Host "Enter encryption password" -AsSecureString
+        $confirm = Read-Host "Confirm encryption password" -AsSecureString
+
+        $passwordBstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
+        $confirmBstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirm)
+
+        $plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto($passwordBstr)
+        $plainConfirm = [Runtime.InteropServices.Marshal]::PtrToStringAuto($confirmBstr)
+
+        $match = ($plain -eq $plainConfirm)
+
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordBstr)
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($confirmBstr)
+        $plainConfirm = $null
+
+        if (-not $match) {
+            Write-Host "Passwords do not match. Please try again." -ForegroundColor Yellow
+        }
+    }
+
+    # --- Encrypt ZIP using OpenSSL ---
+    Write-Host "Encrypting ZIP with OpenSSL AES-256-CBC..." -ForegroundColor Cyan
+    $passFile = Join-Path $env:TEMP "rock-os-backup-pass-$PID.txt"
+
+    try {
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        [IO.File]::WriteAllText($passFile, $plain, $utf8NoBom)
+
+        # Run OpenSSL with pbkdf2 and explicit sha256 digest
+        & openssl enc -aes-256-cbc -salt -pbkdf2 -md sha256 -in $zipPath -out $encPath -pass "file:$passFile"
+        if ($LASTEXITCODE -ne 0) {
+            Fail "OpenSSL encryption failed."
+        }
+    }
+    finally {
+        if (Test-Path -LiteralPath $passFile) {
+            # Overwrite temp password file before deleting
+            [IO.File]::WriteAllText($passFile, "0000000000000000", $utf8NoBom)
+            Remove-Item -LiteralPath $passFile -Force
+        }
     }
 }
 finally {
-    if (Test-Path -LiteralPath $passFile) {
-        Remove-Item -LiteralPath $passFile -Force
+    # CRITICAL: Always clean up unencrypted files
+    if (Test-Path $zipPath) {
+        Remove-Item $zipPath -Force
+        Write-Host "Temporary unencrypted ZIP removed." -ForegroundColor DarkGray
+    }
+    if (Test-Path $tempBackupSrc) {
+        Remove-Item $tempBackupSrc -Recurse -Force
+        Write-Host "Staging area cleaned." -ForegroundColor DarkGray
     }
 }
 
 # Clear plaintext password from memory
-[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordBstr)
 $plain = $null
 
 Write-Host "Encrypted backup created at $encPath" -ForegroundColor Green
-
-# --- Cleanup original ZIP ---
-Remove-Item $zipPath -Force
-Write-Host "Temporary ZIP removed." -ForegroundColor DarkGray
-
 Write-Host ""
 Write-Host "Backup complete." -ForegroundColor Green
