@@ -75,17 +75,29 @@ if /I "%~1"=="all" set "ROCK_OS_HOST=local"
 if /I "%~1"=="0.0.0.0" set "ROCK_OS_HOST=0.0.0.0"
 if /I "%~1"=="127.0.0.1" set "ROCK_OS_HOST=127.0.0.1"
 
-if not exist "%ROCK_OS_ROOT%\.git" (
-    call :red "This folder is not a cloned Git repository."
-    call :yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Profiles."
-    call :yellow "Use this instead:"
-    echo git clone https://github.com/rocketpowerinc/rock-os.git
-    echo cd rock-os
-    echo cd START-HERE\Windows
-    call :wait
-    exit /b 1
+if exist "%ROCK_OS_ROOT%\.git" (
+    set "ROCK_OS_HAS_GIT=1"
+) else (
+    set "ROCK_OS_HAS_GIT=0"
+    call :red    "============================================================"
+    call :red    "  WARNING: This is NOT a cloned Git repository."
+    call :red    "============================================================"
+    call :yellow "  Rock-OS will still start, but in a LIMITED mode:"
+    call :yellow "    - Automatic updates are skipped (no 'git pull')."
+    call :yellow "    - git-crypt cannot unlock private Profiles."
+    echo.
+    call :yellow "  This usually means Rock-OS was downloaded as a GitHub ZIP,"
+    call :yellow "  which does not include the hidden .git folder."
+    echo.
+    call :yellow "  For updates and Profiles, a real clone is strongly recommended:"
+    call :green  "    git clone https://github.com/rocketpowerinc/rock-os.git"
+    call :green  "    cd rock-os\START-HERE\Windows"
+    call :red    "============================================================"
+    call :yellow "  Press Enter to continue from local files, or close this window to cancel."
+    set /p "ROCK_OS_CONTINUE=  > "
 )
 
+if "%ROCK_OS_HAS_GIT%"=="0" goto :after_pull
 call :pull_updates
 if "%ERRORLEVEL%"=="222" (
     call :yellow "Launcher files changed during update. Restarting Rock-OS launcher once..."
@@ -93,6 +105,7 @@ if "%ERRORLEVEL%"=="222" (
     call "%~f0" %*
     exit /b %ERRORLEVEL%
 )
+:after_pull
 
 cd /d "%ROCK_OS_ROOT%\Website"
 if errorlevel 1 (

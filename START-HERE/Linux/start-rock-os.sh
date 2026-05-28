@@ -32,14 +32,26 @@ case "${1:-}" in
         ;;
 esac
 
-if [ ! -e "$REPO_ROOT/.git" ]; then
-    red "This folder is not a cloned Git repository."
-    yellow "GitHub ZIP downloads do not include the .git folder, so git-crypt cannot unlock Profiles."
-    yellow "Use this instead:"
-    printf '%s\n' "git clone https://github.com/rocketpowerinc/rock-os.git"
-    printf '%s\n' "cd rock-os"
-    printf '%s\n' "cd START-HERE/Linux"
-    exit 1
+if [ -e "$REPO_ROOT/.git" ]; then
+    ROCK_OS_HAS_GIT=1
+else
+    ROCK_OS_HAS_GIT=0
+    red    "============================================================"
+    red    "  WARNING: This is NOT a cloned Git repository."
+    red    "============================================================"
+    yellow "  Rock-OS will still start, but in a LIMITED mode:"
+    yellow "    - Automatic updates are skipped (no 'git pull')."
+    yellow "    - git-crypt cannot unlock private Profiles."
+    yellow ""
+    yellow "  This usually means Rock-OS was downloaded as a GitHub ZIP,"
+    yellow "  which does not include the hidden .git folder."
+    yellow ""
+    yellow "  For updates and Profiles, a real clone is strongly recommended:"
+    green  "    git clone https://github.com/rocketpowerinc/rock-os.git"
+    green  "    cd rock-os/START-HERE/Linux"
+    red    "============================================================"
+    yellow "  Press Enter to continue from local files, or Ctrl+C to cancel."
+    read -r _ignore_continue || true
 fi
 
 pull_updates() {
@@ -85,15 +97,17 @@ write_version_file() {
     } > "$VERSION_FILE"
 }
 
-if pull_updates; then
-    :
-else
-    status="$?"
-    if [ "$status" -eq 222 ]; then
-        yellow "Launcher files changed during update. Restarting Rock-OS launcher once..."
-        ROCK_OS_RESTARTED_AFTER_PULL=1 exec "$SELF_SCRIPT" "$@"
+if [ "$ROCK_OS_HAS_GIT" -eq 1 ]; then
+    if pull_updates; then
+        :
+    else
+        status="$?"
+        if [ "$status" -eq 222 ]; then
+            yellow "Launcher files changed during update. Restarting Rock-OS launcher once..."
+            ROCK_OS_RESTARTED_AFTER_PULL=1 exec "$SELF_SCRIPT" "$@"
+        fi
+        exit "$status"
     fi
-    exit "$status"
 fi
 
 cd "$REPO_ROOT/Website"

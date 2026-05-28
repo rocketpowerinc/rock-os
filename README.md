@@ -532,6 +532,12 @@ git clone https://github.com/rocketpowerinc/rock-os.git
 cd rock-os
 ```
 
+A ZIP download will still run. If `start-rock-os` does not find a `.git` folder,
+it prints a prominent warning, waits for you to press Enter, then starts in a
+limited mode: automatic `git pull` updates are skipped and `git-crypt` cannot
+unlock Profiles. The public wiki, dashboards, scripts, and search all work
+normally. Clone the repo when you want updates and private Profiles.
+
 The start scripts show only launcher-side activity: the real `git pull
 --ff-only` output, whether Go is available for source fallback, release binary
 download/current messages, and the final launch handoff. If a newer release
