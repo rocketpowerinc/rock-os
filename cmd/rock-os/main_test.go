@@ -293,6 +293,39 @@ func TestScanLinkHealthReportsLocalAndExternalLinks(t *testing.T) {
 	}
 }
 
+func TestScanLinkHealthIgnoresMarkedLinks(t *testing.T) {
+	siteRoot := t.TempDir()
+	wikiRoot := filepath.Join(siteRoot, markdownDir)
+	if err := os.MkdirAll(wikiRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	source := strings.Join([]string{
+		"[Ignored](Future.md) <!-- rock-os-ignore-link -->",
+		"[Missing](Missing.md)",
+	}, "\n")
+	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := scanLinkHealth(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if report.Checked != 1 {
+		t.Fatalf("expected only unignored link to be checked, got %d", report.Checked)
+	}
+	if report.Broken != 1 {
+		t.Fatalf("expected one broken unignored link, got %d", report.Broken)
+	}
+	for _, item := range report.Items {
+		if item.Href == "Future.md" {
+			t.Fatalf("ignored link was reported: %+v", item)
+		}
+	}
+}
+
 func TestNewsItemThumbnailFindsCommonRSSImageFields(t *testing.T) {
 	tests := []struct {
 		name string

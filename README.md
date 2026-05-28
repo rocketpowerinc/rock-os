@@ -768,6 +768,16 @@ HTML pages, dashboard/profile folders, media, and asset paths against the real
 filesystem. External `http` and `https` links are counted but not fetched, so the
 scan stays local-first and does not leak browsing intent to the internet.
 
+If a broken link is intentional, such as a planned future page, add this marker
+after the link on the same line:
+
+```markdown
+[KDE](../../cheatsheets/Linux/KDE-CheatSheet.md) <!-- rock-os-ignore-link -->
+```
+
+Use this sparingly. If a page was deleted and the link is no longer useful,
+remove the link instead of hiding it from the report.
+
 Direct wiki URLs look like this:
 
 ```text

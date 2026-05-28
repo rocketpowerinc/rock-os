@@ -27,6 +27,8 @@ func linkHealthHandler(siteRoot string) http.HandlerFunc {
 	}
 }
 
+const linkHealthIgnoreMarker = "rock-os-ignore-link"
+
 var markdownLinkRegex = regexp.MustCompile(`!?\[([^\]]*)\]\(([^)\r\n]+)\)`)
 
 func scanLinkHealth(siteRoot string) (linkHealthResponse, error) {
@@ -51,9 +53,14 @@ func scanLinkHealth(siteRoot string) (linkHealthResponse, error) {
 			continue
 		}
 
-		for _, match := range markdownLinkRegex.FindAllStringSubmatch(string(content), -1) {
-			label := strings.TrimSpace(match[1])
-			href := cleanMarkdownHref(match[2])
+		text := string(content)
+		for _, match := range markdownLinkRegex.FindAllStringSubmatchIndex(text, -1) {
+			if linkHealthIgnoredOnLine(text, match[1]) {
+				continue
+			}
+
+			label := strings.TrimSpace(text[match[2]:match[3]])
+			href := cleanMarkdownHref(text[match[4]:match[5]])
 			if href == "" {
 				continue
 			}
@@ -75,6 +82,21 @@ func scanLinkHealth(siteRoot string) (linkHealthResponse, error) {
 	}
 
 	return report, nil
+}
+
+func linkHealthIgnoredOnLine(content string, linkEnd int) bool {
+	if linkEnd < 0 || linkEnd > len(content) {
+		return false
+	}
+
+	lineEnd := strings.IndexAny(content[linkEnd:], "\r\n")
+	if lineEnd < 0 {
+		lineEnd = len(content)
+	} else {
+		lineEnd += linkEnd
+	}
+
+	return strings.Contains(content[linkEnd:lineEnd], linkHealthIgnoreMarker)
 }
 
 func linkHealthSourceFiles(siteRoot string) ([]string, error) {
