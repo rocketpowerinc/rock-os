@@ -29,9 +29,13 @@ if (-not $repoPath -or -not (Test-Path (Join-Path $repoPath '.git'))) {
     exit 1
 }
 
-$backupDir = Join-Path $env:USERPROFILE "Downloads"
-$timestamp = Get-Date -Format "MMM-d-yyyy_h-mmtt"
-$encPath   = Join-Path $backupDir "rock-os-backup-$timestamp.zip.enc"
+$timestamp    = Get-Date -Format "MMM-d-yyyy_h-mmtt"
+# Each backup gets its own dated folder under Downloads\Rock-OS-backup, holding
+# the .enc, its .hmac, and a copy of the decrypt script - a self-contained bundle.
+$backupRoot   = Join-Path (Join-Path $env:USERPROFILE "Downloads") "Rock-OS-backup"
+$backupFolder = Join-Path $backupRoot $timestamp
+New-Item -ItemType Directory -Path $backupFolder -Force | Out-Null
+$encPath   = Join-Path $backupFolder "rock-os-backup-$timestamp.zip.enc"
 $macPath   = "$encPath.hmac"
 
 # Build the ZIP in a NON-synced temp dir so a plaintext copy never lands in
@@ -47,43 +51,55 @@ function Test-Command($Name) { return [bool](Get-Command $Name -ErrorAction Sile
 
 if (-not (Test-Command openssl)) { Fail "OpenSSL is not installed or not available in PATH." }
 
-# Folders inside the repo to skip: regenerable build caches. Edit this list if
-# you want a leaner or fuller snapshot. Paths are relative to the repo root.
-$excludeDirs = @(
-    'Website\.gocache',
-    'Website\.gotmp'
-)
+if (-not (Test-Command git)) { Fail "Git is not installed or not available in PATH." }
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-Write-Host "Snapshotting repo (including .git, .key, and uncommitted changes)..." -ForegroundColor Cyan
+Write-Host "Building file list (tracked + uncommitted, the .git folder, and .key)..." -ForegroundColor Cyan
 
-# Zip DIRECTLY from the repo - no staging copy. This avoids the MAX_PATH
-# doubling you'd hit by copying into %TEMP% first. Long source paths are read
-# with the \\?\ extended-length prefix.
 $repoFull = (Resolve-Path -LiteralPath $repoPath).Path.TrimEnd('\')
-$allFiles = [System.IO.Directory]::EnumerateFiles($repoFull, '*', [System.IO.SearchOption]::AllDirectories)
+
+# What goes in the snapshot:
+#   1. Everything Git tracks OR sees as new, honoring .gitignore. This keeps the
+#      multi-GB build/test caches (.gotest-cache, .gocache, dist, *.exe, etc.)
+#      OUT, since they are all gitignored, while still capturing uncommitted work.
+#   2. The entire .git folder, so history, branches, and stashes are preserved.
+#   3. Any root *.key files - gitignored, but the whole reason this backup exists.
+$relPaths = [System.Collections.Generic.List[string]]::new()
+$seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+function Add-Rel($rel) { if ($rel -and $seen.Add($rel)) { $relPaths.Add($rel) } }
+
+$gitFiles = & git -C $repoPath ls-files -c -o --exclude-standard
+if ($LASTEXITCODE -ne 0) { Fail "git ls-files failed." }
+foreach ($g in $gitFiles) { Add-Rel ($g -replace '/', '\') }
+
+$gitDir = Join-Path $repoFull '.git'
+if (Test-Path -LiteralPath $gitDir) {
+    foreach ($f in [System.IO.Directory]::EnumerateFiles($gitDir, '*', [System.IO.SearchOption]::AllDirectories)) {
+        Add-Rel ($f.Substring($repoFull.Length + 1))
+    }
+}
+
+foreach ($k in (Get-ChildItem -LiteralPath $repoPath -Filter '*.key' -File -ErrorAction SilentlyContinue)) {
+    Add-Rel $k.Name
+}
+
+Write-Host "Zipping $($relPaths.Count) files..." -ForegroundColor Cyan
 
 if (Test-Path -LiteralPath $tempZip) { Remove-Item -LiteralPath $tempZip -Force }
 
+# Zip DIRECTLY from the repo - no staging copy - to avoid MAX_PATH doubling.
+# Long source paths are read with the \\?\ extended-length prefix.
 $skipped = 0
 $zip = [System.IO.Compression.ZipFile]::Open($tempZip, [System.IO.Compression.ZipArchiveMode]::Create)
 try {
-    foreach ($file in $allFiles) {
-        $rel = $file.Substring($repoFull.Length + 1)
-
-        $skip = $false
-        foreach ($ex in $excludeDirs) {
-            if ($rel -eq $ex -or $rel.StartsWith($ex + '\')) { $skip = $true; break }
-        }
-        if ($skip) { continue }
-
+    foreach ($rel in $relPaths) {
+        $srcPath = Join-Path $repoFull $rel
+        if (-not (Test-Path -LiteralPath $srcPath)) { continue }
         $entryName = $rel -replace '\\', '/'
-        $srcPath = $file
         if ($srcPath.Length -ge 248 -and -not $srcPath.StartsWith('\\?\')) {
             $srcPath = '\\?\' + $srcPath
         }
-
         try {
             [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
                 $zip, $srcPath, $entryName,
@@ -149,7 +165,17 @@ finally {
     [GC]::Collect()
 }
 
+# Copy the decrypt script into the bundle so a restore is self-contained.
+$decryptSrc = Join-Path $PSScriptRoot "decrypt-windows-rock-os-daily-backup.ps1"
+if (Test-Path -LiteralPath $decryptSrc) {
+    Copy-Item -LiteralPath $decryptSrc -Destination (Join-Path $backupFolder "decrypt-windows-rock-os-daily-backup.ps1") -Force
+    Write-Host "Decrypt script copied into the backup folder." -ForegroundColor Green
+} else {
+    Write-Host "WARNING: decrypt script not found at $decryptSrc; not copied." -ForegroundColor Yellow
+}
+
 Write-Host ""
+Write-Host "Backup folder:    $backupFolder" -ForegroundColor Green
 Write-Host "Encrypted backup: $encPath" -ForegroundColor Green
 Write-Host "Integrity tag:    $macPath" -ForegroundColor Green
 Write-Host "Backup complete." -ForegroundColor Green

@@ -32,9 +32,12 @@ if (-not (Get-Command openssl -ErrorAction SilentlyContinue)) {
 }
 
 if (-not $EncryptedFile) {
-    Write-Host "Select the .enc file to decrypt..." -ForegroundColor Cyan
-    $EncryptedFile = Read-Host "Path to encrypted file"
+    Write-Host "Tip: you can drag and drop the .enc file onto this window, then press Enter." -ForegroundColor Cyan
+    $EncryptedFile = Read-Host "Path to encrypted (.enc) file"
 }
+
+# Drag-and-drop often wraps the path in quotes - strip them.
+$EncryptedFile = $EncryptedFile.Trim().Trim('"')
 
 if (-not (Test-Path -LiteralPath $EncryptedFile)) {
     Fail "File not found: $EncryptedFile"
