@@ -9,6 +9,21 @@ to the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
+## Contents
+
+- [Quick Install](#quick-install) — one-line installers for each platform
+- [Connection Modes](#connection-modes) — Local vs LAN, and the safety rules
+- [Features](#features)
+- [Release Binaries](#50-release-binaries) and [Dependencies](#dependencies)
+- [Profiles and Dashboards](#profiles-and-dashboards)
+- [Project Layout](#project-layout)
+- [Running From a Release Binary](#running-from-a-release-binary) · [From Source](#running-from-source) · [Server Options](#server-options)
+- [Local Script Dashboard](#local-script-dashboard)
+- [Unlocking](#unlocking-profiles) / [Locking](#locking-profiles-again) Profiles (`git-crypt`)
+- [How the Wiki Works](#how-the-wiki-works) · [Wiki Links](#wiki-links) · [Personal Pins](#personal-pins)
+- [Offline Assets](#offline-assets) · [Markdown and Media](#markdown-and-media)
+- [License](#license)
+
 ## License
 
 Rock OS uses a split license:
@@ -167,19 +182,7 @@ Choose the binary for your system:
 The release also includes `rock-os-vX.Y-checksums.txt` for verifying
 downloads.
 
-## Dependencies
-
-You can run Rock OS from a release binary without Go installed. Go is only
-needed if you want to run from source or if the start script cannot find a
-matching release binary and falls back to the Go source under
-`cmd/rock-os`.
-
-The Go source uses `goldmark` for local server-side markdown rendering. It is
-managed through `cmd/rock-os/go.mod` and is included automatically when you
-build or run from source.
-
-`git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/profiles/`.
+## Profiles and Dashboards
 
 The top navigation includes a **Profiles** tab between Home and Menu. When
 `Website/profiles/` is locked, the Profiles page shows a locked panel instead
@@ -229,6 +232,20 @@ in the same browser tab. External web links open in a new tab so the local
 dashboard stays available. Dashboard/profile cards can link directly to their
 markdown tree by using `?view=notes`, for example
 `/dashboards/OS/Windows/?view=notes`.
+
+## Dependencies
+
+You can run Rock OS from a release binary without Go installed. Go is only
+needed if you want to run from source or if the start script cannot find a
+matching release binary and falls back to the Go source under
+`cmd/rock-os`.
+
+The Go source uses `goldmark` for local server-side markdown rendering. It is
+managed through `cmd/rock-os/go.mod` and is included automatically when you
+build or run from source.
+
+`git-crypt` is only needed for unlocking, editing, or re-locking private
+markdown stored under `Website/profiles/`.
 
 ### Windows
 
@@ -558,11 +575,8 @@ Pass a port number if you started Rock-OS on a different port:
 ```
 
 By default, the server listens on port `8000`, opens the site in your browser,
-and binds to `127.0.0.1`. That means only the computer running Rock OS can
-connect.
-
-To share Rock OS with other devices on a trusted home/private network, start it
-in LAN mode:
+and binds to `127.0.0.1` (see [Connection Modes](#connection-modes)). To share
+with other devices on a trusted network, append `lan`:
 
 ```powershell
 .\START-HERE\Windows\start-rock-os.cmd lan
@@ -573,9 +587,6 @@ in LAN mode:
 # or on macOS
 ./START-HERE/Mac/start-rock-os.sh lan
 ```
-
-LAN mode binds to the local network interface and prints URLs that other devices
-on the same network can open.
 
 ## Server Options
 
@@ -805,7 +816,6 @@ Wiki code highlighting is also local: Highlight.js and the Bash/PowerShell
 language files are vendored under `Website/js/vendor/`.
 
 ## Markdown And Media
-
 The wiki supports common markdown features including images, links, tables,
 lists, code blocks, and callouts. Raw HTML is not rendered, so use normal
 markdown links for videos and other media files.

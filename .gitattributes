@@ -1,1 +1,7 @@
-Website/profiles/** filter=git-crypt diff=git-crypt
+# Normalize line endings to LF in the repo. Git auto-detects binary files and
+# leaves them alone; everything text is stored and checked out as LF.
+* text=auto eol=lf
+
+# git-crypt content is encrypted binary; disable EOL conversion so it is never
+# rewritten by the normalization rule above.
+Website/profiles/** filter=git-crypt diff=git-crypt -text
