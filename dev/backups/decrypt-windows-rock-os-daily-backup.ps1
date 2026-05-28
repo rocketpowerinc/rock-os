@@ -17,6 +17,15 @@ param(
     [string]$EncryptedFile
 )
 
+function Fail($Message) {
+    Write-Host "ERROR: $Message" -ForegroundColor Red
+    exit 1
+}
+
+if (-not (Get-Command openssl -ErrorAction SilentlyContinue)) {
+    Fail "OpenSSL is not installed or not available in PATH."
+}
+
 # If script was run without drag‑and‑drop, ask for file
 if (-not $EncryptedFile) {
     Write-Host "Select the .enc file to decrypt..." -ForegroundColor Cyan
@@ -25,8 +34,7 @@ if (-not $EncryptedFile) {
 
 # Validate file
 if (-not (Test-Path $EncryptedFile)) {
-    Write-Host "ERROR: File not found: $EncryptedFile" -ForegroundColor Red
-    exit 1
+    Fail "File not found: $EncryptedFile"
 }
 
 # Build output ZIP path
@@ -38,20 +46,36 @@ Write-Host "Decrypting $EncryptedFile ..." -ForegroundColor Cyan
 
 # Ask for password
 $password = Read-Host "Enter decryption password" -AsSecureString
-$plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
-)
+$passwordBstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
+$plain = [Runtime.InteropServices.Marshal]::PtrToStringAuto($passwordBstr)
 
-# Run OpenSSL decrypt
-$cmd = "openssl enc -d -aes-256-cbc -pbkdf2 -in `"$EncryptedFile`" -out `"$outZip`" -pass pass:$plain"
-cmd.exe /c $cmd
+$passFile =
+    Join-Path $env:TEMP "rock-os-backup-pass-$PID.txt"
+
+try {
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [IO.File]::WriteAllText($passFile, $plain, $utf8NoBom)
+
+    # Run OpenSSL without putting the password directly on the command line.
+    & openssl enc -d -aes-256-cbc -pbkdf2 -in $EncryptedFile -out $outZip -pass "file:$passFile"
+    if ($LASTEXITCODE -ne 0) {
+        if (Test-Path -LiteralPath $outZip) {
+            Remove-Item -LiteralPath $outZip -Force
+        }
+        Fail "OpenSSL decryption failed. Check the password and encrypted file."
+    }
+}
+finally {
+    if (Test-Path -LiteralPath $passFile) {
+        Remove-Item -LiteralPath $passFile -Force
+    }
+}
 
 # Clear plaintext password from memory
-[Runtime.InteropServices.Marshal]::ZeroFreeBSTR(
-    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
-)
+[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordBstr)
+$plain = $null
 
 Write-Host "Decryption complete." -ForegroundColor Green
 Write-Host "Decrypted ZIP saved to: $outZip" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "⚠️  Reminder: This ZIP contains the git‑crypt key. Protect it." -ForegroundColor Red
+Write-Host "Reminder: This ZIP may contain the git-crypt key and decrypted Profiles data. Protect it." -ForegroundColor Red
