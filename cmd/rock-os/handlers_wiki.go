@@ -7,9 +7,22 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
+)
+
+var (
+	searchSnippetHTMLTagPattern       = regexp.MustCompile(`(?is)<[^>]+>`)
+	searchSnippetImagePattern         = regexp.MustCompile(`!\[([^\]]*)\]\([^)]+\)`)
+	searchSnippetLinkPattern          = regexp.MustCompile(`\[([^\]]+)\]\([^)]+\)`)
+	searchSnippetInlineCodePattern    = regexp.MustCompile("`([^`]*)`")
+	searchSnippetHeadingPattern       = regexp.MustCompile(`(?m)^\s{0,3}#{1,6}\s*`)
+	searchSnippetBlockquotePattern    = regexp.MustCompile(`(?m)^\s{0,3}>\s?`)
+	searchSnippetUnorderedListPattern = regexp.MustCompile(`(?m)^\s*[-*+]\s+`)
+	searchSnippetOrderedListPattern   = regexp.MustCompile(`(?m)^\s*\d+[.)]\s+`)
+	searchSnippetEmphasisPattern      = regexp.MustCompile(`[*_~]+`)
 )
 
 func wikiDocHandler(siteRoot string) http.HandlerFunc {
@@ -118,27 +131,49 @@ func searchSnippet(text string, normalizedQuery string) string {
 			continue
 		}
 
-		trimmed := strings.TrimSpace(line)
-		if len(trimmed) <= 120 {
-			return trimmed
+		cleaned := cleanSearchSnippetLine(line)
+		if cleaned == "" {
+			continue
+		}
+		if len(cleaned) <= 120 {
+			return cleaned
 		}
 
-		matchIndex := strings.Index(strings.ToLower(trimmed), normalizedQuery)
+		matchIndex := strings.Index(strings.ToLower(cleaned), normalizedQuery)
+		if matchIndex < 0 {
+			return cleaned[:min(len(cleaned), 120)]
+		}
 		start := max(0, matchIndex-45)
-		end := min(len(trimmed), start+120)
+		end := min(len(cleaned), start+120)
 		prefix := ""
 		suffix := ""
 		if start > 0 {
 			prefix = "..."
 		}
-		if end < len(trimmed) {
+		if end < len(cleaned) {
 			suffix = "..."
 		}
 
-		return prefix + trimmed[start:end] + suffix
+		return prefix + cleaned[start:end] + suffix
 	}
 
 	return ""
+}
+
+func cleanSearchSnippetLine(line string) string {
+	line = strings.TrimSpace(line)
+	line = searchSnippetHTMLTagPattern.ReplaceAllString(line, " ")
+	line = searchSnippetImagePattern.ReplaceAllString(line, "$1")
+	line = searchSnippetLinkPattern.ReplaceAllString(line, "$1")
+	line = searchSnippetInlineCodePattern.ReplaceAllString(line, "$1")
+	line = searchSnippetHeadingPattern.ReplaceAllString(line, "")
+	line = searchSnippetBlockquotePattern.ReplaceAllString(line, "")
+	line = searchSnippetUnorderedListPattern.ReplaceAllString(line, "")
+	line = searchSnippetOrderedListPattern.ReplaceAllString(line, "")
+	line = searchSnippetEmphasisPattern.ReplaceAllString(line, "")
+	line = strings.ReplaceAll(line, `\`, "")
+	line = strings.Join(strings.Fields(line), " ")
+	return line
 }
 
 func resolveMarkdownDoc(siteRoot string, docPath string) (string, string, error) {

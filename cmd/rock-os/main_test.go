@@ -166,6 +166,25 @@ func TestRequestFlightGroupDeduplicatesConcurrentCalls(t *testing.T) {
 	}
 }
 
+func TestSearchSnippetStripsMarkdownAndHTML(t *testing.T) {
+	text := `# Links
+This **important** [Linux guide](../Linux/Guide.md) has <strong>needle</strong> and ` + "`inline code`" + `.`
+
+	snippet := searchSnippet(text, "needle")
+	if strings.Contains(snippet, "<strong>") ||
+		strings.Contains(snippet, "[Linux guide]") ||
+		strings.Contains(snippet, "**") ||
+		strings.Contains(snippet, "`") {
+		t.Fatalf("snippet still contains markup: %q", snippet)
+	}
+
+	if !strings.Contains(snippet, "Linux guide") ||
+		!strings.Contains(snippet, "needle") ||
+		!strings.Contains(snippet, "inline code") {
+		t.Fatalf("snippet lost readable text: %q", snippet)
+	}
+}
+
 func TestValidatePublicFetchURLBlocksLocalAndPrivateTargets(t *testing.T) {
 	tests := []string{
 		"http://localhost/feed.xml",
