@@ -47,6 +47,21 @@ locked when you do not need it, and stop the server when you are done sharing it
 These installers clone Rock OS into `~/rock-os`, create a `rock-os` terminal
 command, add a desktop launcher, and start Rock-OS immediately.
 
+### Install Location
+
+The one-line installers use a normal Git clone, not a ZIP download.
+
+| Platform | Repo install location | Terminal command created | Desktop launcher |
+| --- | --- | --- | --- |
+| Windows | `%USERPROFILE%\rock-os` | `%USERPROFILE%\Bin\rock-os.cmd` | `%USERPROFILE%\Desktop\Rock-OS.lnk` |
+| Linux | `$HOME/rock-os` | `$HOME/.local/bin/rock-os` | `$HOME/Desktop/Rock-OS.desktop` when a Desktop folder exists |
+| macOS | `$HOME/rock-os` | `$HOME/.local/bin/rock-os` | `$HOME/Desktop/Rock-OS.app` when a Desktop folder exists |
+
+If the install folder already exists and is a Git clone, rerunning the one-line
+installer updates it with `git pull --ff-only` and refreshes the launcher files.
+If the folder exists but is not a Git clone, the installer stops so it does not
+overwrite unrelated files.
+
 ### Windows PowerShell
 
 ```powershell
