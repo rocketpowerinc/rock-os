@@ -60,6 +60,11 @@ Never break these without an explicit, specific request from the user:
   secondary subtitle. The Dashboards landing kicker reads
   `UNENCRYPTED DASHBOARDS`. Neither landing page needs an explanatory paragraph
   under the heading.
+- Widgets are parsed and rendered by `Website/js/profiles.js` (shared by both
+  Profiles and Dashboards) from each item's `widgets.txt`. When you add a new
+  widget type or change an existing widget's `widgets.txt` fields, update
+  `dev/Widgets.md` in the same change so the widget guide always documents every
+  available widget type and its supported fields.
 
 ## Markdown Writing Style
 
