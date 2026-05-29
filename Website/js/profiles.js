@@ -437,6 +437,8 @@ const SPOTIFY_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL
 const NEWS_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjE1IiB5PSIxNSIgd2lkdGg9IjgwIiBoZWlnaHQ9IjIwIiByeD0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48bGluZSB4MT0iMjAiIHkxPSIyMCIgeDI9Ijg1IiB5Mj0iMjAiIHN0cm9rZT0iIzQ2QjhEMyIgc3Ryb2tlLXdpZHRoPSIyIi8+PGxpbmUgeDE9IjIwIiB5MT0iMjUiIHgyPSI2MCIgeTI9IjI1IiBzdHJva2U9IiM0NkI4RDMiIHN0cm9rZS13aWR0aD0iMiIvPjxsaW5lIHgxPSIyMCIgeTE9IjMwIiB4Mj0iNTUiIHkyPSIzMCIgc3Ryb2tlPSIjNDZCOEQzIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
 const GOOGLE_NEWS_PLACEHOLDER = '/assets/widget-icons/google-news.png';
 
+const FILE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
 function newsPlaceholderForSource(source) {
     const normalized = String(source || '').toLowerCase();
 
@@ -618,6 +620,30 @@ function renderDashboard(profile, config, feeds) {
             </div>
             <div class="glance-dashboard">
                 ${config.widgets.map((w, idx) => {
+                    if (w.type === 'files') {
+                        return `
+                            <div class="glance-card widget-files card-size-${w.card_size} link-size-${w.link_size}">
+                                <div class="glance-card-header">
+                                    <h2>${escapeHtml(w.title)}</h2>
+                                    <span class="glance-badge">${escapeHtml(w.badge)}</span>
+                                </div>
+                                <div class="glance-files-grid link-size-${w.link_size}">
+                                    ${(w.files || []).map(item => {
+                                        const copyText = item.copy || item.path;
+                                        const hint = item.copy ? 'Click to copy command' : 'Click to copy path';
+                                        return `
+                                        <button type="button" class="glance-file-card link-size-${w.link_size}${item.desc ? ' has-desc' : ''}" data-path="${escapeHtml(copyText)}" data-hint="${escapeHtml(hint)}">
+                                            <span class="glance-file-icon">${FILE_ICON_SVG}</span>
+                                            <span class="glance-file-name">${escapeHtml(item.name)}</span>
+                                            <span class="glance-file-hint">${escapeHtml(hint)}</span>
+                                            ${item.desc ? `<span class="glance-file-tooltip" role="tooltip">${escapeHtml(item.desc)}</span>` : ''}
+                                        </button>
+                                    `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
                     if (w.type === 'featuring') {
                         return `
                             <div class="glance-card widget-featuring card-size-${w.card_size}">
@@ -716,9 +742,42 @@ function renderDashboard(profile, config, feeds) {
             </div>
         `;
 
+        // Wire up click-to-copy for files widgets.
+        content.querySelectorAll('.glance-file-card').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const path = btn.getAttribute('data-path') || '';
+                const hint = btn.querySelector('.glance-file-hint');
+                const original = hint ? hint.textContent : '';
+                const showCopied = () => {
+                    btn.classList.add('copied');
+                    if (hint) hint.textContent = 'Copied!';
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        if (hint) hint.textContent = original;
+                    }, 1500);
+                };
+                const fallbackCopy = () => {
+                    const ta = document.createElement('textarea');
+                    ta.value = path;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch {}
+                    document.body.removeChild(ta);
+                    showCopied();
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(path).then(showCopied).catch(fallbackCopy);
+                } else {
+                    fallbackCopy();
+                }
+            });
+        });
+
         // Async load feed content for non-bookmarks widgets
         config.widgets.forEach((w, idx) => {
-            if (w.type === 'bookmarks') return;
+            if (w.type === 'bookmarks' || w.type === 'files') return;
 
             const container = document.getElementById(`widget-content-${idx}`);
             if (!container) return;
@@ -913,6 +972,39 @@ async function loadWidgetsConfig(profile) {
                 const value = parts.slice(1).join('=').trim();
                 if (key === 'url') {
                     currentWidget.urls.push(value);
+                    if (!currentWidget.urlMeta) currentWidget.urlMeta = [];
+                    currentWidget.urlMeta.push({});
+                } else if (key === 'name_of_file' || key === 'file_name' || key === 'filename') {
+                    // Start a new file entry (files widget).
+                    if (!currentWidget.fileEntries) currentWidget.fileEntries = [];
+                    currentWidget.fileEntries.push({ name: value });
+                } else if (key === 'path') {
+                    // Attach the path to the most recent file entry (files widget).
+                    if (currentWidget.fileEntries && currentWidget.fileEntries.length) {
+                        currentWidget.fileEntries[currentWidget.fileEntries.length - 1].path = value;
+                    } else {
+                        // Bare path with no preceding name: start an entry from it.
+                        if (!currentWidget.fileEntries) currentWidget.fileEntries = [];
+                        currentWidget.fileEntries.push({ path: value });
+                    }
+                } else if (key === 'desc' || key === 'description') {
+                    // Attach to the most recent file entry (or legacy url entry).
+                    if (currentWidget.fileEntries && currentWidget.fileEntries.length) {
+                        currentWidget.fileEntries[currentWidget.fileEntries.length - 1].desc = value;
+                    } else if (currentWidget.urlMeta && currentWidget.urlMeta.length) {
+                        currentWidget.urlMeta[currentWidget.urlMeta.length - 1].desc = value;
+                    } else {
+                        currentWidget[key] = value;
+                    }
+                } else if (key === 'command' || key === 'cmd' || key === 'copy') {
+                    // Attach to the most recent file entry (or legacy url entry).
+                    if (currentWidget.fileEntries && currentWidget.fileEntries.length) {
+                        currentWidget.fileEntries[currentWidget.fileEntries.length - 1].copy = value;
+                    } else if (currentWidget.urlMeta && currentWidget.urlMeta.length) {
+                        currentWidget.urlMeta[currentWidget.urlMeta.length - 1].copy = value;
+                    } else {
+                        currentWidget[key] = value;
+                    }
                 } else if (key === 'limit') {
                     currentWidget.limit = parseInt(value, 10) || 5;
                 } else {
@@ -966,6 +1058,56 @@ async function startProfiles() {
                     let targetType = f.type;
                     if (f.type === 'videos' || f.type === 'music') {
                         targetType = 'youtube';
+                    }
+                    if (targetType === 'files') {
+                        let fileItems;
+                        if (f.fileEntries && f.fileEntries.length) {
+                            // Preferred form: separate name_of_file / path / description / command lines.
+                            fileItems = f.fileEntries.map(e => {
+                                const path = (e.path || '').trim();
+                                const name = (e.name || (path ? path.split(/[\\/]/).pop() : '') || path).trim();
+                                return {
+                                    name: name,
+                                    path: path,
+                                    desc: (e.desc || '').trim(),
+                                    copy: (e.copy || '').trim()
+                                };
+                            }).filter(it => it.path);
+                        } else {
+                            // Legacy form: url = Name | Path | Description | CopyText (with optional
+                            // desc/command lines attached via urlMeta).
+                            const fileMeta = f.urlMeta || [];
+                            fileItems = (f.urls || []).map((uStr, i) => {
+                                const parts = uStr.split('|');
+                                const m = fileMeta[i] || {};
+                                let name, path, desc, copy;
+                                if (parts.length >= 2) {
+                                    name = parts[0].trim();
+                                    path = parts[1].trim();
+                                    desc = parts.length >= 3 ? parts[2].trim() : '';
+                                    copy = parts.length >= 4 ? parts.slice(3).join('|').trim() : '';
+                                } else {
+                                    path = parts[0].trim();
+                                    name = path.split(/[\\/]/).pop() || path;
+                                    desc = '';
+                                    copy = '';
+                                }
+                                if (m.desc) desc = m.desc;
+                                if (m.copy) copy = m.copy;
+                                return { name: name, path: path, desc: desc, copy: copy };
+                            }).filter(it => it.path);
+                        }
+                        return {
+                            type: 'files',
+                            feedKey: f.feedKey,
+                            title: f.title || f.feedKey,
+                            badge: f.badge || 'Files',
+                            layout: f.layout || 'horizontal',
+                            size: f.size || 'medium',
+                            card_size: f.card_size || f.size || 'medium',
+                            link_size: f.link_size || f.size || 'medium',
+                            files: fileItems
+                        };
                     }
                     if (targetType === 'bookmarks' || targetType === 'featuring') {
                         const items = (f.urls || []).map(uStr => {

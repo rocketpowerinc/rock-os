@@ -227,6 +227,11 @@ Website/dashboards/OS/Windows/assets/windows.png
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
 
+Each `widgets.txt` can define dynamic dashboard widgets (YouTube, Spotify,
+Reddit, podcasts, news feeds, bookmarks, featured spotlights, and clickable
+file cards). For every widget type, its configuration fields, and copy-paste
+examples, see the widget guide: [`documentation/Widgets.md`](documentation/Widgets.md).
+
 Internal Rock OS links, such as `/scripts.html` or `/dashboards/OS/Windows/`, open
 in the same browser tab. External web links open in a new tab so the local
 dashboard stays available. Dashboard/profile cards can link directly to their
