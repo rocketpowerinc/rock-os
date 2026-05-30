@@ -203,8 +203,9 @@ $json = $json -replace "`r`n", "`n"
 Write-Host "Policy written to $policyFile"
 
 # ── Erase all bookmarks from existing profiles ──────────────────────────────
-# Wipe every row from moz_bookmarks so Firefox starts clean with only the
-# policy-defined folder. Each places.sqlite is backed up first.
+# Rename places.sqlite so Firefox creates a fresh database on next launch.
+# This is the most reliable wipe and needs no external tools (no Python or
+# SQLite CLI). The renamed file serves as the backup.
 
 $profileRoot = Join-Path $env:APPDATA 'Mozilla\Firefox\Profiles'
 if (Test-Path $profileRoot) {
@@ -219,27 +220,21 @@ if (Test-Path $profileRoot) {
             $dbBackup = "$dbPath.rock-os-backup.$timestamp"
 
             try {
-                Copy-Item $dbPath $dbBackup
-                # Use Python to wipe the SQLite table since PowerShell has
-                # no built-in SQLite support.
-                $pyScript = @"
-import sqlite3, sys
-conn = sqlite3.connect(sys.argv[1])
-cur = conn.cursor()
-cur.execute('DELETE FROM moz_bookmarks')
-removed = cur.rowcount
-conn.commit()
-conn.close()
-print(f'Erased {removed} bookmark(s) from {sys.argv[1]}')
-"@
-                python3 -c $pyScript "$dbPath" 2>$null
-                if ($LASTEXITCODE -ne 0) {
-                    # Try 'python' if 'python3' is not available (common on Windows)
-                    python -c $pyScript "$dbPath"
+                Rename-Item -Path $dbPath -NewName (Split-Path $dbBackup -Leaf)
+                Write-Host "Renamed $dbPath -> $(Split-Path $dbBackup -Leaf)"
+
+                # Also remove the WAL and SHM journal files so Firefox
+                # doesn't try to recover the old database.
+                foreach ($ext in @('.sqlite-wal', '.sqlite-shm')) {
+                    $journal = $dbPath -replace '\.sqlite$', $ext
+                    if (Test-Path $journal) {
+                        Remove-Item $journal -Force
+                    }
                 }
-                Write-Host "Bookmark database backup saved to $dbBackup"
+
+                Write-Host 'Firefox will create a fresh bookmark database on next launch.'
             } catch {
-                Write-Host "Could not clean ${dbPath}: $_"
+                Write-Host "Could not rename ${dbPath}: $_"
                 Write-Host 'Close Firefox completely, then run this script again.'
             }
         }
