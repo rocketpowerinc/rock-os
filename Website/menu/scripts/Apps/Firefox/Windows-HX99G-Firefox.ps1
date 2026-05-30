@@ -42,14 +42,18 @@ Write-Host ''
 Write-Host 'Close Firefox before running this script so policies reload cleanly.'
 Write-Host ''
 
-$confirm = Read-Host 'Type Y to continue, anything else to abort'
-if ($confirm -ne 'Y' -and $confirm -ne 'y') {
+$yes = New-Object System.Management.Automation.Host.ChoiceDescription '&Yes', 'Erase all bookmarks and apply the policy.'
+$no  = New-Object System.Management.Automation.Host.ChoiceDescription '&No',  'Abort without changing anything.'
+$choice = $Host.UI.PromptForChoice('Confirm', 'Continue?', @($yes, $no), 1)
+if ($choice -ne 0) {
     Write-Host 'Aborted.'
     Read-Host 'Press Enter to exit'
     exit 0
 }
 
 Write-Host ''
+
+try {
 
 # ── Install Firefox via winget if not present ────────────────────────────────
 
@@ -251,5 +255,11 @@ Write-Host 'Firefox policy installed:'
 Write-Host $policyFile
 Write-Host ''
 Write-Host 'Restart Firefox, then open about:policies to verify it loaded.'
-Write-Host ''
-Read-Host 'Press Enter to exit'
+
+} catch {
+    Write-Host ''
+    Write-Host "ERROR: $_" -ForegroundColor Red
+} finally {
+    Write-Host ''
+    Read-Host 'Press Enter to exit'
+}
