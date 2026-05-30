@@ -74,13 +74,24 @@ Write-Host ''
 
 $firefoxPaths = @(
     "$env:ProgramFiles\Mozilla Firefox\firefox.exe",
+    "$env:ProgramFiles\Firefox Developer Edition\firefox.exe",
     "${env:ProgramFiles(x86)}\Mozilla Firefox\firefox.exe",
-    "$env:LOCALAPPDATA\Mozilla Firefox\firefox.exe"
+    "${env:ProgramFiles(x86)}\Firefox Developer Edition\firefox.exe",
+    "$env:LOCALAPPDATA\Mozilla Firefox\firefox.exe",
+    "$env:LOCALAPPDATA\Firefox Developer Edition\firefox.exe"
 )
 
-$firefoxExe = $firefoxPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+$firefoxDirs = @()
+foreach ($path in $firefoxPaths) {
+    if (Test-Path $path) {
+        $dir = Split-Path $path -Parent
+        if ($firefoxDirs -notcontains $dir) {
+            $firefoxDirs += $dir
+        }
+    }
+}
 
-if (-not $firefoxExe) {
+if ($firefoxDirs.Count -eq 0) {
     Write-Host 'Firefox not found. Installing via winget...'
     winget.exe install --id "Mozilla.Firefox" --exact --source winget `
         --accept-source-agreements --disable-interactivity --silent `
@@ -92,72 +103,29 @@ if (-not $firefoxExe) {
         exit 1
     }
 
-    # Refresh the search after install
-    $firefoxExe = $firefoxPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    # Refresh directories search after install
+    foreach ($path in $firefoxPaths) {
+        if (Test-Path $path) {
+            $dir = Split-Path $path -Parent
+            if ($firefoxDirs -notcontains $dir) {
+                $firefoxDirs += $dir
+            }
+        }
+    }
 
-    if (-not $firefoxExe) {
+    if ($firefoxDirs.Count -eq 0) {
         Write-Host 'Firefox was installed but could not be found at the expected paths.'
         Write-Host 'You may need to restart your terminal or check the install location.'
         Read-Host 'Press Enter to exit'
         exit 1
     }
-
-    Write-Host "Firefox installed: $firefoxExe"
-} else {
-    Write-Host "Firefox already installed: $firefoxExe"
 }
 
-# ── Locate or create the distribution policy folder ──────────────────────────
-
-$firefoxDir = Split-Path $firefoxExe -Parent
-$policyDir  = Join-Path $firefoxDir 'distribution'
-$policyFile = Join-Path $policyDir 'policies.json'
-
-if (-not (Test-Path $policyDir)) {
-    New-Item -ItemType Directory -Path $policyDir -Force | Out-Null
-    Write-Host "Created policy directory: $policyDir"
+Write-Host 'Configuring policies for all discovered Firefox installations:'
+foreach ($dir in $firefoxDirs) {
+    Write-Host "  - $dir"
 }
-
-# ── Load existing policy or start fresh ──────────────────────────────────────
-
-if (Test-Path $policyFile) {
-    $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $backup = "$policyFile.rock-os-backup.$timestamp"
-    Copy-Item $policyFile $backup
-    Write-Host "Backed up existing policy to $backup"
-
-    try {
-        $data = Get-Content $policyFile -Raw -Encoding UTF8 | ConvertFrom-Json
-    } catch {
-        Write-Host 'Existing policies.json was invalid, starting fresh.'
-        $data = [pscustomobject]@{}
-    }
-} else {
-    $data = [pscustomobject]@{}
-}
-
-# ── Build the policies object ────────────────────────────────────────────────
-
-if (-not (Get-Member -InputObject $data -Name 'policies' -MemberType NoteProperty)) {
-    $data | Add-Member -NotePropertyName 'policies' -NotePropertyValue ([pscustomobject]@{})
-}
-
-$policies = $data.policies
-
-# Always show the bookmarks toolbar and suppress the default import prompt
-$fieldDefaults = @{
-    DisplayBookmarksToolbar = $true
-    NoDefaultBookmarks      = $true
-    DisableProfileImport    = $true
-}
-
-foreach ($key in $fieldDefaults.Keys) {
-    if (Get-Member -InputObject $policies -Name $key -MemberType NoteProperty) {
-        $policies.$key = $fieldDefaults[$key]
-    } else {
-        $policies | Add-Member -NotePropertyName $key -NotePropertyValue $fieldDefaults[$key]
-    }
-}
+Write-Host ''
 
 # ── Bookmarks ────────────────────────────────────────────────────────────────
 # Each bookmark is a flat entry. The Folder field tells Firefox to group them
@@ -176,12 +144,6 @@ $bookmarks = @(
     @{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/';        Placement = 'toolbar'; Folder = $folderName },
     @{ Title = 'VibeMax';        URL = 'https://vibemax.to/';                Placement = 'toolbar'; Folder = $folderName }
 )
-
-if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty) {
-    $policies.Bookmarks = $bookmarks
-} else {
-    $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue $bookmarks
-}
 
 # ── Extensions ────────────────────────────────────────────────────────────────
 
@@ -220,20 +182,76 @@ $extensions = [pscustomobject]@{
     }
 }
 
-if (Get-Member -InputObject $policies -Name 'ExtensionSettings' -MemberType NoteProperty) {
-    $policies.ExtensionSettings = $extensions
-} else {
-    $policies | Add-Member -NotePropertyName 'ExtensionSettings' -NotePropertyValue $extensions
+# ── Write policy files ───────────────────────────────────────────────────────
+
+foreach ($firefoxDir in $firefoxDirs) {
+    $policyDir  = Join-Path $firefoxDir 'distribution'
+    $policyFile = Join-Path $policyDir 'policies.json'
+
+    if (-not (Test-Path $policyDir)) {
+        New-Item -ItemType Directory -Path $policyDir -Force | Out-Null
+        Write-Host "Created policy directory: $policyDir"
+    }
+
+    # Load existing policy or start fresh
+    if (Test-Path $policyFile) {
+        $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+        $backup = "$policyFile.rock-os-backup.$timestamp"
+        Copy-Item $policyFile $backup
+        Write-Host "Backed up existing policy to $backup"
+
+        try {
+            $data = Get-Content $policyFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        } catch {
+            Write-Host "Existing policies.json at $policyFile was invalid, starting fresh."
+            $data = [pscustomobject]@{}
+        }
+    } else {
+        $data = [pscustomobject]@{}
+    }
+
+    # Build the policies object
+    if (-not (Get-Member -InputObject $data -Name 'policies' -MemberType NoteProperty)) {
+        $data | Add-Member -NotePropertyName 'policies' -NotePropertyValue ([pscustomobject]@{})
+    }
+
+    $policies = $data.policies
+
+    # Always show the bookmarks toolbar and suppress the default import prompt
+    $fieldDefaults = @{
+        DisplayBookmarksToolbar = $true
+        NoDefaultBookmarks      = $true
+        DisableProfileImport    = $true
+    }
+
+    foreach ($key in $fieldDefaults.Keys) {
+        if (Get-Member -InputObject $policies -Name $key -MemberType NoteProperty) {
+            $policies.$key = $fieldDefaults[$key]
+        } else {
+            $policies | Add-Member -NotePropertyName $key -NotePropertyValue $fieldDefaults[$key]
+        }
+    }
+
+    # Merge Bookmarks
+    if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty) {
+        $policies.Bookmarks = $bookmarks
+    } else {
+        $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue $bookmarks
+    }
+
+    # Merge Extensions
+    if (Get-Member -InputObject $policies -Name 'ExtensionSettings' -MemberType NoteProperty) {
+        $policies.ExtensionSettings = $extensions
+    } else {
+        $policies | Add-Member -NotePropertyName 'ExtensionSettings' -NotePropertyValue $extensions
+    }
+
+    # Write
+    $json = $data | ConvertTo-Json -Depth 10
+    $json = $json -replace "`r`n", "`n"
+    [System.IO.File]::WriteAllText($policyFile, "$json`n", [System.Text.UTF8Encoding]::new($false))
+    Write-Host "Policy written to $policyFile"
 }
-
-# ── Write the policy file ────────────────────────────────────────────────────
-
-$json = $data | ConvertTo-Json -Depth 10
-# Normalize to LF line endings
-$json = $json -replace "`r`n", "`n"
-
-[System.IO.File]::WriteAllText($policyFile, "$json`n", [System.Text.UTF8Encoding]::new($false))
-Write-Host "Policy written to $policyFile"
 
 # ── Erase all bookmarks from existing profiles ──────────────────────────────
 # Rename places.sqlite so Firefox creates a fresh database on next launch.
@@ -279,8 +297,7 @@ if (Test-Path $profileRoot) {
 # ── Done ─────────────────────────────────────────────────────────────────────
 
 Write-Host ''
-Write-Host 'Firefox policy installed:'
-Write-Host $policyFile
+Write-Host 'Firefox policy installed for all discovered Firefox installations.'
 Write-Host ''
 Write-Host 'Restart Firefox, then open about:policies to verify it loaded.'
 
