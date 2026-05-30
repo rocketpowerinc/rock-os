@@ -39,7 +39,6 @@ Write-Host '  WARNING: This will DELETE every bookmark in every Firefox profile.
 Write-Host '  A backup of each places.sqlite is saved before wiping.'               -ForegroundColor Red
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host ''
-Write-Host 'Close Firefox before running this script so policies reload cleanly.'
 Write-Host ''
 
 $yes = New-Object System.Management.Automation.Host.ChoiceDescription '&Yes', 'Erase all bookmarks and apply the policy.'
@@ -54,6 +53,19 @@ if ($choice -ne 0) {
 Write-Host ''
 
 try {
+
+# ── Close Firefox if running ─────────────────────────────────────────────────
+
+$ffProcs = @(Get-Process -Name 'firefox' -ErrorAction SilentlyContinue)
+if ($ffProcs.Count -gt 0) {
+    Write-Host "Closing Firefox ($($ffProcs.Count) process(es))..."
+    $ffProcs | Stop-Process -Force
+    Start-Sleep -Seconds 2
+    Write-Host 'Firefox closed.'
+} else {
+    Write-Host 'Firefox is not running.'
+}
+Write-Host ''
 
 # ── Install Firefox via winget if not present ────────────────────────────────
 
@@ -145,27 +157,22 @@ foreach ($key in $fieldDefaults.Keys) {
 }
 
 # ── Bookmarks ────────────────────────────────────────────────────────────────
-# All links go inside a toolbar folder. Firefox enterprise policy supports
-# Folder + Children to create a named bookmark folder on the toolbar.
+# Each bookmark is a flat entry. The Folder field tells Firefox to group them
+# inside a named folder on the toolbar. Firefox creates the folder automatically.
 
-$pirateFolder = [pscustomobject]@{
-    Title     = [char]0x2B07 + [char]0xFE0F + 'Pirate'   # ⬇️Pirate
-    Placement = 'toolbar'
-    Folder    = [char]0x2B07 + [char]0xFE0F + 'Pirate'
-    Children  = @(
-        [pscustomobject]@{ Title = 'SkipVids';       URL = 'https://skipvids.com/' },
-        [pscustomobject]@{ Title = 'Ext';            URL = 'https://ext.to/' },
-        [pscustomobject]@{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/' },
-        [pscustomobject]@{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/' },
-        [pscustomobject]@{ Title = 'Ziperto';        URL = 'https://www.ziperto.com/' },
-        [pscustomobject]@{ Title = 'DLPSGame';       URL = 'https://dlpsgame.com/category/ps4/' },
-        [pscustomobject]@{ Title = 'GetComics';      URL = 'https://getcomics.org/' },
-        [pscustomobject]@{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/' },
-        [pscustomobject]@{ Title = 'VibeMax';        URL = 'https://vibemax.to/' }
-    )
-}
+$folderName = "⬇️Pirate"
 
-$bookmarks = @($pirateFolder)
+$bookmarks = @(
+    @{ Title = 'SkipVids';       URL = 'https://skipvids.com/';              Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'Ext';            URL = 'https://ext.to/';                    Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/';         Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/';       Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'Ziperto';        URL = 'https://www.ziperto.com/';           Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'DLPSGame';       URL = 'https://dlpsgame.com/category/ps4/'; Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'GetComics';      URL = 'https://getcomics.org/';             Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/';        Placement = 'toolbar'; Folder = $folderName },
+    @{ Title = 'VibeMax';        URL = 'https://vibemax.to/';                Placement = 'toolbar'; Folder = $folderName }
+)
 
 if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty) {
     $policies.Bookmarks = $bookmarks
