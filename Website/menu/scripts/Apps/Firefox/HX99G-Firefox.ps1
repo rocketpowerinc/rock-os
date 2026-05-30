@@ -30,11 +30,25 @@ Write-Host 'This script installs and configures Firefox with a Rock-OS policy.'
 Write-Host 'It will:'
 Write-Host '  - Install Firefox via winget if not already installed'
 Write-Host '  - Always show the bookmarks toolbar'
-Write-Host '  - Remove the default import-bookmarks toolbar prompt'
-Write-Host '  - Add bookmarks to the toolbar'
+Write-Host '  - ERASE ALL existing bookmarks from every Firefox profile'
+Write-Host '  - Add a bookmark folder to the toolbar'
 Write-Host '  - Install uBlock Origin from Mozilla Add-ons'
 Write-Host ''
+Write-Host '========================================================================' -ForegroundColor Red
+Write-Host '  WARNING: This will DELETE every bookmark in every Firefox profile.'   -ForegroundColor Red
+Write-Host '  A backup of each places.sqlite is saved before wiping.'               -ForegroundColor Red
+Write-Host '========================================================================' -ForegroundColor Red
+Write-Host ''
 Write-Host 'Close Firefox before running this script so policies reload cleanly.'
+Write-Host ''
+
+$confirm = Read-Host 'Type Y to continue, anything else to abort'
+if ($confirm -ne 'Y' -and $confirm -ne 'y') {
+    Write-Host 'Aborted.'
+    Read-Host 'Press Enter to exit'
+    exit 0
+}
+
 Write-Host ''
 
 # ── Install Firefox via winget if not present ────────────────────────────────
@@ -127,39 +141,33 @@ foreach ($key in $fieldDefaults.Keys) {
 }
 
 # ── Bookmarks ────────────────────────────────────────────────────────────────
+# All links go inside a toolbar folder. Firefox enterprise policy supports
+# Folder + Children to create a named bookmark folder on the toolbar.
 
-$desiredBookmarks = @(
-    @{ Title = 'SkipVids';       URL = 'https://skipvids.com/' },
-    @{ Title = 'Ext';            URL = 'https://ext.to/' },
-    @{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/' },
-    @{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/' },
-    @{ Title = 'Ziperto';        URL = 'https://www.ziperto.com/' },
-    @{ Title = 'DLPSGame';       URL = 'https://dlpsgame.com/category/ps4/' },
-    @{ Title = 'GetComics';      URL = 'https://getcomics.org/' },
-    @{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/' },
-    @{ Title = 'VibeMax';        URL = 'https://vibemax.to/' }
-)
+$pirateFolder = [pscustomobject]@{
+    Title     = [char]0x2B07 + [char]0xFE0F + 'Pirate'   # ⬇️Pirate
+    Placement = 'toolbar'
+    Folder    = [char]0x2B07 + [char]0xFE0F + 'Pirate'
+    Children  = @(
+        [pscustomobject]@{ Title = 'SkipVids';       URL = 'https://skipvids.com/' },
+        [pscustomobject]@{ Title = 'Ext';            URL = 'https://ext.to/' },
+        [pscustomobject]@{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/' },
+        [pscustomobject]@{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/' },
+        [pscustomobject]@{ Title = 'Ziperto';        URL = 'https://www.ziperto.com/' },
+        [pscustomobject]@{ Title = 'DLPSGame';       URL = 'https://dlpsgame.com/category/ps4/' },
+        [pscustomobject]@{ Title = 'GetComics';      URL = 'https://getcomics.org/' },
+        [pscustomobject]@{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/' },
+        [pscustomobject]@{ Title = 'VibeMax';        URL = 'https://vibemax.to/' }
+    )
+}
+
+$bookmarks = @($pirateFolder)
 
 if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty) {
-    $bookmarks = @($policies.Bookmarks)
+    $policies.Bookmarks = $bookmarks
 } else {
-    $bookmarks = @()
-    $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue @()
+    $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue $bookmarks
 }
-
-$existingUrls = @($bookmarks | ForEach-Object { $_.URL }) | Where-Object { $_ }
-
-foreach ($bm in $desiredBookmarks) {
-    if ($bm.URL -notin $existingUrls) {
-        $bookmarks += [pscustomobject]@{
-            Title     = $bm.Title
-            URL       = $bm.URL
-            Placement = 'toolbar'
-        }
-    }
-}
-
-$policies.Bookmarks = $bookmarks
 
 # ── uBlock Origin ────────────────────────────────────────────────────────────
 
@@ -190,7 +198,9 @@ $json = $json -replace "`r`n", "`n"
 [System.IO.File]::WriteAllText($policyFile, "$json`n", [System.Text.UTF8Encoding]::new($false))
 Write-Host "Policy written to $policyFile"
 
-# ── Clean import-bookmarks prompt from existing profiles ─────────────────────
+# ── Erase all bookmarks from existing profiles ──────────────────────────────
+# Wipe every row from moz_bookmarks so Firefox starts clean with only the
+# policy-defined folder. Each places.sqlite is backed up first.
 
 $profileRoot = Join-Path $env:APPDATA 'Mozilla\Firefox\Profiles'
 if (Test-Path $profileRoot) {
@@ -206,25 +216,17 @@ if (Test-Path $profileRoot) {
 
             try {
                 Copy-Item $dbPath $dbBackup
-                # Use Python to clean the SQLite database since PowerShell has
+                # Use Python to wipe the SQLite table since PowerShell has
                 # no built-in SQLite support.
                 $pyScript = @"
 import sqlite3, sys
 conn = sqlite3.connect(sys.argv[1])
 cur = conn.cursor()
-cur.execute("""
-    DELETE FROM moz_bookmarks
-    WHERE type = 1
-      AND (
-        title IN ('Import bookmarks from another browser',
-                  'Import Bookmarks from Another Browser')
-        OR lower(title) LIKE 'import bookmarks from another browser%%'
-      )
-""")
+cur.execute('DELETE FROM moz_bookmarks')
 removed = cur.rowcount
 conn.commit()
 conn.close()
-print(f"Cleaned {removed} import bookmark(s) from {sys.argv[1]}")
+print(f'Erased {removed} bookmark(s) from {sys.argv[1]}')
 "@
                 python3 -c $pyScript "$dbPath" 2>$null
                 if ($LASTEXITCODE -ne 0) {
@@ -239,7 +241,7 @@ print(f"Cleaned {removed} import bookmark(s) from {sys.argv[1]}")
         }
     }
 } else {
-    Write-Host 'No Firefox profiles folder found. Skipping import-bookmark cleanup.'
+    Write-Host 'No Firefox profiles folder found. Skipping bookmark cleanup.'
 }
 
 # ── Done ─────────────────────────────────────────────────────────────────────
