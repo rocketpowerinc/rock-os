@@ -152,11 +152,11 @@ $extensions = [pscustomobject]@{
         installation_mode = 'force_installed'
         install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi'
     }
-    'tabliss@tabliss.io' = [pscustomobject]@{
+    'extension@tabliss.io' = [pscustomobject]@{
         installation_mode = 'force_installed'
         install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/tabliss/latest.xpi'
     }
-    'jid1-MnnxcSUIq6G18g@jetpack' = [pscustomobject]@{
+    'jid1-MnnxcxisBPnSXQ@jetpack' = [pscustomobject]@{
         installation_mode = 'force_installed'
         install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi'
     }
@@ -249,6 +249,23 @@ foreach ($firefoxDir in $firefoxDirs) {
     # Write
     $json = $data | ConvertTo-Json -Depth 10
     $json = $json -replace "`r`n", "`n"
+
+    # Escape every non-ASCII character (e.g. the emoji in the bookmark folder
+    # name) to a \uXXXX JSON escape so the output is pure ASCII. This makes the
+    # file immune to codepage misreads: literal UTF-8 bytes can be decoded as
+    # Windows-1252 and show up as mojibake (e.g. "â¬‡ï¸Pirate"), but \uXXXX
+    # escapes decode to the correct characters no matter how the file is read.
+    $sb = [System.Text.StringBuilder]::new()
+    foreach ($ch in $json.ToCharArray()) {
+        $code = [int][char]$ch
+        if ($code -gt 127) {
+            [void]$sb.AppendFormat('\u{0:x4}', $code)
+        } else {
+            [void]$sb.Append($ch)
+        }
+    }
+    $json = $sb.ToString()
+
     [System.IO.File]::WriteAllText($policyFile, "$json`n", [System.Text.UTF8Encoding]::new($false))
     Write-Host "Policy written to $policyFile"
 }
