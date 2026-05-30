@@ -208,7 +208,7 @@ Write-Host "Policy written to $policyFile"
 
 $profileRoot = Join-Path $env:APPDATA 'Mozilla\Firefox\Profiles'
 if (Test-Path $profileRoot) {
-    $databases = Get-ChildItem -Path $profileRoot -Recurse -Filter 'places.sqlite' -ErrorAction SilentlyContinue
+    $databases = @(Get-ChildItem -Path $profileRoot -Recurse -Filter 'places.sqlite' -ErrorAction SilentlyContinue)
 
     if ($databases.Count -eq 0) {
         Write-Host 'No Firefox profile bookmark databases found to clean.'
