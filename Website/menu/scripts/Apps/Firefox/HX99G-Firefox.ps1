@@ -11,6 +11,20 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# ── Self-elevate to Administrator ────────────────────────────────────────────
+# Writing to Program Files\Mozilla Firefox\distribution requires elevation.
+
+$isAdmin = ([Security.Principal.WindowsPrincipal] `
+    [Security.Principal.WindowsIdentity]::GetCurrent()
+).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    Write-Host 'Requesting Administrator privileges...'
+    $argList = "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    Start-Process powershell.exe -Verb RunAs -ArgumentList $argList
+    exit
+}
+
 Write-Host ''
 Write-Host 'This script installs and configures Firefox with a Rock-OS policy.'
 Write-Host 'It will:'
