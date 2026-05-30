@@ -1,8 +1,9 @@
 # HX99G-Firefox.ps1
 # Installs Firefox via winget if missing, then configures it with a Rock-OS
-# enterprise policy: uBlock Origin, always-visible bookmarks toolbar, and
-# a set of toolbar bookmarks. Close Firefox before running this script so
-# policies reload cleanly.
+# enterprise policy: privacy and utility extensions (uBlock Origin, Tabliss,
+# Privacy Badger, CanvasBlocker, Multi-Account Containers, Skip Redirect,
+# I Still Don't Care About Cookies, Startpage Search), always-visible
+# bookmarks toolbar, and a set of toolbar bookmarks.
 #
 # Firefox reads enterprise policies from distribution\policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
@@ -32,7 +33,9 @@ Write-Host '  - Install Firefox via winget if not already installed'
 Write-Host '  - Always show the bookmarks toolbar'
 Write-Host '  - ERASE ALL existing bookmarks from every Firefox profile'
 Write-Host '  - Add a bookmark folder to the toolbar'
-Write-Host '  - Install uBlock Origin from Mozilla Add-ons'
+Write-Host '  - Install uBlock Origin, Tabliss, Privacy Badger, CanvasBlocker,'
+Write-Host '    Multi-Account Containers, Skip Redirect, I Still Don''t Care'
+Write-Host '    About Cookies, and Startpage Search extensions'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host '  WARNING: This will DELETE every bookmark in every Firefox profile.'   -ForegroundColor Red
@@ -160,7 +163,7 @@ foreach ($key in $fieldDefaults.Keys) {
 # Each bookmark is a flat entry. The Folder field tells Firefox to group them
 # inside a named folder on the toolbar. Firefox creates the folder automatically.
 
-$folderName = "⬇️Pirate"
+$folderName = "$([char]0x2B07)$([char]0xFE0F)Pirate"
 
 $bookmarks = @(
     @{ Title = 'SkipVids';       URL = 'https://skipvids.com/';              Placement = 'toolbar'; Folder = $folderName },
@@ -180,24 +183,47 @@ if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty
     $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue $bookmarks
 }
 
-# ── uBlock Origin ────────────────────────────────────────────────────────────
+# ── Extensions ────────────────────────────────────────────────────────────────
 
-$ublock = [pscustomobject]@{
-    installation_mode = 'force_installed'
-    install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi'
+$extensions = [pscustomobject]@{
+    'uBlock0@raymondhill.net' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi'
+    }
+    'tabliss@tabliss.io' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/tabliss/latest.xpi'
+    }
+    'jid1-MnnxcSUIq6G18g@jetpack' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi'
+    }
+    'CanvasBlocker@kkapsner.de' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/canvasblocker/latest.xpi'
+    }
+    '@testpilot-containers' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/multi-account-containers/latest.xpi'
+    }
+    'skipredirect@sblask' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/skip-redirect/latest.xpi'
+    }
+    'idcac-pub@guus.ninja' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/istilldontcareaboutcookies/latest.xpi'
+    }
+    'StartpageSearchExtension@roteKlaue' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/startpage-search/latest.xpi'
+    }
 }
 
 if (Get-Member -InputObject $policies -Name 'ExtensionSettings' -MemberType NoteProperty) {
-    $ext = $policies.ExtensionSettings
-    if (Get-Member -InputObject $ext -Name 'uBlock0@raymondhill.net' -MemberType NoteProperty) {
-        $ext.'uBlock0@raymondhill.net' = $ublock
-    } else {
-        $ext | Add-Member -NotePropertyName 'uBlock0@raymondhill.net' -NotePropertyValue $ublock
-    }
+    $policies.ExtensionSettings = $extensions
 } else {
-    $policies | Add-Member -NotePropertyName 'ExtensionSettings' -NotePropertyValue ([pscustomobject]@{
-        'uBlock0@raymondhill.net' = $ublock
-    })
+    $policies | Add-Member -NotePropertyName 'ExtensionSettings' -NotePropertyValue $extensions
 }
 
 # ── Write the policy file ────────────────────────────────────────────────────
