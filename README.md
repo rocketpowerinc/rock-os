@@ -182,6 +182,23 @@ Choose the binary for your system:
 The release also includes `rock-os-vX.Y-checksums.txt` for verifying
 downloads.
 
+### Creating A Release On Windows
+
+Use the release helper after reviewing and committing server-side changes:
+
+```powershell
+.\dev\windows-create-release.ps1 -Version 8.0
+```
+
+The helper requires a clean Git tree, runs `go test ./...`, cross-compiles all
+six supported binaries, and writes the checksum file under `.release/`. It does
+not push or publish by default. When you intentionally want the helper to push
+the current branch and create the GitHub release, add `-Publish`:
+
+```powershell
+.\dev\windows-create-release.ps1 -Version 8.0 -Publish
+```
+
 ## Profiles and Dashboards
 
 The top navigation includes a **Profiles** tab between Home and Menu. When

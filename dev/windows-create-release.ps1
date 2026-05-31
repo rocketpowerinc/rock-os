@@ -1,6 +1,11 @@
 # Rock-OS Release Creation Script
 # Automates checks, cross-compilation, and checksum generation for new releases.
 
+param(
+    [string]$Version,
+    [switch]$Publish
+)
+
 # Ensure we run from the repo root
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Resolve-Path (Join-Path $scriptPath "..")
@@ -33,7 +38,21 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Exit 1
 }
 
-# 4. Ask for next version interactively
+# 4. Run server tests before building release binaries
+Write-Host "Running Go server tests..." -ForegroundColor Gray
+Push-Location "cmd/rock-os"
+try {
+    go test ./...
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Go server tests failed. Release build stopped." -ForegroundColor Red
+        Exit 1
+    }
+} finally {
+    Pop-Location
+}
+Write-Host "[OK] Go server tests passed." -ForegroundColor Green
+
+# 5. Ask for next version interactively unless supplied by the caller
 $currentVersion = "none"
 $suggestionPrompt = "e.g., 1.0 or 1.1"
 
@@ -71,7 +90,10 @@ try {
     Exit 1
 }
 
-$rawVersion = Read-Host "Enter the next version number ($suggestionPrompt)"
+$rawVersion = $Version
+if (-not $rawVersion) {
+    $rawVersion = Read-Host "Enter the next version number ($suggestionPrompt)"
+}
 if (-not $rawVersion) {
     Write-Host "[ERROR] Version number cannot be empty." -ForegroundColor Red
     Exit 1
@@ -84,6 +106,10 @@ if ($cleanVersion.StartsWith("v")) {
 }
 if ($cleanVersion.StartsWith(".")) {
     $cleanVersion = $cleanVersion.Substring(1)
+}
+if ($cleanVersion -notmatch "^\d+\.\d+(\.\d+)?$") {
+    Write-Host "[ERROR] Version must look like 8.0 or 8.0.1." -ForegroundColor Red
+    Exit 1
 }
 
 $versionName = "v$cleanVersion"
@@ -114,42 +140,41 @@ $checksums = @()
 # Move into module directory to compile with go.mod present
 Push-Location "cmd/rock-os"
 
-foreach ($target in $targets) {
-    $os = $target.os
-    $arch = $target.arch
-    $binaryName = $target.name
-    $outputPath = Join-Path $absoluteReleaseDir $binaryName
+try {
+    foreach ($target in $targets) {
+        $os = $target.os
+        $arch = $target.arch
+        $binaryName = $target.name
+        $outputPath = Join-Path $absoluteReleaseDir $binaryName
 
-    Write-Host "Building $os/$arch -> $binaryName..." -ForegroundColor Gray
+        Write-Host "Building $os/$arch -> $binaryName..." -ForegroundColor Gray
 
-    # Set environment variables for cross-compilation
-    $env:GOOS = $os
-    $env:GOARCH = $arch
+        # Set environment variables for cross-compilation
+        $env:GOOS = $os
+        $env:GOARCH = $arch
 
-    # Compile binary with optimizations
-    go build -ldflags="-s -w" -o $outputPath .
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] Failed to compile binary for $os/$arch" -ForegroundColor Red
-        Pop-Location
-        Exit 1
+        # Compile binary with optimizations
+        go build -ldflags="-s -w" -o $outputPath .
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[ERROR] Failed to compile binary for $os/$arch" -ForegroundColor Red
+            Exit 1
+        }
+
+        # Generate checksum
+        $hash = (Get-FileHash -Path $outputPath -Algorithm SHA256).Hash.ToLower()
+        $checksumLine = "$hash  $binaryName"
+        $checksums += $checksumLine
     }
-
-    # Generate checksum
-    $hash = (Get-FileHash -Path $outputPath -Algorithm SHA256).Hash.ToLower()
-    $checksumLine = "$hash  $binaryName"
-    $checksums += $checksumLine
+} finally {
+    Remove-Item env:GOOS -ErrorAction SilentlyContinue
+    Remove-Item env:GOARCH -ErrorAction SilentlyContinue
+    Pop-Location
 }
-
-Pop-Location
 
 # Write checksums file
 $checksumFile = Join-Path $releaseDir "rock-os-$versionName-checksums.txt"
 $checksums | Out-File -FilePath $checksumFile -Encoding ascii
-
-# Reset environment variables to default
-Remove-Item env:GOOS -ErrorAction SilentlyContinue
-Remove-Item env:GOARCH -ErrorAction SilentlyContinue
 
 Write-Host
 Write-Host "==========================================" -ForegroundColor Green
@@ -162,8 +187,7 @@ Get-ChildItem $releaseDir | ForEach-Object {
 }
 
 Write-Host
-$publishAnswer = Read-Host "Do you want to push commits and publish this release to GitHub now? (y/n)"
-if ($publishAnswer -match "^[yY](es)?$") {
+if ($Publish) {
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         Write-Host "[ERROR] gh command not found. Please install GitHub CLI to publish releases." -ForegroundColor Red
         Exit 1
@@ -188,6 +212,7 @@ if ($publishAnswer -match "^[yY](es)?$") {
     Write-Host "[OK] Release published successfully to GitHub!" -ForegroundColor Green
 } else {
     Write-Host "Skipped publishing to GitHub. Binaries are prepared locally in $releaseDir." -ForegroundColor Yellow
+    Write-Host "Re-run with -Version $cleanVersion -Publish only when you explicitly want to push and publish." -ForegroundColor Yellow
 }
 
 Write-Host

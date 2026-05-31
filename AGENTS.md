@@ -104,6 +104,13 @@ Never break these without an explicit, specific request from the user:
   Run server tests from `cmd/rock-os` with `go test ./...`.
 - If `cmd/rock-os/main.go` or server behavior changes, remind the user to build
   and publish a new release binary.
+- When a server-side change is complete and substantial enough to warrant a new
+  release, wait until the user has reviewed and committed the work, ask for the
+  release version if it is missing, then run
+  `dev/windows-create-release.ps1 -Version <version>`. Use its default
+  build-only mode. Never pass `-Publish` unless the user explicitly asks you to
+  push commits and publish that specific release. Do not create a release for
+  HTML, CSS, JavaScript, markdown, or asset-only changes.
 
 ## Profiles (`Website/profiles/`)
 
