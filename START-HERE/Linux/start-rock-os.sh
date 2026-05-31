@@ -50,7 +50,8 @@ else
     green  "    git clone https://github.com/rocketpowerinc/rock-os.git"
     green  "    cd rock-os/START-HERE/Linux"
     red    "============================================================"
-    yellow "  Press Enter to continue from local files, or Ctrl+C to cancel."
+    yellow "  Press Enter to continue. Rock-OS will still check for and download"
+    yellow "  the latest release binary before launching, or press Ctrl+C to cancel."
     read -r _ignore_continue || true
 fi
 

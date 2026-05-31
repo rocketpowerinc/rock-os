@@ -94,7 +94,8 @@ function Create-DesktopShortcut {
     $shortcut =
         $shell.CreateShortcut($DesktopShortcut)
 
-    $shortcut.TargetPath = $startScript
+    $shortcut.TargetPath = $env:ComSpec
+    $shortcut.Arguments = "/c `"`"$startScript`"`""
     $shortcut.WorkingDirectory = Join-Path $InstallDir 'START-HERE\Windows'
     $shortcut.IconLocation = $iconPath
     $shortcut.Description = 'Start Rock-OS'

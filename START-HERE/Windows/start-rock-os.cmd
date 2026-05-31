@@ -97,7 +97,8 @@ if exist "%ROCK_OS_ROOT%\.git" (
     call :green  "    git clone https://github.com/rocketpowerinc/rock-os.git"
     call :green  "    cd rock-os\START-HERE\Windows"
     call :red    "============================================================"
-    call :yellow "  Press Enter to continue from local files, or close this window to cancel."
+    call :yellow "  Press Enter to continue. Rock-OS will still check for and download"
+    call :yellow "  the latest release binary before launching, or close this window to cancel."
     set /p "ROCK_OS_CONTINUE=  > "
 )
 
