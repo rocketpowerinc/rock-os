@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release New"
+  short_description: "Build, commit, push, and publish Rock-OS"
+  default_prompt: "Use $release-new to publish a new Rock-OS server release."

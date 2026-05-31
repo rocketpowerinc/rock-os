@@ -184,20 +184,25 @@ downloads.
 
 ### Creating A Release On Windows
 
-Use the release helper after reviewing and committing server-side changes:
+Use the release helper after reviewing server-side changes:
 
 ```powershell
-.\dev\windows-create-release.ps1 -Version 8.0
+.\dev\windows-create-release.ps1
 ```
 
-The helper requires a clean Git tree, runs `go test ./...`, cross-compiles all
-six supported binaries, and writes the checksum file under `.release/`. It does
-not push or publish by default. When you intentionally want the helper to push
-the current branch and create the GitHub release, add `-Publish`:
+The helper prompts for the next version number, stages pending source changes,
+rejects known secrets and generated artifacts, runs `git diff --cached --check`
+and `go test ./...`, creates a release-preparation commit, cross-compiles all six
+supported binaries, and writes the checksum file under `.release/`. It does not
+push or publish by default. When you intentionally want the helper to push the
+current branch and create the GitHub release, add `-Publish`:
 
 ```powershell
-.\dev\windows-create-release.ps1 -Version 8.0 -Publish
+.\dev\windows-create-release.ps1 -Publish
 ```
+
+The `/release-new` Codex skill runs the `-Publish` workflow in a visible
+PowerShell window. The version prompt is the only interactive question.
 
 ## Profiles and Dashboards
 

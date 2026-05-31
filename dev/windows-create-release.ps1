@@ -22,23 +22,13 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Exit 1
 }
 
-# 2. Check if repo is clean
-Write-Host "Checking repository status..." -ForegroundColor Gray
-$gitStatus = git status --porcelain
-if ($gitStatus) {
-    Write-Host "[ERROR] Your repository has uncommitted changes. Please commit or stash them first." -ForegroundColor Red
-    Write-Host $gitStatus
-    Exit 1
-}
-Write-Host "[OK] Repository is clean." -ForegroundColor Green
-
-# 3. Check if go is available
+# 2. Check if go is available
 if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] go command not found. Go is required to compile release binaries." -ForegroundColor Red
     Exit 1
 }
 
-# 4. Run server tests before building release binaries
+# 3. Run server tests before building release binaries
 Write-Host "Running Go server tests..." -ForegroundColor Gray
 Push-Location "cmd/rock-os"
 try {
@@ -52,7 +42,7 @@ try {
 }
 Write-Host "[OK] Go server tests passed." -ForegroundColor Green
 
-# 5. Ask for next version interactively unless supplied by the caller
+# 4. Ask for next version interactively unless supplied by the caller
 $currentVersion = "none"
 $suggestionPrompt = "e.g., 1.0 or 1.1"
 
@@ -114,6 +104,65 @@ if ($cleanVersion -notmatch "^\d+\.\d+(\.\d+)?$") {
 
 $versionName = "v$cleanVersion"
 $releaseDir = Join-Path ".release" $versionName
+
+# 5. Stage and commit pending release source changes
+Write-Host
+Write-Host "Preparing release commit..." -ForegroundColor Gray
+git diff --cached --quiet
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] The Git index already contains staged changes. Unstage them before creating a release." -ForegroundColor Red
+    Exit 1
+}
+
+git add --all
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Could not stage release changes." -ForegroundColor Red
+    Exit 1
+}
+
+$stagedFiles = @(git diff --cached --name-only)
+$forbiddenPatterns = @(
+    '(^|/).*\.key$',
+    '^Website/\.rock-os-version$',
+    '^Website/(wiki|guides|cheatsheets|dotfiles|bookmarks|profiles|dashboards)-index\.json$',
+    '^Website/rock-os-',
+    '^Website/.*\.download$',
+    '(^|/)\.gocache/',
+    '^\.release/'
+)
+
+$forbiddenFiles = @(
+    $stagedFiles | Where-Object {
+        $path = $_
+        $forbiddenPatterns | Where-Object { $path -match $_ }
+    }
+)
+
+if ($forbiddenFiles.Count -gt 0) {
+    Write-Host "[ERROR] Refusing to commit generated artifacts or secrets:" -ForegroundColor Red
+    $forbiddenFiles | ForEach-Object { Write-Host " - $_" -ForegroundColor Red }
+    git reset --mixed HEAD
+    Exit 1
+}
+
+git diff --cached --check
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Staged changes failed the whitespace check." -ForegroundColor Red
+    git reset --mixed HEAD
+    Exit 1
+}
+
+if ($stagedFiles.Count -gt 0) {
+    git commit -m "release: prepare $versionName"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Could not create the release commit." -ForegroundColor Red
+        git reset --mixed HEAD
+        Exit 1
+    }
+    Write-Host "[OK] Created release commit for $versionName." -ForegroundColor Green
+} else {
+    Write-Host "[OK] No pending source changes to commit." -ForegroundColor Green
+}
 
 Write-Host
 Write-Host "Preparing to build $versionName release into: $releaseDir" -ForegroundColor Cyan
@@ -212,7 +261,7 @@ if ($Publish) {
     Write-Host "[OK] Release published successfully to GitHub!" -ForegroundColor Green
 } else {
     Write-Host "Skipped publishing to GitHub. Binaries are prepared locally in $releaseDir." -ForegroundColor Yellow
-    Write-Host "Re-run with -Version $cleanVersion -Publish only when you explicitly want to push and publish." -ForegroundColor Yellow
+    Write-Host "Re-run with -Publish only when you explicitly want to push and publish. The script will prompt for the version." -ForegroundColor Yellow
 }
 
 Write-Host

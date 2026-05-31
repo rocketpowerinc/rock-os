@@ -10,7 +10,9 @@ Never break these without an explicit, specific request from the user:
 
 - **Never** commit, stage, stash, push, or open pull requests. The user reviews
   and commits everything themselves. Leave nothing staged — including
-  executable-mode changes.
+  executable-mode changes. The sole standing exception is the user-invoked
+  `/release-new` workflow: it may run `dev/windows-create-release.ps1 -Publish`,
+  which stages, commits, pushes, and publishes the reviewed release changes.
 - **Never** commit `.key` files.
 - **Never** move, rename, split, or restructure locked `git-crypt` content. Tell
   the user to unlock `Website/profiles/` first; moving locked ciphertext can
@@ -104,13 +106,11 @@ Never break these without an explicit, specific request from the user:
   Run server tests from `cmd/rock-os` with `go test ./...`.
 - If `cmd/rock-os/main.go` or server behavior changes, remind the user to build
   and publish a new release binary.
-- When a server-side change is complete and substantial enough to warrant a new
-  release, wait until the user has reviewed and committed the work, ask for the
-  release version if it is missing, then run
-  `dev/windows-create-release.ps1 -Version <version>`. Use its default
-  build-only mode. Never pass `-Publish` unless the user explicitly asks you to
-  push commits and publish that specific release. Do not create a release for
-  HTML, CSS, JavaScript, markdown, or asset-only changes.
+- When the user invokes `/release-new`, follow the `release-new` Codex skill.
+  Let `dev/windows-create-release.ps1 -Publish` prompt the user for the version,
+  then allow that script to stage, commit, push, and publish the release without
+  additional confirmation. Do not create a release for HTML, CSS, JavaScript,
+  markdown, or asset-only changes unless the user explicitly requests one.
 
 ## Profiles (`Website/profiles/`)
 
