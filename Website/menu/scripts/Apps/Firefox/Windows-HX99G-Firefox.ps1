@@ -8,6 +8,13 @@
 # Firefox reads enterprise policies from distribution\policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
 # Firefox's profile database directly, which is safer and easier to review.
+#
+# WARNING: After confirmation, this script PERMANENTLY DELETES all Firefox data
+# (every profile: bookmarks, history, saved passwords/logins, cookies, sessions,
+# preferences, and extension data) for a clean, fresh start. There is NO backup.
+# The policy itself survives the wipe because it lives in the install directory
+# (distribution\policies.json), not in the profile, so the configured extensions
+# and bookmarks are re-applied to the new profile on next launch.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -31,15 +38,18 @@ Write-Host 'This script installs and configures Firefox with a Rock-OS policy.'
 Write-Host 'It will:'
 Write-Host '  - Install Firefox via winget if not already installed'
 Write-Host '  - Always show the bookmarks toolbar'
-Write-Host '  - ERASE ALL existing bookmarks from every Firefox profile'
+Write-Host '  - DELETE all Firefox data (full profile reset: bookmarks, history,'
+Write-Host '    saved passwords/logins, cookies, sessions, prefs, extension data)'
 Write-Host '  - Add a bookmark folder to the toolbar'
 Write-Host '  - Install uBlock Origin, Tabliss, Privacy Badger, CanvasBlocker,'
 Write-Host '    Multi-Account Containers, Skip Redirect, I Still Don''t Care'
 Write-Host '    About Cookies, and Startpage Search extensions'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
-Write-Host '  WARNING: This will DELETE every bookmark in every Firefox profile.'   -ForegroundColor Red
-Write-Host '  A backup of each places.sqlite is saved before wiping.'               -ForegroundColor Red
+Write-Host '  WARNING: This PERMANENTLY DELETES ALL Firefox data for a fresh start.' -ForegroundColor Red
+Write-Host '  That includes bookmarks, history, saved passwords/logins, cookies,'   -ForegroundColor Red
+Write-Host '  open tabs/sessions, preferences, and extension data. NO BACKUP is'    -ForegroundColor Red
+Write-Host '  made. If Firefox Sync is on, synced data may re-download afterward.'   -ForegroundColor Red
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host ''
 Write-Host ''
@@ -270,45 +280,41 @@ foreach ($firefoxDir in $firefoxDirs) {
     Write-Host "Policy written to $policyFile"
 }
 
-# ── Erase all bookmarks from existing profiles ──────────────────────────────
-# Rename places.sqlite so Firefox creates a fresh database on next launch.
-# This is the most reliable wipe and needs no external tools (no Python or
-# SQLite CLI). The renamed file serves as the backup.
+# ── Wipe ALL Firefox data (full profile reset) ──────────────────────────────
+# Delete the entire Firefox data directory so Firefox starts completely fresh
+# on next launch. This removes every profile (bookmarks, history, saved
+# passwords/logins, cookies, sessions, prefs, extension data) and the cache.
+#
+# The enterprise policy (extensions + bookmarks) lives in
+# Program Files\Mozilla Firefox\distribution\policies.json, NOT inside the
+# profile, so it survives this wipe and is automatically applied to the brand
+# new profile Firefox creates on next launch.
+#
+# This is a permanent delete with NO backup, per the script's configuration.
 
-$profileRoot = Join-Path $env:APPDATA 'Mozilla\Firefox\Profiles'
-if (Test-Path $profileRoot) {
-    $databases = @(Get-ChildItem -Path $profileRoot -Recurse -Filter 'places.sqlite' -ErrorAction SilentlyContinue)
+$firefoxDataRoots = @(
+    (Join-Path $env:APPDATA      'Mozilla\Firefox'),
+    (Join-Path $env:LOCALAPPDATA 'Mozilla\Firefox')
+)
 
-    if ($databases.Count -eq 0) {
-        Write-Host 'No Firefox profile bookmark databases found to clean.'
-    } else {
-        foreach ($db in $databases) {
-            $dbPath = $db.FullName
-            $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-            $dbBackup = "$dbPath.rock-os-backup.$timestamp"
-
-            try {
-                Rename-Item -Path $dbPath -NewName (Split-Path $dbBackup -Leaf)
-                Write-Host "Renamed $dbPath -> $(Split-Path $dbBackup -Leaf)"
-
-                # Also remove the WAL and SHM journal files so Firefox
-                # doesn't try to recover the old database.
-                foreach ($ext in @('.sqlite-wal', '.sqlite-shm')) {
-                    $journal = $dbPath -replace '\.sqlite$', $ext
-                    if (Test-Path $journal) {
-                        Remove-Item $journal -Force
-                    }
-                }
-
-                Write-Host 'Firefox will create a fresh bookmark database on next launch.'
-            } catch {
-                Write-Host "Could not rename ${dbPath}: $_"
-                Write-Host 'Close Firefox completely, then run this script again.'
-            }
+$wipedAny = $false
+foreach ($dataRoot in $firefoxDataRoots) {
+    if (Test-Path $dataRoot) {
+        try {
+            Remove-Item -LiteralPath $dataRoot -Recurse -Force -ErrorAction Stop
+            Write-Host "Deleted $dataRoot"
+            $wipedAny = $true
+        } catch {
+            Write-Host "Could not fully delete ${dataRoot}: $_"
+            Write-Host 'Make sure Firefox is completely closed (check Task Manager for firefox.exe), then run this script again.'
         }
     }
+}
+
+if ($wipedAny) {
+    Write-Host 'All Firefox data wiped. Firefox will create a fresh profile and apply the policy on next launch.'
 } else {
-    Write-Host 'No Firefox profiles folder found. Skipping bookmark cleanup.'
+    Write-Host 'No existing Firefox data found. Firefox will start fresh on next launch.'
 }
 
 # ── Done ─────────────────────────────────────────────────────────────────────
