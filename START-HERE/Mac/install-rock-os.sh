@@ -16,7 +16,9 @@ yellow() {
 
 require_git() {
     if ! command -v git >/dev/null 2>&1; then
-        printf '%s\n' "Git is required. Install Git, then run this installer again." >&2
+        yellow "Git is required but was not found."
+        yellow "Install Git with this command, then run this installer again:"
+        printf '\n%s\n\n' "  brew install git" >&2
         exit 1
     fi
 }

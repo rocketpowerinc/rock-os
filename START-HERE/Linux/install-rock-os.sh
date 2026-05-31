@@ -16,7 +16,12 @@ yellow() {
 
 require_git() {
     if ! command -v git >/dev/null 2>&1; then
-        printf '%s\n' "Git is required. Install Git, then run this installer again." >&2
+        yellow "Git is required but was not found."
+        yellow "Install Git for your distro, then run this installer again:"
+        printf '\n%s\n%s\n%s\n\n' \
+            "  Debian/Ubuntu:  sudo apt install git" \
+            "  Fedora/RHEL:    sudo dnf install git" \
+            "  Arch:           sudo pacman -S git" >&2
         exit 1
     fi
 }

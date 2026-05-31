@@ -25,6 +25,10 @@ exit /b 0
 powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Get-Command git -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" 2>nul
 if errorlevel 1 (
     call :yellow "Git is not installed. Skipping repo update and using local files."
+    call :yellow "To enable auto-updates, install Git with:"
+    echo.
+    echo   winget.exe install --id "Git.Git" --exact --source winget --accept-source-agreements --disable-interactivity --silent --accept-package-agreements --force
+    echo.
     exit /b 0
 )
 call :green "Checking for Rock-OS repo updates..."

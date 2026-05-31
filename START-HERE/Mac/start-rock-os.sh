@@ -57,6 +57,8 @@ fi
 pull_updates() {
     if ! command -v git >/dev/null 2>&1; then
         yellow "Git is not installed. Skipping repo update and using local files."
+        yellow "To enable auto-updates, install Git with:"
+        printf '\n%s\n\n' "  brew install git"
         return
     fi
 

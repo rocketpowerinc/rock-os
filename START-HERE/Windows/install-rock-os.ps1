@@ -17,7 +17,12 @@ function Write-Yellow($Message) {
 
 function Ensure-Git {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        throw 'Git is required. Install Git, then run this installer again.'
+        Write-Yellow 'Git is required but was not found on your PATH.'
+        Write-Yellow 'Install Git with this command, then run this installer again:'
+        Write-Host ''
+        Write-Host '  winget.exe install --id "Git.Git" --exact --source winget --accept-source-agreements --disable-interactivity --silent --accept-package-agreements --force'
+        Write-Host ''
+        throw 'Git is required. Run the install command shown above, then re-run this installer.'
     }
 }
 

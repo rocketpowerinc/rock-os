@@ -57,6 +57,11 @@ fi
 pull_updates() {
     if ! command -v git >/dev/null 2>&1; then
         yellow "Git is not installed. Skipping repo update and using local files."
+        yellow "To enable auto-updates, install Git for your distro:"
+        printf '\n%s\n%s\n%s\n\n' \
+            "  Debian/Ubuntu:  sudo apt install git" \
+            "  Fedora/RHEL:    sudo dnf install git" \
+            "  Arch:           sudo pacman -S git"
         return
     fi
 
