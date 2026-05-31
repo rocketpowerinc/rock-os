@@ -308,13 +308,9 @@ foreach ($firefoxDir in $firefoxDirs) {
         Write-Host "Created policy directory: $policyDir"
     }
 
-    # Load existing policy or start fresh
+    # Load existing policy or start fresh (no backup is kept; the Rock-OS policy
+    # is regenerated from this script, so the previous file is simply overwritten).
     if (Test-Path $policyFile) {
-        $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-        $backup = "$policyFile.rock-os-backup.$timestamp"
-        Copy-Item $policyFile $backup
-        Write-Host "Backed up existing policy to $backup"
-
         try {
             $data = Get-Content $policyFile -Raw -Encoding UTF8 | ConvertFrom-Json
         } catch {
