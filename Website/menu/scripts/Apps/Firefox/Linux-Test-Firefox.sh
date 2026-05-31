@@ -3,7 +3,7 @@ set -eu
 
 # Firefox reads enterprise policies from distribution/policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
-# Firefox's profile database directly, which is safer and easier to review..
+# Firefox's profile database directly, which is safer and easier to review.
 
 printf '%s\n' "This script configures Firefox with a small Rock-OS policy."
 printf '%s\n' "It will:"
