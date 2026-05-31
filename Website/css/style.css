@@ -2476,7 +2476,7 @@ scroll-behavior:smooth;
 }
 
 .script-token-comment {
-	color:var(--text-muted);
+	color:var(--code-comment);
 	font-style:italic;
 }
 
