@@ -471,6 +471,14 @@ with the current operating system. When you click Run, the server opens the
 script in the operating system's default terminal so normal prompts, `sudo`,
 and long-running commands behave like they would outside the browser.
 
+Refresh buttons inside Rock OS check for GitHub updates before reloading local
+content. The server runs a fixed `git pull --ff-only`, so it only accepts clean
+fast-forward updates and never overwrites local work. If the update check fails,
+Rock OS warns you and still refreshes the files already on disk. Live update
+requests are restricted to the computer running the server, even in LAN Mode:
+other LAN clients can browse refreshed content, but they cannot make the host
+pull code from GitHub.
+
 Organize scripts into folders such as `Website/menu/scripts/Windows/`,
 `Website/menu/scripts/Linux/`, and `Website/menu/scripts/Mac/`. The dashboard renders
 those folders as a folded collapsible tree with an expand/fold-all control,

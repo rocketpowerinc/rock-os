@@ -72,6 +72,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/search", scriptsSearchHandler(siteRoot))
 	mux.HandleFunc("/api/scripts/run", scriptRunHandler(siteRoot, *allowLanScriptRuns))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
+	mux.HandleFunc("/api/server/refresh", serverRefreshHandler(siteRoot))
 	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/doc", wikiDocHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/search", wikiSearchHandler(siteRoot))

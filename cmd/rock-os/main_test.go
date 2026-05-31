@@ -70,6 +70,44 @@ func TestScriptRunRequestAllowedAcceptsLANWithExplicitOptIn(t *testing.T) {
 	}
 }
 
+func TestServerRefreshRequestAllowedAcceptsLoopbackSameOrigin(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/server/refresh", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
+	request.Header.Set("X-Rock-OS-Requested", "true")
+	request.Header.Set("Origin", "http://127.0.0.1:8000")
+	request.Header.Set("Referer", "http://127.0.0.1:8000/scripts.html")
+
+	if !serverRefreshRequestAllowed(request) {
+		t.Fatal("loopback same-origin refresh request was rejected")
+	}
+}
+
+func TestServerRefreshRequestAllowedRejectsLAN(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "http://192.168.1.2:8000/api/server/refresh", nil)
+	request.RemoteAddr = "192.168.1.50:49200"
+	request.Header.Set("X-Rock-OS-Requested", "true")
+	request.Header.Set("Origin", "http://192.168.1.2:8000")
+	request.Header.Set("Referer", "http://192.168.1.2:8000/scripts.html")
+
+	if serverRefreshRequestAllowed(request) {
+		t.Fatal("LAN refresh request was allowed")
+	}
+}
+
+func TestServerRefreshHandlerRejectsNonClone(t *testing.T) {
+	siteRoot := t.TempDir()
+	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/server/refresh", nil)
+	request.RemoteAddr = "127.0.0.1:49200"
+	request.Header.Set("X-Rock-OS-Requested", "true")
+	recorder := httptest.NewRecorder()
+
+	serverRefreshHandler(siteRoot).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusConflict {
+		t.Fatalf("expected status 409, got %d", recorder.Code)
+	}
+}
+
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
 	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
 	if err == nil {

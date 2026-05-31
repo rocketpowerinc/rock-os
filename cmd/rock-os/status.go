@@ -11,6 +11,79 @@ import (
 	"time"
 )
 
+func serverRefreshHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !serverRefreshRequestAllowed(r) {
+			http.Error(w, "unauthorized refresh request", http.StatusForbidden)
+			return
+		}
+
+		repoRoot := filepath.Dir(siteRoot)
+		if _, err := os.Stat(filepath.Join(repoRoot, ".git")); err != nil {
+			http.Error(w, "Rock-OS is not running from a Git clone", http.StatusConflict)
+			return
+		}
+
+		beforeHead, err := gitHead(repoRoot)
+		if err != nil {
+			http.Error(w, "Git is required for live updates", http.StatusServiceUnavailable)
+			return
+		}
+
+		cmd := exec.Command("git", "pull", "--ff-only")
+		cmd.Dir = repoRoot
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			message := strings.TrimSpace(string(output))
+			if message == "" {
+				message = err.Error()
+			}
+			http.Error(w, "Could not update from GitHub: "+message, http.StatusConflict)
+			return
+		}
+
+		afterHead, err := gitHead(repoRoot)
+		if err != nil {
+			http.Error(w, "Updated files but could not read the current Git commit", http.StatusInternalServerError)
+			return
+		}
+
+		updated := beforeHead != afterHead
+		message := "Rock-OS is already up to date."
+		if updated {
+			message = "Rock-OS updated. Reloading the website."
+		}
+
+		writeJSON(w, serverRefreshResponse{
+			Updated: updated,
+			Message: message,
+		})
+	}
+}
+
+func serverRefreshRequestAllowed(r *http.Request) bool {
+	return r.Header.Get("X-Rock-OS-Requested") == "true" &&
+		requestFromLoopback(r) &&
+		sameOriginHeaderAllowed(r, "Origin") &&
+		sameOriginHeaderAllowed(r, "Referer")
+}
+
+func gitHead(repoRoot string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	cmd.Dir = repoRoot
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
+
 func printStartupStatus(siteRoot string, bindHost string, address string, allowLanScriptRuns bool) {
 	printStatus("OK", ansiGreen, "Serving %s", siteRoot)
 	printStatus("OK", ansiGreen, "Listening on %s", address)

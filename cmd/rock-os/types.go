@@ -67,6 +67,11 @@ type scriptRunRequest struct {
 	ID string `json:"id"`
 }
 
+type serverRefreshResponse struct {
+	Updated bool   `json:"updated"`
+	Message string `json:"message"`
+}
+
 type scriptSearchResponse struct {
 	Results []scriptSearchResult `json:"results"`
 }

@@ -1,4 +1,5 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
+import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
 
 const isDashboardsMode =
     window.location.pathname.includes('/dashboards/') ||
@@ -64,6 +65,29 @@ function linkTargetAttrs(href) {
     return '';
 }
 
+function bindReloadRefresh(buttonId) {
+    const button =
+        document.getElementById(buttonId);
+
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        button.classList.add('is-refreshing');
+
+        try {
+            await pullLatestRockOS();
+        }
+        catch (err) {
+            warnLiveUpdateFailed(err);
+        }
+
+        window.location.reload();
+    });
+}
+
 async function profilesAreLocked() {
 
     try {
@@ -117,9 +141,12 @@ function renderLockedProfiles() {
                 <h1>Profiles Locked</h1>
                 <p>Encrypted profile notes are locked with git-crypt. Unlock the repository to view Rocket, Kids, Prepper, and any future profiles.</p>
                 <div class="profiles-lock-fake-button" aria-hidden="true">Profiles Locked</div>
+                <button id="refreshLockedProfilesBtn" class="command-button primary" type="button">Refresh</button>
                 <pre><code>START-HERE\\Windows\\unlock-git-crypt.cmd</code></pre>
             </section>
         `;
+
+        bindReloadRefresh('refreshLockedProfilesBtn');
     }
 }
 
@@ -155,8 +182,11 @@ function renderDashboardError(message) {
                 <div class="profiles-lock-badge">Unavailable</div>
                 <h1>${escapeHtml(appMode.pageTitle)} Unavailable</h1>
                 <p>${escapeHtml(message)}</p>
+                <button id="refreshUnavailableBtn" class="command-button primary" type="button">Refresh</button>
             </section>
         `;
+
+        bindReloadRefresh('refreshUnavailableBtn');
     }
 }
 
@@ -397,9 +427,12 @@ function renderProfilesLanding(files) {
             <p class="wiki-error-kicker">${escapeHtml(appMode.landingKicker)}</p>
             <h1>${escapeHtml(appMode.pageTitle)}</h1>
             ${appMode.landingDescription ? `<p>${escapeHtml(appMode.landingDescription)}</p>` : ''}
+            <button id="refreshProfilesLandingBtn" class="command-button primary" type="button">Refresh</button>
             ${cardsHtml}
         </section>
     `;
+
+    bindReloadRefresh('refreshProfilesLandingBtn');
 }
 
 async function loadProfilesLanding() {
@@ -613,6 +646,7 @@ function renderDashboard(profile, config, feeds) {
                     </div>
                 </div>
                 <div class="glance-header-actions">
+                    <button id="refreshDashboardBtn" class="glance-btn">Refresh</button>
                     <button id="viewNotesBtn" class="glance-btn">
                         <span>📄</span> ${escapeHtml(appMode.viewNotesText)}
                     </button>
@@ -891,6 +925,8 @@ function renderDashboard(profile, config, feeds) {
 
     // Toggle button handler
     const viewNotesBtn = document.getElementById('viewNotesBtn');
+    bindReloadRefresh('refreshDashboardBtn');
+
     if (viewNotesBtn) {
         viewNotesBtn.addEventListener('click', () => {
             renderNotesViewer(profile);

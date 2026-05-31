@@ -4,6 +4,7 @@ import { enhanceCodeBlocks, enhanceInlineCode } from './code-blocks.js';
 import { enhanceExternalLinks, enhanceWikiLinks, markdownLinksInText, wikiDocHref } from './links.js';
 import { buildTableOfContents, clearToc, scrollToCurrentHash } from './toc.js';
 import { escapeHtml, fileTitle, formatEditedDate } from './utils.js';
+import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from '../server-refresh.js';
 
 export function createMarkdownTabApp(config) {
 
@@ -1697,6 +1698,15 @@ if (refreshButton) {
 
         try {
 
+            if (await pullLatestRockOSAndReload()) {
+                return;
+            }
+
+            await refreshTab();
+        }
+        catch (err) {
+
+            warnLiveUpdateFailed(err);
             await refreshTab();
         }
         finally {

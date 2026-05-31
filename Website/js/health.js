@@ -1,3 +1,5 @@
+import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from './server-refresh.js';
+
 const ids = {
     checked: document.getElementById('healthChecked'),
     ok: document.getElementById('healthOk'),
@@ -117,5 +119,16 @@ async function loadLinkHealth() {
     }
 }
 
-ids.refresh?.addEventListener('click', loadLinkHealth);
+ids.refresh?.addEventListener('click', async () => {
+    try {
+        if (await pullLatestRockOSAndReload()) {
+            return;
+        }
+    }
+    catch (err) {
+        warnLiveUpdateFailed(err);
+    }
+
+    await loadLinkHealth();
+});
 loadLinkHealth();

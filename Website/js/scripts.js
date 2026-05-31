@@ -1,3 +1,5 @@
+import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from './server-refresh.js';
+
 const scriptList =
     document.getElementById('scriptList');
 const scriptPreview =
@@ -956,6 +958,13 @@ if (refreshScriptsBtn) {
         refreshScriptsBtn.disabled = true;
         refreshScriptsBtn.classList.add('is-refreshing');
         try {
+            if (await pullLatestRockOSAndReload()) {
+                return;
+            }
+
+            await loadScripts();
+        } catch (err) {
+            warnLiveUpdateFailed(err);
             await loadScripts();
         } finally {
             refreshScriptsBtn.disabled = false;
