@@ -2,12 +2,18 @@
 # Installs Firefox via winget if missing, then configures it with a Rock-OS
 # enterprise policy: privacy and utility extensions (uBlock Origin, Tabliss,
 # Privacy Badger, CanvasBlocker, Multi-Account Containers, Skip Redirect,
-# I Still Don't Care About Cookies, Startpage Search), always-visible
-# bookmarks toolbar, and a set of toolbar bookmarks.
+# I Still Don't Care About Cookies), Startpage as the default search engine,
+# always-visible bookmarks toolbar, a set of toolbar bookmarks, and these
+# preferences: do not reopen previous tabs on startup, confirm before closing
+# multiple tabs, Enhanced Tracking Protection set to Strict, and Global Privacy
+# Control ("tell websites not to sell or share my data") enabled.
 #
 # Firefox reads enterprise policies from distribution\policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
-# Firefox's profile database directly, which is safer and easier to review.
+# Firefox's profile database directly, which is safer and easier to review. The
+# four preferences above are applied via an AutoConfig file (rock-os.cfg) in the
+# install directory, because the policies.json Preferences policy cannot set the
+# privacy.* pref that Global Privacy Control needs.
 #
 # WARNING: After confirmation, this script PERMANENTLY DELETES all Firefox data
 # (every profile: bookmarks, history, saved passwords/logins, cookies, sessions,
@@ -42,8 +48,13 @@ Write-Host '  - DELETE all Firefox data (full profile reset: bookmarks, history,
 Write-Host '    saved passwords/logins, cookies, sessions, prefs, extension data)'
 Write-Host '  - Add a bookmark folder to the toolbar'
 Write-Host '  - Install uBlock Origin, Tabliss, Privacy Badger, CanvasBlocker,'
-Write-Host '    Multi-Account Containers, Skip Redirect, I Still Don''t Care'
-Write-Host '    About Cookies, and Startpage Search extensions'
+Write-Host '    Multi-Account Containers, Skip Redirect, and I Still Don''t Care'
+Write-Host '    About Cookies extensions'
+Write-Host '  - Set Startpage as the default search engine'
+Write-Host '  - Not reopen previous tabs/windows on startup'
+Write-Host '  - Confirm before closing a window with multiple tabs'
+Write-Host '  - Set Enhanced Tracking Protection to Strict'
+Write-Host '  - Enable Global Privacy Control (tell sites not to sell/share data)'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host '  WARNING: This PERMANENTLY DELETES ALL Firefox data for a fresh start.' -ForegroundColor Red
@@ -186,11 +197,52 @@ $extensions = [pscustomobject]@{
         installation_mode = 'force_installed'
         install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/istilldontcareaboutcookies/latest.xpi'
     }
-    'StartpageSearchExtension@roteKlaue' = [pscustomobject]@{
-        installation_mode = 'force_installed'
-        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/startpage-search/latest.xpi'
-    }
 }
+
+# ── Search engine ──────────────────────────────────────────────────────────────
+# Add Startpage as a real search engine and make it the default. Defining the
+# engine directly (rather than relying on the Startpage add-on to register one)
+# means the Default name always matches and there is no duplicate engine. The
+# SearchEngines policy works on all Firefox release channels as of Firefox 139.
+
+$searchEngines = [pscustomobject]@{
+    Default = 'Startpage'
+    Add     = @(
+        [pscustomobject]@{
+            Name               = 'Startpage'
+            URLTemplate        = 'https://www.startpage.com/sp/search?query={searchTerms}'
+            Method             = 'GET'
+            SuggestURLTemplate = 'https://www.startpage.com/suggestions?q={searchTerms}'
+        }
+    )
+}
+
+# ── Preferences (applied via AutoConfig, see "Write AutoConfig" below) ──────────
+# These are written to a .cfg in the Firefox install directory rather than the
+# policies.json "Preferences" policy, because that policy's allow-list does not
+# include privacy.* prefs (needed for Global Privacy Control). AutoConfig can set
+# any pref and, like policies.json, lives in the install dir so it survives the
+# full profile wipe below.
+#   browser.startup.page=1          -> do NOT reopen previous tabs/windows on start
+#   browser.tabs.warnOnClose=true   -> confirm before closing a window with many tabs
+#   browser.contentblocking.category=strict -> Enhanced Tracking Protection = Strict
+#   privacy.globalprivacycontrol.enabled=true -> "Tell websites not to sell/share my data"
+
+$prefLines = @(
+    '// Rock-OS Firefox preferences (AutoConfig). First line is intentionally a comment.'
+    'defaultPref("browser.startup.page", 1);'
+    'defaultPref("browser.tabs.warnOnClose", true);'
+    'defaultPref("browser.contentblocking.category", "strict");'
+    'defaultPref("privacy.globalprivacycontrol.enabled", true);'
+)
+$prefCfg = ($prefLines -join "`n") + "`n"
+
+$autoConfigLines = @(
+    '// Rock-OS AutoConfig loader'
+    'pref("general.config.filename", "rock-os.cfg");'
+    'pref("general.config.obscure_value", 0);'
+)
+$autoConfigJs = ($autoConfigLines -join "`n") + "`n"
 
 # ── Write policy files ───────────────────────────────────────────────────────
 
@@ -256,6 +308,13 @@ foreach ($firefoxDir in $firefoxDirs) {
         $policies | Add-Member -NotePropertyName 'ExtensionSettings' -NotePropertyValue $extensions
     }
 
+    # Merge SearchEngines (Startpage as default)
+    if (Get-Member -InputObject $policies -Name 'SearchEngines' -MemberType NoteProperty) {
+        $policies.SearchEngines = $searchEngines
+    } else {
+        $policies | Add-Member -NotePropertyName 'SearchEngines' -NotePropertyValue $searchEngines
+    }
+
     # Write
     $json = $data | ConvertTo-Json -Depth 10
     $json = $json -replace "`r`n", "`n"
@@ -278,6 +337,22 @@ foreach ($firefoxDir in $firefoxDirs) {
 
     [System.IO.File]::WriteAllText($policyFile, "$json`n", [System.Text.UTF8Encoding]::new($false))
     Write-Host "Policy written to $policyFile"
+
+    # ── Write AutoConfig preference files ───────────────────────────────────
+    # rock-os.cfg holds the prefs; defaults\pref\autoconfig.js tells Firefox to
+    # load it. Both live in the install dir, so they survive the profile wipe.
+    $cfgFile     = Join-Path $firefoxDir 'rock-os.cfg'
+    $autoCfgDir  = Join-Path $firefoxDir 'defaults\pref'
+    $autoCfgFile = Join-Path $autoCfgDir 'autoconfig.js'
+
+    if (-not (Test-Path $autoCfgDir)) {
+        New-Item -ItemType Directory -Path $autoCfgDir -Force | Out-Null
+    }
+
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($cfgFile, $prefCfg, $utf8NoBom)
+    [System.IO.File]::WriteAllText($autoCfgFile, $autoConfigJs, $utf8NoBom)
+    Write-Host "Preferences written to $cfgFile"
 }
 
 # ── Wipe ALL Firefox data (full profile reset) ──────────────────────────────
