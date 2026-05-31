@@ -17,7 +17,9 @@
 #     windows (the "custom settings for history" equivalent, NOT permanent private
 #     browsing)
 #   - Clear cookies and site data when Firefox is closed
-#   - Turn off "Provide search suggestions"
+#   - Turn off "Provide search suggestions" and "Remember search and form history"
+#   - Turn off every Address Bar suggestion source (history, bookmarks, open tabs,
+#     shortcuts, recent searches, search-engine suggestions, quick actions)
 #   - Block AI enhancements (AIControls = blocked: chatbot, translations, etc.)
 #
 # Firefox reads enterprise policies from distribution\policies.json at startup.
@@ -76,6 +78,9 @@ Write-Host '  - Enable Max Protection secure DNS (DNS over HTTPS)'
 Write-Host '  - Do not record browsing/download history (normal, non-private windows)'
 Write-Host '  - Clear cookies and site data when Firefox closes'
 Write-Host '  - Turn off search suggestions'
+Write-Host '  - Turn off remembering search and form history'
+Write-Host '  - Turn off all Address Bar suggestions (history, bookmarks, open'
+Write-Host '    tabs, shortcuts, recent searches, search engines, quick actions)'
 Write-Host '  - Block AI enhancements (generative-AI features)'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
@@ -290,6 +295,11 @@ $aiControls = [pscustomobject]@{
 #       -> "Clear cookies and site data when Firefox is closed".
 #   browser.search.suggest.enabled=false + browser.urlbar.suggest.searches=false
 #       -> turn OFF "Provide search suggestions".
+#   browser.formfill.enable=false   -> OFF "Remember search and form history".
+#   browser.urlbar.suggest.* = false -> turn OFF every Address Bar suggestion source:
+#       history (Browsing history), bookmark (Bookmarks), openpage (Open tabs),
+#       topsites (Shortcuts), recentsearches (Recent searches),
+#       engines (Suggest search engines to use), quickactions (Quick actions).
 
 $prefLines = @(
     '// Rock-OS Firefox preferences (AutoConfig). First line is intentionally a comment.'
@@ -304,7 +314,15 @@ $prefLines = @(
     'defaultPref("privacy.clearOnShutdown.cookies", true);'
     'defaultPref("privacy.clearOnShutdown_v2.cookiesAndStorage", true);'
     'defaultPref("browser.search.suggest.enabled", false);'
+    'defaultPref("browser.formfill.enable", false);'
     'defaultPref("browser.urlbar.suggest.searches", false);'
+    'defaultPref("browser.urlbar.suggest.history", false);'
+    'defaultPref("browser.urlbar.suggest.bookmark", false);'
+    'defaultPref("browser.urlbar.suggest.openpage", false);'
+    'defaultPref("browser.urlbar.suggest.topsites", false);'
+    'defaultPref("browser.urlbar.suggest.recentsearches", false);'
+    'defaultPref("browser.urlbar.suggest.engines", false);'
+    'defaultPref("browser.urlbar.suggest.quickactions", false);'
 )
 $prefCfg = ($prefLines -join "`n") + "`n"
 
