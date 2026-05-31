@@ -183,11 +183,7 @@ Write-Host ''
 $folderName = "$([char]0x2B07)$([char]0xFE0F)Pirate"
 
 $bookmarks = @(
-    # Directly on the bookmarks toolbar (no folder)
-    @{ Title = 'SkipVids';       URL = 'https://skipvids.com/';              Placement = 'toolbar' },
-    @{ Title = 'Jellyfin';       URL = 'http://192.168.1.53:8096';           Placement = 'toolbar' },
-
-    # Inside the Pirate folder
+    # Inside the Pirate folder (listed first so the folder appears first on the toolbar)
     @{ Title = 'Ext';            URL = 'https://ext.to/';                    Placement = 'toolbar'; Folder = $folderName },
     @{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/';         Placement = 'toolbar'; Folder = $folderName },
     @{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/';       Placement = 'toolbar'; Folder = $folderName },
@@ -197,7 +193,12 @@ $bookmarks = @(
     @{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/';        Placement = 'toolbar'; Folder = $folderName },
     @{ Title = 'YTS';            URL = 'https://yts.hn/';                    Placement = 'toolbar'; Folder = $folderName },
     @{ Title = 'FMHY Torrenting';URL = 'https://fmhy.net/torrenting';        Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'Is It Cracked';  URL = 'https://isitcracked.com/';           Placement = 'toolbar'; Folder = $folderName }
+    @{ Title = 'Is It Cracked';  URL = 'https://isitcracked.com/';           Placement = 'toolbar'; Folder = $folderName },
+
+    # Directly on the bookmarks toolbar (no folder), after the Pirate folder
+    @{ Title = 'Rock-OS';        URL = 'https://github.com/rocketpowerinc/rock-os'; Placement = 'toolbar' },
+    @{ Title = 'SkipVids';       URL = 'https://skipvids.com/';              Placement = 'toolbar' },
+    @{ Title = 'Jellyfin';       URL = 'http://192.168.1.53:8096';           Placement = 'toolbar' }
 )
 
 # ── Extensions ────────────────────────────────────────────────────────────────
