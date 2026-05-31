@@ -13,6 +13,9 @@
 #   - Turn off saving passwords, payment-method autofill, and address autofill
 #   - Turn off all data collection: telemetry, studies, daily usage ping,
 #     personalized extension recommendations, and remote feature rollouts
+#   - History = "Never Remember History" (permanent private browsing; extensions
+#     are kept working in private windows)
+#   - Clear cookies and site data when Firefox is closed
 #
 # Firefox reads enterprise policies from distribution\policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
@@ -67,6 +70,8 @@ Write-Host '  - Turn off saving passwords, payment info, and addresses'
 Write-Host '  - Turn off all Firefox data collection (telemetry, studies, daily'
 Write-Host '    usage ping, extension recommendations, remote rollouts)'
 Write-Host '  - Enable Max Protection secure DNS (DNS over HTTPS)'
+Write-Host '  - Set History to "Never Remember History" (always private browsing)'
+Write-Host '  - Clear cookies and site data when Firefox closes'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host '  WARNING: This PERMANENTLY DELETES ALL Firefox data for a fresh start.' -ForegroundColor Red
@@ -260,6 +265,14 @@ $dnsOverHttps = [pscustomobject]@{
 #   privacy.globalprivacycontrol.enabled=true -> "Tell websites not to sell/share my data"
 #   app.normandy.enabled=false      -> OFF "improve features... between updates" (remote rollouts)
 #   datareporting.usage.uploadEnabled=false -> OFF "Send daily usage ping to Mozilla"
+#   browser.privatebrowsing.autostart=true -> History = "Never Remember History"
+#       (permanent private browsing: nothing is saved, everything is discarded on
+#       close). extensions.allowPrivateBrowsingByDefault=true keeps the installed
+#       extensions (uBlock, etc.) working in this always-private mode.
+#   privacy.sanitize.sanitizeOnShutdown + clearOnShutdown(.cookies / _v2.cookiesAndStorage)
+#       -> "Clear cookies and site data when Firefox is closed". This is redundant
+#       while Never-Remember is on (private mode already clears on close), but set
+#       so the behavior holds if Never-Remember is ever turned off.
 
 $prefLines = @(
     '// Rock-OS Firefox preferences (AutoConfig). First line is intentionally a comment.'
@@ -269,6 +282,11 @@ $prefLines = @(
     'defaultPref("privacy.globalprivacycontrol.enabled", true);'
     'defaultPref("app.normandy.enabled", false);'
     'defaultPref("datareporting.usage.uploadEnabled", false);'
+    'defaultPref("browser.privatebrowsing.autostart", true);'
+    'defaultPref("extensions.allowPrivateBrowsingByDefault", true);'
+    'defaultPref("privacy.sanitize.sanitizeOnShutdown", true);'
+    'defaultPref("privacy.clearOnShutdown.cookies", true);'
+    'defaultPref("privacy.clearOnShutdown_v2.cookiesAndStorage", true);'
 )
 $prefCfg = ($prefLines -join "`n") + "`n"
 
