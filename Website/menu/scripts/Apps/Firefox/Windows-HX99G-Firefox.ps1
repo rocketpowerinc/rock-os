@@ -3,17 +3,25 @@
 # enterprise policy: privacy and utility extensions (uBlock Origin, Tabliss,
 # Privacy Badger, CanvasBlocker, Multi-Account Containers, Skip Redirect,
 # I Still Don't Care About Cookies), Startpage as the default search engine,
-# always-visible bookmarks toolbar, a set of toolbar bookmarks, and these
-# preferences: do not reopen previous tabs on startup, confirm before closing
-# multiple tabs, Enhanced Tracking Protection set to Strict, and Global Privacy
-# Control ("tell websites not to sell or share my data") enabled.
+# always-visible bookmarks toolbar, and a set of toolbar bookmarks. It also
+# applies these settings:
+#   - Do not reopen previous tabs/windows on startup
+#   - Confirm before closing a window with multiple tabs
+#   - Enhanced Tracking Protection = Strict
+#   - Global Privacy Control enabled ("don't sell or share my data")
+#   - Max Protection secure DNS (DNS over HTTPS, no fallback)
+#   - Turn off saving passwords, payment-method autofill, and address autofill
+#   - Turn off all data collection: telemetry, studies, daily usage ping,
+#     personalized extension recommendations, and remote feature rollouts
 #
 # Firefox reads enterprise policies from distribution\policies.json at startup.
 # This script merges a small Rock-OS policy into that file instead of editing
-# Firefox's profile database directly, which is safer and easier to review. The
-# four preferences above are applied via an AutoConfig file (rock-os.cfg) in the
-# install directory, because the policies.json Preferences policy cannot set the
-# privacy.* pref that Global Privacy Control needs.
+# Firefox's profile database directly, which is safer and easier to review. A few
+# preferences that have no matching policy (startup behavior, multi-tab warning,
+# Global Privacy Control, Strict tracking protection, remote rollouts, daily
+# usage ping) are applied via an AutoConfig file (rock-os.cfg) in the install
+# directory, because the policies.json Preferences policy cannot set privacy.*
+# prefs and cannot make ETP "Strict" stick.
 #
 # WARNING: After confirmation, this script PERMANENTLY DELETES all Firefox data
 # (every profile: bookmarks, history, saved passwords/logins, cookies, sessions,
@@ -55,6 +63,10 @@ Write-Host '  - Not reopen previous tabs/windows on startup'
 Write-Host '  - Confirm before closing a window with multiple tabs'
 Write-Host '  - Set Enhanced Tracking Protection to Strict'
 Write-Host '  - Enable Global Privacy Control (tell sites not to sell/share data)'
+Write-Host '  - Turn off saving passwords, payment info, and addresses'
+Write-Host '  - Turn off all Firefox data collection (telemetry, studies, daily'
+Write-Host '    usage ping, extension recommendations, remote rollouts)'
+Write-Host '  - Enable Max Protection secure DNS (DNS over HTTPS)'
 Write-Host ''
 Write-Host '========================================================================' -ForegroundColor Red
 Write-Host '  WARNING: This PERMANENTLY DELETES ALL Firefox data for a fresh start.' -ForegroundColor Red
@@ -217,6 +229,23 @@ $searchEngines = [pscustomobject]@{
     )
 }
 
+# ── UserMessaging ───────────────────────────────────────────────────────────────
+# Turn OFF "Allow personalized extension recommendations".
+$userMessaging = [pscustomobject]@{
+    ExtensionRecommendations = $false
+}
+
+# ── DNS over HTTPS (Max Protection) ─────────────────────────────────────────────
+# Enabled + Fallback=false == "Max Protection": Firefox always uses secure DNS and
+# shows a security-risk warning before falling back to system DNS. ProviderURL is
+# Firefox's default (Cloudflare); change it if you prefer another resolver.
+$dnsOverHttps = [pscustomobject]@{
+    Enabled     = $true
+    ProviderURL = 'https://mozilla.cloudflare-dns.com/dns-query'
+    Fallback    = $false
+    Locked      = $false
+}
+
 # ── Preferences (applied via AutoConfig, see "Write AutoConfig" below) ──────────
 # These are written to a .cfg in the Firefox install directory rather than the
 # policies.json "Preferences" policy, because that policy's allow-list does not
@@ -225,15 +254,21 @@ $searchEngines = [pscustomobject]@{
 # full profile wipe below.
 #   browser.startup.page=1          -> do NOT reopen previous tabs/windows on start
 #   browser.tabs.warnOnClose=true   -> confirm before closing a window with many tabs
-#   browser.contentblocking.category=strict -> Enhanced Tracking Protection = Strict
+#   browser.contentblocking.category=strict -> Enhanced Tracking Protection = Strict.
+#       LOCKED on purpose: as a plain default pref Firefox recomputes the category
+#       back to Standard, so locking is what makes Strict actually stick.
 #   privacy.globalprivacycontrol.enabled=true -> "Tell websites not to sell/share my data"
+#   app.normandy.enabled=false      -> OFF "improve features... between updates" (remote rollouts)
+#   datareporting.usage.uploadEnabled=false -> OFF "Send daily usage ping to Mozilla"
 
 $prefLines = @(
     '// Rock-OS Firefox preferences (AutoConfig). First line is intentionally a comment.'
     'defaultPref("browser.startup.page", 1);'
     'defaultPref("browser.tabs.warnOnClose", true);'
-    'defaultPref("browser.contentblocking.category", "strict");'
+    'lockPref("browser.contentblocking.category", "strict");'
     'defaultPref("privacy.globalprivacycontrol.enabled", true);'
+    'defaultPref("app.normandy.enabled", false);'
+    'defaultPref("datareporting.usage.uploadEnabled", false);'
 )
 $prefCfg = ($prefLines -join "`n") + "`n"
 
@@ -279,11 +314,24 @@ foreach ($firefoxDir in $firefoxDirs) {
 
     $policies = $data.policies
 
-    # Always show the bookmarks toolbar and suppress the default import prompt
+    # Simple on/off policies:
+    #   DisplayBookmarksToolbar  - always show the bookmarks toolbar
+    #   NoDefaultBookmarks       - don't create Firefox's default bookmarks
+    #   DisableProfileImport     - suppress the import-from-another-browser prompt
+    #   OfferToSaveLogins        - turn OFF "Ask to save passwords"
+    #   AutofillAddressEnabled   - turn OFF "Save and autofill addresses"
+    #   AutofillCreditCardEnabled- turn OFF "Save and autofill payment info"
+    #   DisableTelemetry         - turn OFF "Send technical and interaction data"
+    #   DisableFirefoxStudies    - turn OFF "Allow Firefox to run feature studies"
     $fieldDefaults = @{
-        DisplayBookmarksToolbar = $true
-        NoDefaultBookmarks      = $true
-        DisableProfileImport    = $true
+        DisplayBookmarksToolbar   = $true
+        NoDefaultBookmarks        = $true
+        DisableProfileImport      = $true
+        OfferToSaveLogins         = $false
+        AutofillAddressEnabled    = $false
+        AutofillCreditCardEnabled = $false
+        DisableTelemetry          = $true
+        DisableFirefoxStudies     = $true
     }
 
     foreach ($key in $fieldDefaults.Keys) {
@@ -313,6 +361,20 @@ foreach ($firefoxDir in $firefoxDirs) {
         $policies.SearchEngines = $searchEngines
     } else {
         $policies | Add-Member -NotePropertyName 'SearchEngines' -NotePropertyValue $searchEngines
+    }
+
+    # Merge UserMessaging (no personalized extension recommendations)
+    if (Get-Member -InputObject $policies -Name 'UserMessaging' -MemberType NoteProperty) {
+        $policies.UserMessaging = $userMessaging
+    } else {
+        $policies | Add-Member -NotePropertyName 'UserMessaging' -NotePropertyValue $userMessaging
+    }
+
+    # Merge DNSOverHTTPS (Max Protection)
+    if (Get-Member -InputObject $policies -Name 'DNSOverHTTPS' -MemberType NoteProperty) {
+        $policies.DNSOverHTTPS = $dnsOverHttps
+    } else {
+        $policies | Add-Member -NotePropertyName 'DNSOverHTTPS' -NotePropertyValue $dnsOverHttps
     }
 
     # Write
