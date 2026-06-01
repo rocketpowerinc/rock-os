@@ -2,7 +2,8 @@
 # Installs Firefox via winget if missing, then configures it with a Rock-OS
 # enterprise policy: privacy and utility extensions (uBlock Origin, Tabliss,
 # Privacy Badger, CanvasBlocker, Multi-Account Containers, Skip Redirect,
-# I Still Don't Care About Cookies), Startpage as the default search engine,
+# I Still Don't Care About Cookies, Bitwarden, SingleFile), Startpage as the
+# default search engine,
 # always-visible bookmarks toolbar, and a set of toolbar bookmarks. It also
 # applies these settings:
 #   - Do not reopen previous tabs/windows on startup
@@ -16,7 +17,7 @@
 #   - Do not record browsing/download history, while keeping normal (non-private)
 #     windows (the "custom settings for history" equivalent, NOT permanent private
 #     browsing)
-#   - Clear cookies and site data when Firefox is closed
+#   - Keep cookies and site data when Firefox is closed so website logins persist
 #   - Turn off "Provide search suggestions" and "Remember search and form history"
 #   - Turn off every Address Bar suggestion source (history, bookmarks, open tabs,
 #     shortcuts, recent searches, search-engine suggestions, quick actions)
@@ -65,7 +66,7 @@ Write-Host '    saved passwords/logins, cookies, sessions, prefs, extension data
 Write-Host '  - Add a bookmark folder to the toolbar'
 Write-Host '  - Install uBlock Origin, Tabliss, Privacy Badger, CanvasBlocker,'
 Write-Host '    Multi-Account Containers, Skip Redirect, and I Still Don''t Care'
-Write-Host '    About Cookies extensions'
+Write-Host '    About Cookies, Bitwarden, and SingleFile extensions'
 Write-Host '  - Set Startpage as the default search engine'
 Write-Host '  - Not reopen previous tabs/windows on startup'
 Write-Host '  - Confirm before closing a window with multiple tabs'
@@ -76,7 +77,7 @@ Write-Host '  - Turn off all Firefox data collection (telemetry, studies, daily'
 Write-Host '    usage ping, extension recommendations, remote rollouts)'
 Write-Host '  - Enable Max Protection secure DNS (DNS over HTTPS)'
 Write-Host '  - Do not record browsing/download history (normal, non-private windows)'
-Write-Host '  - Clear cookies and site data when Firefox closes'
+Write-Host '  - Keep cookies and site data when Firefox closes so logins persist'
 Write-Host '  - Turn off search suggestions'
 Write-Host '  - Turn off remembering search and form history'
 Write-Host '  - Turn off all Address Bar suggestions (history, bookmarks, open'
@@ -176,29 +177,26 @@ foreach ($dir in $firefoxDirs) {
 Write-Host ''
 
 # ── Bookmarks ────────────────────────────────────────────────────────────────
-# Each bookmark is a flat entry. A bookmark WITH a Folder field is grouped inside
-# that named folder on the toolbar (Firefox creates the folder automatically);
-# a bookmark WITHOUT a Folder field sits directly on the bookmarks toolbar.
-
-$folderName = "$([char]0x2B07)$([char]0xFE0F)Pirate"
-
-$bookmarks = @(
-    # Inside the Pirate folder (listed first so the folder appears first on the toolbar)
-    @{ Title = 'Ext';            URL = 'https://ext.to/';                    Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'TorrentGalaxy';  URL = 'https://torrentgalaxy.one/';         Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'PCGamesTorrent'; URL = 'https://pcgamestorrents.com/';       Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'Ziperto';        URL = 'https://www.ziperto.com/';           Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'DLPSGame';       URL = 'https://dlpsgame.com/category/ps4/'; Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'GetComics';      URL = 'https://getcomics.org/';             Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'PirateBay';      URL = 'https://thepiratebay10.xyz/';        Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'YTS';            URL = 'https://yts.hn/';                    Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'FMHY Torrenting';URL = 'https://fmhy.net/torrenting';        Placement = 'toolbar'; Folder = $folderName },
-    @{ Title = 'Is It Cracked';  URL = 'https://isitcracked.com/';           Placement = 'toolbar'; Folder = $folderName },
-
-    # Directly on the bookmarks toolbar (no folder), after the Pirate folder
-    @{ Title = 'Rock-OS';        URL = 'https://github.com/rocketpowerinc/rock-os'; Placement = 'toolbar' },
-    @{ Title = 'SkipVids';       URL = 'https://skipvids.com/';              Placement = 'toolbar' },
-    @{ Title = 'Jellyfin';       URL = 'http://192.168.1.53:8096';           Placement = 'toolbar' }
+# ManagedBookmarks supports nested folders. Firefox displays the top-level
+# Favorites folder as a button on the bookmarks toolbar.
+$managedBookmarks = @(
+    @{ toplevel_name = 'Favorites' },
+    @{
+        name     = 'Pins'
+        children = @(
+            @{ name = 'YouTube Watch Later'; url = 'https://www.youtube.com/playlist?list=WL' },
+            @{ name = 'Reddit Saved';        url = 'https://www.reddit.com/user/reeves1987/saved/' },
+            @{ name = 'RocketPowerInc';      url = 'https://github.com/rocketpowerinc?tab=repositories' }
+        )
+    },
+    @{
+        name     = 'Launch'
+        children = @(
+            @{ name = 'Rock-OS';  url = 'https://github.com/rocketpowerinc/rock-os' },
+            @{ name = 'SkipVids'; url = 'https://skipvids.com/' },
+            @{ name = 'Jellyfin'; url = 'http://192.168.1.53:8096' }
+        )
+    }
 )
 
 # ── Extensions ────────────────────────────────────────────────────────────────
@@ -231,6 +229,14 @@ $extensions = [pscustomobject]@{
     'idcac-pub@guus.ninja' = [pscustomobject]@{
         installation_mode = 'force_installed'
         install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/istilldontcareaboutcookies/latest.xpi'
+    }
+    '{446900e4-71c2-419f-a6a7-df9c091e268b}' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi'
+    }
+    '{531906d3-e22f-4a6c-a102-8057b88a1a63}' = [pscustomobject]@{
+        installation_mode = 'force_installed'
+        install_url       = 'https://addons.mozilla.org/firefox/downloads/latest/single-file/latest.xpi'
     }
 }
 
@@ -300,7 +306,7 @@ $aiControls = [pscustomobject]@{
 #       option is permanent PRIVATE browsing and forces every window private, which
 #       is not what we want here.)
 #   privacy.sanitize.sanitizeOnShutdown + clearOnShutdown(.cookies / _v2.cookiesAndStorage)
-#       -> "Clear cookies and site data when Firefox is closed".
+#       -> keep cookies and site data so website logins persist after Firefox closes.
 #   browser.search.suggest.enabled=false + browser.urlbar.suggest.searches=false
 #       -> turn OFF "Provide search suggestions".
 #   browser.formfill.enable=false   -> OFF "Remember search and form history".
@@ -318,9 +324,9 @@ $prefLines = @(
     'defaultPref("app.normandy.enabled", false);'
     'defaultPref("datareporting.usage.uploadEnabled", false);'
     'defaultPref("places.history.enabled", false);'
-    'defaultPref("privacy.sanitize.sanitizeOnShutdown", true);'
-    'defaultPref("privacy.clearOnShutdown.cookies", true);'
-    'defaultPref("privacy.clearOnShutdown_v2.cookiesAndStorage", true);'
+    'defaultPref("privacy.sanitize.sanitizeOnShutdown", false); // Keep website logins after Firefox closes.'
+    'defaultPref("privacy.clearOnShutdown.cookies", false); // Keep sign-in cookies, such as YouTube sessions.'
+    'defaultPref("privacy.clearOnShutdown_v2.cookiesAndStorage", false); // Keep site storage used by signed-in websites.'
     'defaultPref("browser.search.suggest.enabled", false);'
     'defaultPref("browser.formfill.enable", false);'
     'defaultPref("browser.urlbar.suggest.searches", false);'
@@ -400,11 +406,15 @@ foreach ($firefoxDir in $firefoxDirs) {
         }
     }
 
-    # Merge Bookmarks
+    # Replace legacy flat bookmarks with a nested Favorites folder.
     if (Get-Member -InputObject $policies -Name 'Bookmarks' -MemberType NoteProperty) {
-        $policies.Bookmarks = $bookmarks
+        $policies.PSObject.Properties.Remove('Bookmarks')
+    }
+
+    if (Get-Member -InputObject $policies -Name 'ManagedBookmarks' -MemberType NoteProperty) {
+        $policies.ManagedBookmarks = $managedBookmarks
     } else {
-        $policies | Add-Member -NotePropertyName 'Bookmarks' -NotePropertyValue $bookmarks
+        $policies | Add-Member -NotePropertyName 'ManagedBookmarks' -NotePropertyValue $managedBookmarks
     }
 
     # Merge Extensions
@@ -446,11 +456,9 @@ foreach ($firefoxDir in $firefoxDirs) {
     $json = $data | ConvertTo-Json -Depth 10
     $json = $json -replace "`r`n", "`n"
 
-    # Escape every non-ASCII character (e.g. the emoji in the bookmark folder
-    # name) to a \uXXXX JSON escape so the output is pure ASCII. This makes the
-    # file immune to codepage misreads: literal UTF-8 bytes can be decoded as
-    # Windows-1252 and show up as mojibake (e.g. "â¬‡ï¸Pirate"), but \uXXXX
-    # escapes decode to the correct characters no matter how the file is read.
+    # Escape every non-ASCII character to a \uXXXX JSON escape so the output is
+    # pure ASCII. This keeps future policy text immune to codepage misreads:
+    # \uXXXX escapes decode correctly no matter how the file is read.
     $sb = [System.Text.StringBuilder]::new()
     foreach ($ch in $json.ToCharArray()) {
         $code = [int][char]$ch
