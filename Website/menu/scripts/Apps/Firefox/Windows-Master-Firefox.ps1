@@ -1,4 +1,4 @@
-# HX99G-Firefox.ps1
+# Windows-Master-Firefox.ps1
 # Installs Firefox via winget if missing, then configures it with a Rock-OS
 # enterprise policy: privacy and utility extensions (uBlock Origin, Tabliss,
 # Privacy Badger, CanvasBlocker, Multi-Account Containers, Skip Redirect,
