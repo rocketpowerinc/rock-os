@@ -1057,10 +1057,10 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .prepper-avatar-display { background-image:url('../profiles/Prepper/assets/Prepper-Cyberpunk.svg'); }
-:root[data-theme="steel"] .prepper-avatar-display { background-image:url('../profiles/Prepper/assets/Prepper-Steel.svg'); }
-:root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../profiles/Prepper/assets/Prepper-Rugged.svg'); }
-:root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../profiles/Prepper/assets/Prepper-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .prepper-avatar-display { background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Cyberpunk.svg'); }
+:root[data-theme="steel"] .prepper-avatar-display { background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Steel.svg'); }
+:root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Rugged.svg'); }
+:root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Blue-Grass.svg'); }
 
 .kids-avatar-display {
 	width:80px;
@@ -1072,10 +1072,10 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .kids-avatar-display { background-image:url('../profiles/Kids/assets/Kids-Cyberpunk.svg'); }
-:root[data-theme="steel"] .kids-avatar-display { background-image:url('../profiles/Kids/assets/Kids-Steel.svg'); }
-:root[data-theme="rugged"] .kids-avatar-display { background-image:url('../profiles/Kids/assets/Kids-Rugged.svg'); }
-:root[data-theme="blue-grass"] .kids-avatar-display { background-image:url('../profiles/Kids/assets/Kids-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .kids-avatar-display { background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Cyberpunk.svg'); }
+:root[data-theme="steel"] .kids-avatar-display { background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Steel.svg'); }
+:root[data-theme="rugged"] .kids-avatar-display { background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Rugged.svg'); }
+:root[data-theme="blue-grass"] .kids-avatar-display { background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Blue-Grass.svg'); }
 
 .rocket-avatar-display {
 	width:80px;
@@ -1087,15 +1087,15 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .rocket-avatar-display { background-image:url('../profiles/Rocket/assets/Rocket-Cyberpunk.svg'); }
-:root[data-theme="steel"] .rocket-avatar-display { background-image:url('../profiles/Rocket/assets/Rocket-Steel.svg'); }
-:root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../profiles/Rocket/assets/Rocket-Rugged.svg'); }
-:root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../profiles/Rocket/assets/Rocket-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .rocket-avatar-display { background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Cyberpunk.svg'); }
+:root[data-theme="steel"] .rocket-avatar-display { background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Steel.svg'); }
+:root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Rugged.svg'); }
+:root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Blue-Grass.svg'); }
 
 .windows-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/OS/Windows/assets/windows.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/Windows/assets/windows.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1106,7 +1106,7 @@ color:#88ff88;
 .linux-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/OS/Linux/assets/linux.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/Linux/assets/linux.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1117,7 +1117,7 @@ color:#88ff88;
 .android-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Mobile/Android/assets/android.png');
+	background-image:url('../ENCRYPTED/dashboards/Mobile/Android/assets/android.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1128,7 +1128,7 @@ color:#88ff88;
 .ios-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Mobile/iOS/assets/ios.png');
+	background-image:url('../ENCRYPTED/dashboards/Mobile/iOS/assets/ios.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1139,7 +1139,7 @@ color:#88ff88;
 .macos-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/OS/MacOS/assets/macos.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/MacOS/assets/macos.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1150,7 +1150,7 @@ color:#88ff88;
 .pirating-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Homelab/Pirating/assets/ship.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/Pirating/assets/ship.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1161,7 +1161,7 @@ color:#88ff88;
 .selfhosting-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1172,7 +1172,7 @@ color:#88ff88;
 .artificial-intelligence-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1183,7 +1183,7 @@ color:#88ff88;
 .emulation-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../dashboards/Gaming/Emulation/assets/emulation.png');
+	background-image:url('../ENCRYPTED/dashboards/Gaming/Emulation/assets/emulation.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1500,90 +1500,90 @@ color:#88ff88;
 
 /* Cyberpunk */
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../profiles/Rocket/assets/Rocket-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../profiles/Kids/assets/Kids-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../profiles/Prepper/assets/Prepper-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Cyberpunk.svg');
 }
 
 /* Steel */
 :root[data-theme="steel"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../profiles/Rocket/assets/Rocket-Steel.svg');
+	background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../profiles/Kids/assets/Kids-Steel.svg');
+	background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../profiles/Prepper/assets/Prepper-Steel.svg');
+	background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Steel.svg');
 }
 
 /* Rugged */
 :root[data-theme="rugged"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../profiles/Rocket/assets/Rocket-Rugged.svg');
+	background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../profiles/Kids/assets/Kids-Rugged.svg');
+	background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../profiles/Prepper/assets/Prepper-Rugged.svg');
+	background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Rugged.svg');
 }
 
 /* Blue-Grass */
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../profiles/Rocket/assets/Rocket-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/profiles/Rocket/assets/Rocket-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../profiles/Kids/assets/Kids-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/profiles/Kids/assets/Kids-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../profiles/Prepper/assets/Prepper-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/profiles/Prepper/assets/Prepper-Blue-Grass.svg');
 }
 
 .profiles-card[data-profile="Windows"] .profile-card-icon {
-	background-image:url('../dashboards/OS/Windows/assets/windows.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/Windows/assets/windows.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Linux"] .profile-card-icon {
-	background-image:url('../dashboards/OS/Linux/assets/linux.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/Linux/assets/linux.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Android"] .profile-card-icon {
-	background-image:url('../dashboards/Mobile/Android/assets/android.png');
+	background-image:url('../ENCRYPTED/dashboards/Mobile/Android/assets/android.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="iOS"] .profile-card-icon {
-	background-image:url('../dashboards/Mobile/iOS/assets/ios.png');
+	background-image:url('../ENCRYPTED/dashboards/Mobile/iOS/assets/ios.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="MacOS"] .profile-card-icon {
-	background-image:url('../dashboards/OS/MacOS/assets/macos.png');
+	background-image:url('../ENCRYPTED/dashboards/OS/MacOS/assets/macos.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Pirating"] .profile-card-icon {
-	background-image:url('../dashboards/Homelab/Pirating/assets/ship.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/Pirating/assets/ship.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="SelfHosting"] .profile-card-icon {
-	background-image:url('../dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Artificial-Intelligence"] .profile-card-icon {
-	background-image:url('../dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
+	background-image:url('../ENCRYPTED/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Emulation"] .profile-card-icon {
-	background-image:url('../dashboards/Gaming/Emulation/assets/emulation.png');
+	background-image:url('../ENCRYPTED/dashboards/Gaming/Emulation/assets/emulation.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 

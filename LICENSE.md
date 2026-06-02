@@ -31,8 +31,8 @@ International License.
 
 This includes, but is not limited to:
 
-- Markdown notes under `Website/menu/`
-- Markdown notes under `Website/dashboards/`
+- Markdown notes under `Website/ENCRYPTED/menu/`
+- Markdown notes under `Website/ENCRYPTED/dashboards/`
 - Markdown profile or guide content, where applicable
 - Project documentation and tutorial-style written content
 
@@ -58,4 +58,3 @@ apply to those files.
 
 For example, vendored libraries under `Website/js/vendor/` may carry their own
 upstream license headers.
-

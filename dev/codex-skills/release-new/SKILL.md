@@ -49,5 +49,5 @@ Start-Process `
 
 - Do not manually stage, commit, push, or create a release outside the helper.
 - Do not pass `-Version`; keep the version prompt inside the visible script.
-- Do not move, rename, or restructure locked `Website/profiles/` ciphertext.
+- Do not move, rename, or restructure locked `Website/ENCRYPTED/` ciphertext.
 - Stop and report any helper failure. Do not bypass its checks.

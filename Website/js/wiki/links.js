@@ -113,12 +113,12 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^(profiles|dashboards)\//.test(pathOnly)) {
+    if (/^ENCRYPTED\/menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^ENCRYPTED\/(profiles|dashboards)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
     if (/^(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly)) {
-        return normalizeDocPath(`menu/${pathOnly}`);
+        return normalizeDocPath(`ENCRYPTED/menu/${pathOnly}`);
     }
 
     const currentFolder =
@@ -135,21 +135,21 @@ export function resolveMarkdownLink(
 export function wikiDocHref(path) {
 
     let targetPage = '/wiki.html';
-    if (path.startsWith('profiles/')) {
+    if (path.startsWith('ENCRYPTED/profiles/')) {
         const parts = path.split('/');
-        const profile = parts.length > 1 ? parts[1] : '';
-        targetPage = profile ? `/profiles/${encodeURIComponent(profile)}/` : '/profiles.html';
-    } else if (path.startsWith('dashboards/')) {
+        const profile = parts.length > 2 ? parts[2] : '';
+        targetPage = profile ? `/ENCRYPTED/profiles/${encodeURIComponent(profile)}/` : '/dashboards.html';
+    } else if (path.startsWith('ENCRYPTED/dashboards/')) {
         const parts = path.split('/');
-        const dashboard = parts.length > 2 ? `${parts[1]}/${parts[2]}` : '';
-        targetPage = dashboard ? `/dashboards/${encodePathSegments(dashboard)}/` : '/dashboards.html';
-    } else if (path.startsWith('menu/guides/')) {
+        const dashboard = parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
+        targetPage = dashboard ? `/ENCRYPTED/dashboards/${encodePathSegments(dashboard)}/` : '/dashboards.html';
+    } else if (path.startsWith('ENCRYPTED/menu/guides/')) {
         targetPage = '/guides.html';
-    } else if (path.startsWith('menu/cheatsheets/')) {
+    } else if (path.startsWith('ENCRYPTED/menu/cheatsheets/')) {
         targetPage = '/cheatsheets.html';
-    } else if (path.startsWith('menu/dotfiles/')) {
+    } else if (path.startsWith('ENCRYPTED/menu/dotfiles/')) {
         targetPage = '/dotfiles.html';
-    } else if (path.startsWith('menu/bookmarks/')) {
+    } else if (path.startsWith('ENCRYPTED/menu/bookmarks/')) {
         targetPage = '/bookmarks.html';
     }
 
@@ -163,21 +163,21 @@ export function wikiDocHref(path) {
 
 
 function getTabForPath(path) {
-    if (path.startsWith('menu/wiki/')) return 'wiki';
-    if (path.startsWith('profiles/')) {
+    if (path.startsWith('ENCRYPTED/menu/wiki/')) return 'wiki';
+    if (path.startsWith('ENCRYPTED/profiles/')) {
         const parts = path.split('/');
-        const profile = parts.length > 1 ? parts[1] : '';
+        const profile = parts.length > 2 ? parts[2] : '';
         return `profiles-${profile}`;
     }
-    if (path.startsWith('dashboards/')) {
+    if (path.startsWith('ENCRYPTED/dashboards/')) {
         const parts = path.split('/');
-        const dashboard = parts.length > 2 ? `${parts[1]}/${parts[2]}` : '';
+        const dashboard = parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
         return `dashboards-${dashboard}`;
     }
-    if (path.startsWith('menu/guides/')) return 'guides';
-    if (path.startsWith('menu/cheatsheets/')) return 'cheatsheets';
-    if (path.startsWith('menu/dotfiles/')) return 'dotfiles';
-    if (path.startsWith('menu/bookmarks/')) return 'bookmarks';
+    if (path.startsWith('ENCRYPTED/menu/guides/')) return 'guides';
+    if (path.startsWith('ENCRYPTED/menu/cheatsheets/')) return 'cheatsheets';
+    if (path.startsWith('ENCRYPTED/menu/dotfiles/')) return 'dotfiles';
+    if (path.startsWith('ENCRYPTED/menu/bookmarks/')) return 'bookmarks';
     return '';
 }
 

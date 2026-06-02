@@ -15,11 +15,11 @@ For project direction and AI agent development rules, see `AGENTS.md`.
 - [Connection Modes](#connection-modes) — Local vs LAN, and the safety rules
 - [Features](#features)
 - [Release Binaries](#50-release-binaries) and [Dependencies](#dependencies)
-- [Profiles and Dashboards](#profiles-and-dashboards)
+- [Dashboards](#dashboards)
 - [Project Layout](#project-layout)
 - [Running From a Release Binary](#running-from-a-release-binary) · [From Source](#running-from-source) · [Server Options](#server-options)
 - [Local Script Dashboard](#local-script-dashboard)
-- [Unlocking](#unlocking-profiles) / [Locking](#locking-profiles-again) Profiles (`git-crypt`)
+- [Unlocking](#unlocking-encrypted-content) / [Locking](#locking-encrypted-content-again) encrypted content (`git-crypt`)
 - [How the Wiki Works](#how-the-wiki-works) · [Wiki Links](#wiki-links) · [Personal Pins](#personal-pins)
 - [Offline Assets](#offline-assets) · [Markdown and Media](#markdown-and-media)
 - [License](#license)
@@ -210,38 +210,29 @@ current branch and create the GitHub release, add `-Publish`:
 The `/release-new` Codex skill runs the `-Publish` workflow in a visible
 PowerShell window. The version prompt is the only interactive question.
 
-## Profiles and Dashboards
+## Dashboards
 
-The top navigation includes a **Profiles** tab between Home and Menu. When
-`Website/profiles/` is locked, the Profiles page shows a locked panel instead
-of listing private profile documents. After unlocking, it behaves like the other
-markdown tabs and shows profile folders such as Rocket, Kids, and Prepper. Each
-profile opens as its own dashboard with its own sidebar, search, favorites, and
-document view.
+The top navigation includes one **Dashboards** tab for dashboard and profile
+command centers. All user content is encrypted with `git-crypt` under
+`Website/ENCRYPTED/`. While it is locked, Rock-OS still starts and shows a
+locked-content panel instead of attempting to render ciphertext.
 
-The top navigation also includes **Dashboards** for always-available local
-command centers that are not encrypted with `git-crypt`. Dashboard folders live
-under category folders in `Website/dashboards/`; each dashboard can have its
-own `dashboard.json`, `widgets.txt`, markdown notes, search, favorites, and
-document view. The Dashboards page groups items dynamically by their containing
-category folder, so you can add as many categories as you need. Use Profiles for
-sensitive/private notes and Dashboards for public local tools or
-platform-specific launch points.
+Dashboard folders live under category folders in
+`Website/ENCRYPTED/dashboards/`. Profile command centers such as Rocket, Kids,
+and Prepper remain stored under `Website/ENCRYPTED/profiles/`, but appear as a
+`Profiles` section on the Dashboards landing page rather than a separate tab.
+Each item can have its own `dashboard.json`, `widgets.txt`, markdown notes,
+search, favorites, and document view.
 
-| Area | Folder | Encryption | Best For |
-| --- | --- | --- | --- |
-| Profiles | `Website/profiles/` | Encrypted with `git-crypt` | Private notes, personal configs, sensitive references |
-| Dashboards | `Website/dashboards/` | Not encrypted | Public local command centers, platform launch points, shared notes |
-
-Profiles and Dashboards use the same folder convention:
+Profiles and Dashboards use the same item folder convention:
 
 ```text
-Website/profiles/Rocket/index.html
-Website/dashboards/OS/Windows/index.html
+Website/ENCRYPTED/profiles/Rocket/index.html
+Website/ENCRYPTED/dashboards/OS/Windows/index.html
 ```
 
 The profile folder name is the profile name. Dashboard paths use
-`Website/dashboards/<Category>/<DashboardName>/`, where the category becomes a
+`Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`, where the category becomes a
 section heading on the Dashboards page. The `index.html` file is the entry page.
 Use `Overview.md` for the first note, with `dashboard.json`, `widgets.txt`, an
 optional local `assets/` folder, and additional markdown files beside it.
@@ -249,8 +240,8 @@ Profile and dashboard page icons should live inside that item's own folder, for
 example:
 
 ```text
-Website/profiles/Rocket/assets/Rocket-Steel.svg
-Website/dashboards/OS/Windows/assets/windows.png
+Website/ENCRYPTED/profiles/Rocket/assets/Rocket-Steel.svg
+Website/ENCRYPTED/dashboards/OS/Windows/assets/windows.png
 ```
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
@@ -260,11 +251,11 @@ Reddit, podcasts, news feeds, bookmarks, featured spotlights, and clickable
 file cards). For every widget type, its configuration fields, and copy-paste
 examples, see the widget guide: [`documentation/Widgets.md`](documentation/Widgets.md).
 
-Internal Rock OS links, such as `/scripts.html` or `/dashboards/OS/Windows/`, open
+Internal Rock OS links, such as `/scripts.html` or `/ENCRYPTED/dashboards/OS/Windows/`, open
 in the same browser tab. External web links open in a new tab so the local
 dashboard stays available. Dashboard/profile cards can link directly to their
 markdown tree by using `?view=notes`, for example
-`/dashboards/OS/Windows/?view=notes`.
+`/ENCRYPTED/dashboards/OS/Windows/?view=notes`.
 
 ## Dependencies
 
@@ -277,8 +268,8 @@ The Go source uses `goldmark` for local server-side markdown rendering. It is
 managed through `cmd/rock-os/go.mod` and is included automatically when you
 build or run from source.
 
-`git-crypt` is only needed for unlocking, editing, or re-locking private
-markdown stored under `Website/profiles/`.
+`git-crypt` is needed for unlocking, editing, or re-locking user content under
+`Website/ENCRYPTED/`.
 
 ### Windows
 
@@ -397,15 +388,16 @@ source ~/.bashrc
 ```text
 cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
-Website/               HTML, CSS, JS, assets, and media
-Website/menu/wiki/     Public wiki markdown
-Website/menu/guides/   Guided setup markdown
-Website/menu/cheatsheets/ Quick-reference markdown
-Website/menu/dotfiles/ Dotfile notes and configs
-Website/menu/bookmarks/ Bookmark collections and link notes
-Website/profiles/      Encrypted/private profile markdown
-Website/dashboards/    Public local dashboards grouped by category
-Website/menu/scripts/  User-managed runnable scripts
+Website/               Public HTML, CSS, JS, assets, and media shell
+Website/ENCRYPTED/     git-crypt protected user content
+Website/ENCRYPTED/menu/wiki/     Wiki markdown
+Website/ENCRYPTED/menu/guides/   Guided setup markdown
+Website/ENCRYPTED/menu/cheatsheets/ Quick-reference markdown
+Website/ENCRYPTED/menu/dotfiles/ Dotfile notes and configs
+Website/ENCRYPTED/menu/bookmarks/ Bookmark collections and link notes
+Website/ENCRYPTED/profiles/      Profile command centers
+Website/ENCRYPTED/dashboards/    Dashboards grouped by category
+Website/ENCRYPTED/menu/scripts/  User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -493,7 +485,7 @@ hidden temporary executable that `go run` creates inside `.gocache`.
 ## Local Script Dashboard
 
 Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
-`Website/menu/scripts/`. The dashboard lists allowed scripts, renders the script
+`Website/ENCRYPTED/menu/scripts/`. The dashboard lists allowed scripts, renders the script
 contents for review, and only then enables a run button for scripts compatible
 with the current operating system. When you click Run, the server opens the
 script in the operating system's default terminal so normal prompts, `sudo`,
@@ -507,12 +499,12 @@ requests are restricted to the computer running the server, even in LAN Mode:
 other LAN clients can browse refreshed content, but they cannot make the host
 pull code from GitHub.
 
-Organize scripts into folders such as `Website/menu/scripts/Windows/`,
-`Website/menu/scripts/Linux/`, and `Website/menu/scripts/Mac/`. The dashboard renders
+Organize scripts into folders such as `Website/ENCRYPTED/menu/scripts/Windows/`,
+`Website/ENCRYPTED/menu/scripts/Linux/`, and `Website/ENCRYPTED/menu/scripts/Mac/`. The dashboard renders
 those folders as a folded collapsible tree with an expand/fold-all control,
 similar to the wiki sidebar.
 
-For safety, the Go server only exposes scripts from `Website/menu/scripts/` and does
+For safety, the Go server only exposes scripts from `Website/ENCRYPTED/menu/scripts/` and does
 not provide an arbitrary command prompt. Supported script types are `.cmd`,
 `.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
 on the machine running the Go server.
@@ -566,7 +558,7 @@ available, they continue with local files.
 
 Run the helper scripts from a real Git clone, not a GitHub ZIP download. ZIP
 downloads do not include the hidden `.git` folder, so `git-crypt` cannot unlock
-private markdown. Clone the repo instead:
+the content under `Website/ENCRYPTED/`. Clone the repo instead:
 
 ```bash
 git clone https://github.com/rocketpowerinc/rock-os.git
@@ -576,8 +568,9 @@ cd rock-os
 A ZIP download will still run. If `start-rock-os` does not find a `.git` folder,
 it prints a prominent warning, waits for you to press Enter, then starts in a
 limited mode: automatic `git pull` updates are skipped and `git-crypt` cannot
-unlock Profiles. The public wiki, dashboards, scripts, and search all work
-normally. Clone the repo when you want updates and private Profiles.
+unlock content. The public shell still loads, but encrypted wiki notes,
+dashboards, Profiles, scripts, and search stay unavailable. Clone the repo when
+you want to use Rock-OS content.
 
 The start scripts show only launcher-side activity: the real `git pull
 --ff-only` output, whether Go is available for source fallback, release binary
@@ -587,7 +580,7 @@ succeeded.
 
 Once the server starts, the Go binary prints the single colored status sanity
 check and request log. That keeps startup output focused: scripts update and
-launch, while Go reports the actual server status, private markdown state,
+launch, while Go reports the actual server status, encrypted-content state,
 folders, host mode, and request activity.
 
 After the update check, the scripts start a stable latest-style binary such as
@@ -654,13 +647,12 @@ LAN to connect. Use `--build-index` to rebuild all local tab index JSON files
 without starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
-## Unlocking Profiles
+## Unlocking Encrypted Content
 
-This repo can use `git-crypt` for Profiles, which is the private markdown
-area stored under:
+This repo uses `git-crypt` for user content stored under:
 
 ```text
-Website/profiles/
+Website/ENCRYPTED/
 ```
 
 Those files can be committed to the public repo, but their contents are stored
@@ -720,7 +712,7 @@ macOS or Linux:
 ```
 
 The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/profiles/` should become readable, and the
+unlocking, files in `Website/ENCRYPTED/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -737,9 +729,9 @@ git-crypt export-key rock-os-git-crypt.key
 
 Store exported keys somewhere private and backed up, outside this repository.
 
-### Locking Profiles Again
+### Locking Encrypted Content Again
 
-To re-lock Profiles after you are done editing:
+To re-lock encrypted content after you are done editing:
 
 Windows:
 
@@ -764,7 +756,7 @@ again.
 The Go server scans:
 
 ```text
-Website/menu/wiki/
+Website/ENCRYPTED/menu/wiki/
 ```
 
 The server exposes:
@@ -793,7 +785,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/menu/wiki/
+Website/ENCRYPTED/menu/wiki/
   Linux/
     AnduinOS/
       Guide.md
@@ -820,8 +812,8 @@ browser, plus a server-side link health report at:
 /api/health/links
 ```
 
-The scanner walks local markdown sources under the public menu folders,
-dashboards, and unlocked profiles. It verifies internal markdown links, local
+The scanner walks unlocked local markdown sources under `Website/ENCRYPTED/`.
+It verifies internal markdown links, local
 HTML pages, dashboard/profile folders, media, and asset paths against the real
 filesystem. External `http` and `https` links are counted but not fetched, so the
 scan stays local-first and does not leak browsing intent to the internet.

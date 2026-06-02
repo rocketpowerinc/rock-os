@@ -10,6 +10,6 @@ createMarkdownTabApp({
     indexUrl: 'cheatsheets-index.json',
     docApiUrl: '/api/cheatsheets/doc',
     searchApiUrl: '/api/cheatsheets/search',
-    pathPrefix: 'menu/cheatsheets',
+    pathPrefix: 'ENCRYPTED/menu/cheatsheets',
     directOpenPageName: 'cheatsheets.html'
 });

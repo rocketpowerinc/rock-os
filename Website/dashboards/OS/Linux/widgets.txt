@@ -1,3 +1,0 @@
-# Optional dashboard widget overrides for the Linux dashboard.
-# Keep public Linux links and non-sensitive local resources here.
-

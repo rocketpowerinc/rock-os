@@ -10,6 +10,6 @@ createMarkdownTabApp({
     indexUrl: 'dotfiles-index.json',
     docApiUrl: '/api/dotfiles/doc',
     searchApiUrl: '/api/dotfiles/search',
-    pathPrefix: 'menu/dotfiles',
+    pathPrefix: 'ENCRYPTED/menu/dotfiles',
     directOpenPageName: 'dotfiles.html'
 });

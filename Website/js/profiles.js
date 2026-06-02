@@ -7,12 +7,12 @@ const isDashboardsMode =
 
 const appMode = isDashboardsMode
     ? {
-        rootDir: 'dashboards',
+        rootDir: 'ENCRYPTED/dashboards',
         indexFile: 'dashboards-index.json',
         apiRoot: 'dashboards',
         mainPage: 'dashboards.html',
         pageTitle: 'Dashboards',
-        landingKicker: 'UNENCRYPTED DASHBOARDS',
+        landingKicker: 'ENCRYPTED DASHBOARDS',
         landingDescription: '',
         cardDescription: '',
         emptyLabel: 'dashboard files',
@@ -22,7 +22,7 @@ const appMode = isDashboardsMode
         documentTitlePrefix: 'Rock-OS'
     }
     : {
-        rootDir: 'profiles',
+        rootDir: 'ENCRYPTED/profiles',
         indexFile: 'profiles-index.json',
         apiRoot: 'profiles',
         mainPage: 'profiles.html',
@@ -138,9 +138,9 @@ function renderLockedProfiles() {
         content.innerHTML = `
             <section class="profiles-locked-panel" aria-live="polite">
                 <div class="profiles-lock-badge">Locked</div>
-                <h1>Profiles Locked</h1>
-                <p>Encrypted profile notes are locked with git-crypt. Unlock the repository to view Rocket, Kids, Prepper, and any future profiles.</p>
-                <div class="profiles-lock-fake-button" aria-hidden="true">Profiles Locked</div>
+                <h1>Encrypted Content Locked</h1>
+                <p>Dashboards, Profiles, menu content, and scripts are locked with git-crypt. Unlock the repository to use Rock-OS content.</p>
+                <div class="profiles-lock-fake-button" aria-hidden="true">Content Locked</div>
                 <button id="refreshLockedProfilesBtn" class="command-button primary" type="button">Refresh</button>
                 <pre><code>START-HERE\\Windows\\unlock-git-crypt.cmd</code></pre>
             </section>
@@ -199,13 +199,17 @@ function currentProfileName() {
                 .split('/')
                 .filter(Boolean)
                 .map(part => decodeURIComponent(part));
+        const rootParts =
+            appMode.rootDir.split('/');
         const rootIndex =
-            parts.indexOf(appMode.rootDir);
+            parts.findIndex((part, index) =>
+                rootParts.every((rootPart, offset) => parts[index + offset] === rootPart)
+            );
 
         if (rootIndex >= 0) {
             const itemParts =
                 parts
-                    .slice(rootIndex + 1)
+                    .slice(rootIndex + rootParts.length)
                     .filter(part => part && part !== 'index.html');
 
             profile =
@@ -234,34 +238,36 @@ function profileItemFromPath(path) {
             .split('/')
             .filter(Boolean);
 
-    if (parts[0] !== appMode.rootDir) {
+    if (parts[0] !== 'ENCRYPTED') {
         return null;
     }
 
-    if (isDashboardsMode) {
-        if (parts.length < 3) {
+    if (parts[1] === 'dashboards') {
+        if (parts.length < 4) {
             return null;
         }
 
         return {
-            category: decodeURIComponent(parts[1]),
-            name: decodeURIComponent(parts[2]),
-            profile: `${decodeURIComponent(parts[1])}/${decodeURIComponent(parts[2])}`
+            category: decodeURIComponent(parts[2]),
+            name: decodeURIComponent(parts[3]),
+            profile: `${decodeURIComponent(parts[2])}/${decodeURIComponent(parts[3])}`,
+            rootDir: 'ENCRYPTED/dashboards'
         };
     }
 
-    if (parts.length < 2) {
+    if (parts[1] !== 'profiles' || parts.length < 3) {
         return null;
     }
 
     return {
-        category: '',
-        name: decodeURIComponent(parts[1]),
-        profile: decodeURIComponent(parts[1])
+        category: isDashboardsMode ? 'Profiles' : '',
+        name: decodeURIComponent(parts[2]),
+        profile: decodeURIComponent(parts[2]),
+        rootDir: 'ENCRYPTED/profiles'
     };
 }
 
-function profileUrl(profile) {
+function profileUrl(profile, rootDir = appMode.rootDir) {
     const path =
         String(profile || '')
             .split('/')
@@ -269,7 +275,7 @@ function profileUrl(profile) {
             .map(part => encodeURIComponent(part))
             .join('/');
 
-    return `/${appMode.rootDir}/${path}/`;
+    return `/${rootDir}/${path}/`;
 }
 
 function profileFileUrl(profile, fileName) {
@@ -353,7 +359,7 @@ function uniqueProfileItems(files) {
 
 function renderProfileCard(item) {
     return `
-        <a class="profiles-card" href="${escapeHtml(profileUrl(item.profile))}" data-profile="${escapeHtml(item.name)}">
+        <a class="profiles-card" href="${escapeHtml(profileUrl(item.profile, item.rootDir))}" data-profile="${escapeHtml(item.name)}">
             <div class="profile-card-icon"></div>
             <div class="profiles-card-info">
                 <span>${escapeHtml(item.name)}</span>
@@ -447,6 +453,17 @@ async function loadProfilesLanding() {
 
         const files =
             await response.json();
+
+        if (isDashboardsMode && Array.isArray(files)) {
+            const profilesResponse =
+                await fetch('/profiles-index.json?nocache=' + Date.now());
+
+            if (!profilesResponse.ok) {
+                throw new Error(`Profiles index failed with HTTP ${profilesResponse.status}`);
+            }
+
+            files.push(...await profilesResponse.json());
+        }
 
         renderProfilesLanding(
             Array.isArray(files) ? files : []
@@ -1059,7 +1076,7 @@ async function loadWidgetsConfig(profile) {
 }
 
 async function startProfiles() {
-    if (!isDashboardsMode && await profilesAreLocked()) {
+    if (await profilesAreLocked()) {
         renderLockedProfiles();
         return;
     }

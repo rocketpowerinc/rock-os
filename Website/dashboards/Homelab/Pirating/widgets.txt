@@ -1,2 +1,0 @@
-# Optional dashboard widget overrides for the Pirating dashboard.
-# Keep public sea links and non-sensitive local resources here.

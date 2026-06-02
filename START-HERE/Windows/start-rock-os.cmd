@@ -88,12 +88,12 @@ if exist "%ROCK_OS_ROOT%\.git" (
     call :red    "============================================================"
     call :yellow "  Rock-OS will still start, but in a LIMITED mode:"
     call :yellow "    - Automatic updates are skipped (no 'git pull')."
-    call :yellow "    - git-crypt cannot unlock private Profiles."
+    call :yellow "    - git-crypt cannot unlock encrypted content."
     echo.
     call :yellow "  This usually means Rock-OS was downloaded as a GitHub ZIP,"
     call :yellow "  which does not include the hidden .git folder."
     echo.
-    call :yellow "  For updates and Profiles, a real clone is strongly recommended:"
+    call :yellow "  For updates and encrypted content, a real clone is strongly recommended:"
     call :green  "    git clone https://github.com/rocketpowerinc/rock-os.git"
     call :green  "    cd rock-os\START-HERE\Windows"
     call :red    "============================================================"

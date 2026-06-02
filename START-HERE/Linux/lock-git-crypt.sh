@@ -16,10 +16,10 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-echo "Locking Profiles with git-crypt..."
+echo "Locking encrypted Rock-OS content with git-crypt..."
 if ! git-crypt lock; then
     echo "Failed to lock the repository."
-    echo "Close open Profiles files or commit/stash changes, then try again."
+    echo "Close open encrypted content files or commit/stash changes, then try again."
     exit 1
 fi
 

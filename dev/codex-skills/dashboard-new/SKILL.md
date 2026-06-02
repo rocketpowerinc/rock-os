@@ -1,17 +1,17 @@
 ---
 name: dashboard-new
-description: Use when the user invokes /dashboard-new or asks to create/scaffold a new Rock-OS dashboard under Website/dashboards. The skill follows Rock-OS dashboard conventions, asks for the dashboard category, dashboard name, and icon asset URL when missing, downloads the icon locally into the dashboard folder, and creates the standard dashboard files.
+description: Use when the user invokes /dashboard-new or asks to create/scaffold a new Rock-OS dashboard under Website/ENCRYPTED/dashboards. The skill follows Rock-OS dashboard conventions, asks for the dashboard category, dashboard name, and icon asset URL when missing, downloads the icon locally into the dashboard folder, and creates the standard dashboard files.
 metadata:
   short-description: Scaffold a Rock-OS dashboard
 ---
 
 # Dashboard New
 
-Create a fresh Rock-OS dashboard under a category folder inside `Website/dashboards/` using the user's preferred conventions.
+Create a fresh Rock-OS dashboard under a category folder inside `Website/ENCRYPTED/dashboards/` using the user's preferred conventions.
 
 ## Trigger
 
-Use this skill when the user says `/dashboard-new`, asks to create a new dashboard, or asks to scaffold a dashboard under `Website/dashboards/`.
+Use this skill when the user says `/dashboard-new`, asks to create a new dashboard, or asks to scaffold a dashboard under `Website/ENCRYPTED/dashboards/`.
 
 ## Required Inputs
 
@@ -20,7 +20,7 @@ If missing, ask briefly for:
 - Dashboard name, such as `Windows`, `Linux`, `Homelab`, or `Recovery`.
   Tell the user the name should be one word so URLs, folder names, CSS selectors,
   and dashboard routing stay clean.
-- Dashboard category/directory under `Website/dashboards/`, such as `OS`,
+- Dashboard category/directory under `Website/ENCRYPTED/dashboards/`, such as `OS`,
   `Gaming`, `Homelab`, or a new one-word category. This determines which
   section title the dashboard appears under on `dashboards.html`.
 - Icon/image URL to download for the dashboard icon.
@@ -32,7 +32,7 @@ If any of these are missing, ask for only the missing pieces before editing file
 Create this shape:
 
 ```text
-Website/dashboards/<Category>/<DashboardName>/
+Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/
   index.html
   Overview.md
   dashboard.json
@@ -49,18 +49,18 @@ Rules:
   scaffolding.
 - Prefer one-word category names too. Existing categories are usually best when
   they fit.
-- Keep dashboard-specific assets inside `Website/dashboards/<Category>/<DashboardName>/assets/`.
+- Keep dashboard-specific assets inside `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/assets/`.
 - Do not place dashboard icons under `Website/assets/`.
 - Shared widget/feed fallback icons live under `Website/assets/widget-icons/` and are not dashboard-specific.
 - Internal Rock-OS links open in the same tab. External links open in a new tab through existing app behavior.
 - Dashboard/Profile landing cards should show only the item title and icon. Do not add subtitle text such as `Open local dashboard`.
-- The Dashboards landing kicker should read `UNENCRYPTED DASHBOARDS` in all caps.
+- The Dashboards landing kicker should read `ENCRYPTED DASHBOARDS` in all caps.
 - Do not add descriptive paragraph text below the Profiles or Dashboards landing headings.
 - Do not update `README.md` for every new dashboard unless the dashboard introduces a new convention or feature.
 
 ## Workflow
 
-1. Inspect an existing dashboard, usually `Website/dashboards/OS/Windows/`, before editing.
+1. Inspect an existing dashboard, usually `Website/ENCRYPTED/dashboards/OS/Windows/`, before editing.
 2. Create the dashboard folder and `assets/` folder.
 3. Download the icon URL into the dashboard `assets/` folder.
    - Prefer the original extension when obvious.
@@ -77,7 +77,7 @@ Rules:
    - one starter `bookmarks` widget with useful internal links.
 7. Create `widgets.txt` with comments explaining that it can override or add widgets later.
 8. Update `Website/css/style.css`:
-   - Add the avatar class pointing to `../dashboards/<Category>/<DashboardName>/assets/<icon>`.
+   - Add the avatar class pointing to `../ENCRYPTED/dashboards/<Category>/<DashboardName>/assets/<icon>`.
    - Add/confirm a landing-card icon rule for `.profiles-card[data-profile="<DashboardName>"]` pointing to the same icon.
 9. Run sanity checks:
    - `node --check Website\js\profiles.js` if JS changed.
@@ -86,7 +86,7 @@ Rules:
 
 ## Dashboard HTML Template Notes
 
-Use the existing `Website/dashboards/OS/Windows/index.html` as the source pattern when it exists. Change only dashboard-specific text:
+Use the existing `Website/ENCRYPTED/dashboards/OS/Windows/index.html` as the source pattern when it exists. Change only dashboard-specific text:
 
 - `<title>Rock-OS <DashboardName> Dashboard</title>`
 - sidebar heading
@@ -103,6 +103,6 @@ The shared `profiles.js` module detects dashboard mode automatically.
 
 ## Safety
 
-- Do not put private or sensitive notes in Dashboards. Use Profiles for encrypted/private content.
+- Keep dashboard and profile content under Website/ENCRYPTED/ so git-crypt protects it.
 - Do not stage, commit, stash, or push unless the user explicitly asks.
 - Do not remove existing dashboards or assets unless the user explicitly asks.

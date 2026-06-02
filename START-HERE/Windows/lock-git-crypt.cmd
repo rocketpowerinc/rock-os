@@ -25,13 +25,13 @@ if not exist ".git" (
     exit /b 1
 )
 
-echo Locking Profiles with git-crypt...
+echo Locking encrypted Rock-OS content with git-crypt...
 "%GIT_CRYPT%" lock
 set "LOCK_RESULT=%ERRORLEVEL%"
 
 if not "%LOCK_RESULT%"=="0" (
     echo Failed to lock the repository.
-    echo Close open Profiles files or commit/stash changes, then try again.
+    echo Close open encrypted content files or commit/stash changes, then try again.
     call :wait
     exit /b %LOCK_RESULT%
 )

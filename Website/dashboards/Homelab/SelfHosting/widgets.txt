@@ -1,3 +1,0 @@
-# Optional dashboard widget overrides for the Self-Hosting dashboard.
-# Keep public Homelab links and non-sensitive local resources here.
-

@@ -144,25 +144,25 @@ What it checks:
 - Whether Go is installed.
 - Whether port `8000` is already in use.
 - Whether `git-crypt` is installed.
-- Whether Profiles appears locked or unlocked.
+- Whether Encrypted content appears locked or unlocked.
 - Whether a `.key` file is sitting in the repo root.
 - Full `git-crypt status` output.
 
 This script does not commit, stash, or fix anything. It only reports.
 
-## Profiles Private Markdown
+## Encrypted Content
 
-Profiles is the private markdown area. It lives here:
+Dashboards, Profiles, menu notes, and scripts are encrypted content. It lives here:
 
 ```text
-Website/profiles/
+Website/ENCRYPTED/
 ```
 
 That folder is intended to be encrypted with `git-crypt`.
 
 ### `unlock-git-crypt`
 
-Use this after cloning the repo on a trusted computer when Profiles is
+Use this after cloning the repo on a trusted computer when encrypted content is
 still encrypted.
 
 How it works:
@@ -178,14 +178,14 @@ The restored `.key` file is ignored by Git. Keep it private and never commit it.
 
 ### `lock-git-crypt`
 
-Use this when you want to re-lock Profiles.
+Use this when you want to re-lock encrypted content.
 
 What it does:
 
 - Runs `git-crypt lock` from the repo root.
-- Leaves the repo locked again so Profiles is encrypted on disk.
+- Leaves the repo locked again so encrypted content is encrypted on disk.
 
-If locking fails, close open Profiles files and make sure you do not
+If locking fails, close open encrypted content files and make sure you do not
 have pending private edits that block `git-crypt`.
 
 ## Folder Layout

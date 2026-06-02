@@ -1,3 +1,0 @@
-# Optional dashboard widget overrides for the MacOS dashboard.
-# Keep public MacOS links and non-sensitive local resources here.
-

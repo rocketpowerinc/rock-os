@@ -1,6 +1,6 @@
 # Rock-OS Dashboard Widgets Guide
 
-You can define custom, dynamic widgets on your profile dashboards by editing your profile's `widgets.txt` configuration file (located at `Website/profiles/<ProfileName>/widgets.txt`).
+You can define custom, dynamic widgets on your profile dashboards by editing your profile's `widgets.txt` configuration file (located at `Website/ENCRYPTED/profiles/<ProfileName>/widgets.txt`).
 
 ---
 

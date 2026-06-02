@@ -32,14 +32,14 @@
                        (or the Git for Windows "usr\bin\openssl.exe" on PATH)
       - PowerShell 5.1+ or PowerShell 7 (required) - ships with Windows 10/11.
                        The HMAC check uses built-in .NET; no module to install.
-      - git-crypt      (only AFTER restore, if the backed-up Profiles were
+      - git-crypt      (only AFTER restore, if the backed-up encrypted content were
                        locked - run "git-crypt unlock" with the included .key to
                        make them readable).  winget install AGWA.git-crypt
       Confirm OpenSSL is on your PATH with "openssl version" in a new terminal.
 
     WARNING
       The decrypted ZIP contains the git-crypt .key and (if the backup was made
-      while unlocked) your decrypted Profiles. Handle with extreme care and
+      while unlocked) your decrypted encrypted content. Handle with extreme care and
       delete it once you have restored what you need.
 #>
 
@@ -123,4 +123,4 @@ finally {
 Write-Host "Decryption complete." -ForegroundColor Green
 Write-Host "Decrypted ZIP saved to: $outZip" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Reminder: This ZIP contains the git-crypt key and decrypted Profiles. Protect it." -ForegroundColor Red
+Write-Host "Reminder: This ZIP contains the git-crypt key and decrypted encrypted content. Protect it." -ForegroundColor Red

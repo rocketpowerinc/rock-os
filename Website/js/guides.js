@@ -10,6 +10,6 @@ createMarkdownTabApp({
     indexUrl: 'guides-index.json',
     docApiUrl: '/api/guides/doc',
     searchApiUrl: '/api/guides/search',
-    pathPrefix: 'menu/guides',
+    pathPrefix: 'ENCRYPTED/menu/guides',
     directOpenPageName: 'guides.html'
 });

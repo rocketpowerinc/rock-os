@@ -229,6 +229,17 @@ func noCache(next http.Handler) http.Handler {
 	})
 }
 
+func requireUnlockedContent(siteRoot string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if privateMarkdownStatus(siteRoot) != "unlocked" {
+			http.Error(w, "encrypted Rock-OS content is locked", http.StatusLocked)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
 func isAddressInUse(err error) bool {
 	message := strings.ToLower(err.Error())
 

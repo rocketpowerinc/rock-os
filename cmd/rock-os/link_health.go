@@ -100,6 +100,10 @@ func linkHealthIgnoredOnLine(content string, linkEnd int) bool {
 }
 
 func linkHealthSourceFiles(siteRoot string) ([]string, error) {
+	if privateMarkdownStatus(siteRoot) != "unlocked" {
+		return []string{}, nil
+	}
+
 	scanDirs := []string{
 		markdownDir,
 		guidesDir,
@@ -107,9 +111,7 @@ func linkHealthSourceFiles(siteRoot string) ([]string, error) {
 		dotfilesDir,
 		bookmarksDir,
 		dashboardsDir,
-	}
-	if privateMarkdownStatus(siteRoot) == "unlocked" {
-		scanDirs = append(scanDirs, profilesDir)
+		profilesDir,
 	}
 
 	files := []string{}
@@ -232,6 +234,7 @@ func resolveLinkTargetPath(siteRoot string, source string, href string) (string,
 		target = filepath.Join(siteRoot, href)
 	} else if strings.HasPrefix(href, "assets"+string(os.PathSeparator)) ||
 		strings.HasPrefix(href, "media"+string(os.PathSeparator)) ||
+		strings.HasPrefix(href, encryptedDir+string(os.PathSeparator)) ||
 		strings.HasPrefix(href, "menu"+string(os.PathSeparator)) ||
 		strings.HasPrefix(href, "profiles"+string(os.PathSeparator)) ||
 		strings.HasPrefix(href, "dashboards"+string(os.PathSeparator)) {

@@ -5,8 +5,8 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
-Profiles_markdown_locked() {
-    git ls-files -- 'Website/profiles' | while IFS= read -r file; do
+encrypted_content_locked() {
+    git ls-files -- 'Website/ENCRYPTED' | while IFS= read -r file; do
         [ -f "$file" ] || continue
         if dd if="$file" bs=16 count=1 2>/dev/null | grep -a -q 'GITCRYPT'; then
             exit 2
@@ -15,34 +15,34 @@ Profiles_markdown_locked() {
     [ "$?" -eq 2 ]
 }
 
-verify_Profiles_unlocked() {
-    if ! Profiles_markdown_locked; then
-        echo "Profiles verified unlocked."
+verify_encrypted_content_unlocked() {
+    if ! encrypted_content_locked; then
+        echo "Encrypted content verified unlocked."
         return 0
     fi
 
-    echo "Profiles files still look encrypted. Refreshing clean Profiles files..."
-    if [ -n "$(git status --porcelain -- 'Website/profiles')" ]; then
-        echo "Profiles has local changes, so this script will not restore it automatically."
+    echo "Encrypted content files still look encrypted. Refreshing clean Encrypted content files..."
+    if [ -n "$(git status --porcelain -- 'Website/ENCRYPTED')" ]; then
+        echo "Encrypted content has local changes, so this script will not restore it automatically."
         echo "Back up or clear those changes first, then run:"
-        echo "git restore --source=HEAD --worktree -- Website/profiles"
+        echo "git restore --source=HEAD --worktree -- Website/ENCRYPTED"
         return 1
     fi
 
-    git ls-files -- 'Website/profiles' | while IFS= read -r file; do
+    git ls-files -- 'Website/ENCRYPTED' | while IFS= read -r file; do
         [ -f "$file" ] && rm -f -- "$file"
     done
 
-    if ! git restore --source=HEAD --worktree -- 'Website/profiles' 2>/dev/null; then
-        git checkout -- 'Website/profiles'
+    if ! git restore --source=HEAD --worktree -- 'Website/ENCRYPTED' 2>/dev/null; then
+        git checkout -- 'Website/ENCRYPTED'
     fi
 
-    if Profiles_markdown_locked; then
-        echo "Profiles still looks encrypted after refresh."
+    if encrypted_content_locked; then
+        echo "Encrypted content still looks encrypted after refresh."
         return 1
     fi
 
-    echo "Profiles verified unlocked."
+    echo "Encrypted content verified unlocked."
     return 0
 }
 
@@ -90,7 +90,7 @@ if [ "$unlock_result" -ne 0 ]; then
     exit "$unlock_result"
 fi
 
-verify_Profiles_unlocked
+verify_encrypted_content_unlocked
 
 echo "Repository unlocked."
 echo "Key restored to $REPO_ROOT/$key_name."

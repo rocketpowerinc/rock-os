@@ -15,12 +15,12 @@ Never break these without an explicit, specific request from the user:
   which stages, commits, pushes, and publishes the reviewed release changes.
 - **Never** commit `.key` files.
 - **Never** move, rename, split, or restructure locked `git-crypt` content. Tell
-  the user to unlock `Website/profiles/` first; moving locked ciphertext can
+  the user to unlock `Website/ENCRYPTED/` first; moving locked ciphertext can
   corrupt it.
 - **Never** depend on external CDNs, icon services, fonts, or remote assets for
   the core website experience. Keep visual assets local in `Website/assets`.
 - **Never** turn the script dashboard into an arbitrary web command prompt. It
-  may only expose allowlisted script files from `Website/menu/scripts/`.
+  may only expose allowlisted script files from `Website/ENCRYPTED/menu/scripts/`.
 - **Never** add a frontend build step unless the user explicitly asks.
 - **Never** track generated indexes, release binaries, caches, downloaded
   artifacts, or `Website/.rock-os-version` in Git.
@@ -58,10 +58,9 @@ Never break these without an explicit, specific request from the user:
   `Website/js/wiki/`. Do not clone full tab JS files — build markdown-style tabs
   with `createMarkdownTabApp` from `Website/js/wiki/markdown-tab.js` plus a small
   config wrapper.
-- Profiles and Dashboards landing cards stay clean: icon plus title only, no
-  secondary subtitle. The Dashboards landing kicker reads
-  `UNENCRYPTED DASHBOARDS`. Neither landing page needs an explanatory paragraph
-  under the heading.
+- Dashboard landing cards stay clean: icon plus title only, no secondary
+  subtitle. The Dashboards landing kicker reads `ENCRYPTED DASHBOARDS`. The
+  landing page does not need an explanatory paragraph under the heading.
 - Widgets are parsed and rendered by `Website/js/profiles.js` (shared by both
   Profiles and Dashboards) from each item's `widgets.txt`. When you add a new
   widget type or change an existing widget's `widgets.txt` fields, update
@@ -81,12 +80,12 @@ Never break these without an explicit, specific request from the user:
 
 ## Scripts & Binaries
 
-- User-managed website scripts live in `Website/menu/scripts/`, organized under
+- User-managed website scripts live in `Website/ENCRYPTED/menu/scripts/`, organized under
   platform folders (`Windows/`, `Linux/`, `Mac/`) and rendered as a collapsible
   tree. Keep the dashboard preview-before-run; on Run, launch in the OS terminal,
   not a browser pseudo-terminal. Supported types: `.cmd`, `.bat`, `.sh`, `.ps1`.
 - Do not update `README.md` for ordinary additions under
-  `Website/menu/scripts/`. Put self-explaining comments inside each script
+  `Website/ENCRYPTED/menu/scripts/`. Put self-explaining comments inside each script
   instead.
 - Shell scripts committed to Git must have executable mode `100755`. If a new
   `.sh` is added, tell the user it should be committed `100755` so Linux/macOS
@@ -112,20 +111,20 @@ Never break these without an explicit, specific request from the user:
   additional confirmation. Do not create a release for HTML, CSS, JavaScript,
   markdown, or asset-only changes unless the user explicitly requests one.
 
-## Profiles (`Website/profiles/`)
+## Encrypted Content (`Website/ENCRYPTED/`)
 
-- Private markdown, intended to be encrypted with `git-crypt`. The Profiles page
-  must show a locked state instead of rendering folders while still encrypted.
+- Keep dashboards, profile items, menu markdown, and user-managed scripts under
+  `Website/ENCRYPTED/` so `git-crypt` protects all user content.
+- Show a locked state instead of rendering encrypted content while
+  `Website/ENCRYPTED/` is still encrypted.
 - Do not break `git-crypt` workflows or remove key safety checks unless the user
   explicitly asks.
 - Remember that GitHub ZIP downloads are not real clones and cannot unlock
   `git-crypt` content.
 
-## Dashboards (`Website/dashboards/`)
+## Dashboards (`Website/ENCRYPTED/dashboards/`)
 
-- Public local command-center pages, not encrypted. Always available. Do not put
-  sensitive notes here.
-- Live under `Website/dashboards/<Category>/<DashboardName>/`. Group by category
+- Live under `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`. Group by category
   folder; `dashboards.html` renders category sections dynamically — do not
   hardcode categories. Order categories with `OS` first, `Mobile` second, then
   the rest alphabetically. In `Homelab`, keep `SelfHosting` first and sort the
@@ -134,7 +133,8 @@ Never break these without an explicit, specific request from the user:
   multi-word name, warn them and ask for a one-word version before scaffolding.
   If they give exact casing or punctuation, preserve it and update all
   path-sensitive references.
-- Profiles and Dashboards share folder conventions: each item folder uses
+- Profiles stored under `Website/ENCRYPTED/profiles/` and Dashboards share
+  folder conventions: each item folder uses
   `index.html` as the entry page, with `dashboard.json`, `widgets.txt`,
   `Overview.md`, optional local `assets/`, and other markdown beside it.
 - Item icons live inside that item's own `assets/` folder, not global

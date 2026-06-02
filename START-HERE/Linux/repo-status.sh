@@ -115,7 +115,7 @@ else
     bad "git-crypt is not installed."
 fi
 
-private_files="$(git ls-files -- 'Website/profiles' 2>/dev/null || true)"
+private_files="$(git ls-files -- 'Website/ENCRYPTED' 2>/dev/null || true)"
 private_found=""
 private_locked=""
 
@@ -139,11 +139,11 @@ if [ -f "${TMPDIR:-/tmp}/rock-os-private-locked-$$" ]; then
 fi
 
 if [ -z "$private_found" ]; then
-    info "No tracked Profiles files found."
+    info "No tracked Encrypted content files found."
 elif [ -n "$private_locked" ]; then
-    bad "Profiles Folder Locked."
+    bad "Encrypted Content Locked."
 else
-    ok "Profiles Folder Unlocked."
+    ok "Encrypted Content Unlocked."
 fi
 
 key_count="$(find . -maxdepth 1 -type f -name '*.key' | wc -l | tr -d ' ')"

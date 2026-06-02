@@ -10,6 +10,6 @@ createMarkdownTabApp({
     indexUrl: 'wiki-index.json',
     docApiUrl: '/api/wiki/doc',
     searchApiUrl: '/api/wiki/search',
-    pathPrefix: 'menu/wiki',
+    pathPrefix: 'ENCRYPTED/menu/wiki',
     directOpenPageName: 'wiki.html'
 });

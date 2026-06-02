@@ -14,20 +14,21 @@ import (
 var startupTime = time.Now()
 
 const (
+	encryptedDir         = "ENCRYPTED"
 	indexFile            = "wiki-index.json"
-	markdownDir          = "menu/wiki"
-	scriptsDir           = "menu/scripts"
-	guidesDir            = "menu/guides"
+	markdownDir          = encryptedDir + "/menu/wiki"
+	scriptsDir           = encryptedDir + "/menu/scripts"
+	guidesDir            = encryptedDir + "/menu/guides"
 	guidesIndexFile      = "guides-index.json"
-	cheatsheetsDir       = "menu/cheatsheets"
+	cheatsheetsDir       = encryptedDir + "/menu/cheatsheets"
 	cheatsheetsIndexFile = "cheatsheets-index.json"
-	dotfilesDir          = "menu/dotfiles"
+	dotfilesDir          = encryptedDir + "/menu/dotfiles"
 	dotfilesIndexFile    = "dotfiles-index.json"
-	bookmarksDir         = "menu/bookmarks"
+	bookmarksDir         = encryptedDir + "/menu/bookmarks"
 	bookmarksIndexFile   = "bookmarks-index.json"
-	profilesDir          = "profiles"
+	profilesDir          = encryptedDir + "/profiles"
 	profilesIndexFile    = "profiles-index.json"
-	dashboardsDir        = "dashboards"
+	dashboardsDir        = encryptedDir + "/dashboards"
 	dashboardsIndexFile  = "dashboards-index.json"
 )
 

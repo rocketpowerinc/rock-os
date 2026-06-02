@@ -1,3 +1,0 @@
-# Optional dashboard widget overrides for the Emulation dashboard.
-# Keep public emulation links and non-sensitive local resources here.
-

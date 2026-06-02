@@ -136,11 +136,11 @@ func printStartupStatus(siteRoot string, bindHost string, address string, allowL
 
 	switch privateMarkdownStatus(siteRoot) {
 	case "locked":
-		printStatus("INFO", ansiCyan, "Profiles Folder Locked.")
+		printStatus("INFO", ansiCyan, "Encrypted content locked.")
 	case "unlocked":
-		printStatus("OK", ansiGreen, "Profiles Folder Unlocked.")
+		printStatus("OK", ansiGreen, "Encrypted content unlocked.")
 	default:
-		printStatus("INFO", ansiCyan, "Profiles Folder not found.")
+		printStatus("INFO", ansiCyan, "Encrypted content folder not found.")
 	}
 
 	printStatus("OK", ansiGreen, "Request logging enabled.")
@@ -159,7 +159,7 @@ func colorize(color string, value string) string {
 }
 
 func privateMarkdownStatus(siteRoot string) string {
-	privateRoot := filepath.Join(siteRoot, profilesDir)
+	privateRoot := filepath.Join(siteRoot, encryptedDir)
 	if info, err := os.Stat(privateRoot); err != nil || !info.IsDir() {
 		return "missing"
 	}

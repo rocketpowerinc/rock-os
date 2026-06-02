@@ -119,20 +119,20 @@ call :wait
 exit /b 0
 
 :check_private
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git ls-files -- 'Website/profiles' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { if (Test-Path $file) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=git ls-files -- 'Website/ENCRYPTED' 2>$null; if (-not $files) { exit 3 }; foreach ($file in $files) { if (Test-Path $file) { $bytes=[IO.File]::ReadAllBytes((Resolve-Path $file)); if ($bytes.Length -ge 10 -and [Text.Encoding]::ASCII.GetString($bytes,1,8) -eq 'GITCRYPT') { exit 2 } } }; exit 0" 2>nul
 if errorlevel 3 (
-    call :info "No tracked Profiles files found."
+    call :info "No tracked Encrypted content files found."
     exit /b 0
 )
 if errorlevel 2 (
-    call :bad "Profiles Folder Locked."
+    call :bad "Encrypted Content Locked."
     exit /b 0
 )
 if errorlevel 1 (
-    call :warn "Could not verify Profiles status."
+    call :warn "Could not verify encrypted content status."
     exit /b 0
 )
-call :ok "Profiles Folder Unlocked."
+call :ok "Encrypted Content Unlocked."
 exit /b 0
 
 :section

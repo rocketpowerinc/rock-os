@@ -10,6 +10,6 @@ createMarkdownTabApp({
     indexUrl: 'bookmarks-index.json',
     docApiUrl: '/api/bookmarks/doc',
     searchApiUrl: '/api/bookmarks/search',
-    pathPrefix: 'menu/bookmarks',
+    pathPrefix: 'ENCRYPTED/menu/bookmarks',
     directOpenPageName: 'bookmarks.html'
 });

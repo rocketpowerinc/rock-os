@@ -4,4 +4,4 @@
 
 # git-crypt content is encrypted binary; disable EOL conversion so it is never
 # rewritten by the normalization rule above.
-Website/profiles/** filter=git-crypt diff=git-crypt -text
+Website/ENCRYPTED/** filter=git-crypt diff=git-crypt -text

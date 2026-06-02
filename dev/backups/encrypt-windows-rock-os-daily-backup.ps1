@@ -31,11 +31,11 @@
       synced folder.
 
     GIT-CRYPT / PROFILES
-      The script runs whether or not git-crypt Profiles are locked, and the
+      The script runs whether or not git-crypt content are locked, and the
       backup is restorable either way (it includes both .git and the .key).
-      However, if Profiles are LOCKED it prints a non-fatal heads-up: it is
+      However, if encrypted content is LOCKED it prints a non-fatal heads-up: it is
       RECOMMENDED to unlock first (START-HERE\Windows\unlock-git-crypt.cmd) so
-      Profiles are captured as readable files rather than git-crypt ciphertext.
+      encrypted content is captured as readable files rather than git-crypt ciphertext.
 
     WHAT IT DOES NOT DO
       Does NOT pull, does NOT require a clean working tree, and does NOT modify
@@ -49,7 +49,7 @@
                        (or the Git for Windows "usr\bin\openssl.exe" on PATH)
       - PowerShell 5.1+ or PowerShell 7 (required) - ships with Windows 10/11.
                        The ZIP and HMAC use built-in .NET; no module to install.
-      - git-crypt      (only if you unlock Profiles first, which is recommended).
+      - git-crypt      (only if you unlock encrypted content first, which is recommended).
                        winget install AGWA.git-crypt
       - Google Drive for Desktop (only if you pick destination [2]).
       Make sure git and openssl are on your PATH (run "git --version" and
@@ -57,7 +57,7 @@
 
     IMPORTANT
       This backup contains the git-crypt .key and (when unlocked) your decrypted
-      Profiles. Handle the .enc - and ESPECIALLY any decrypted output - with
+      encrypted content. Handle the .enc - and ESPECIALLY any decrypted output - with
       extreme care. Keep the encryption password somewhere safe; it cannot be
       recovered.
 #>
@@ -118,9 +118,9 @@ if (-not (Test-Command openssl)) { Fail "OpenSSL is not installed or not availab
 
 if (-not (Test-Command git)) { Fail "Git is not installed or not available in PATH." }
 
-# Heads-up (non-fatal): detect whether git-crypt Profiles are still locked.
-function Test-ProfilesLocked {
-    $files = & git -C $repoPath ls-files -- 'Website/profiles' 2>$null
+# Heads-up (non-fatal): detect whether git-crypt content are still locked.
+function Test-EncryptedContentLocked {
+    $files = & git -C $repoPath ls-files -- 'Website/ENCRYPTED' 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $files) { return $false }
     foreach ($file in $files) {
         $path = Join-Path $repoPath $file
@@ -133,11 +133,11 @@ function Test-ProfilesLocked {
     return $false
 }
 
-if (Test-ProfilesLocked) {
+if (Test-EncryptedContentLocked) {
     Write-Host ""
-    Write-Host "NOTE: git-crypt Profiles appear to be LOCKED." -ForegroundColor Yellow
+    Write-Host "NOTE: git-crypt content appear to be LOCKED." -ForegroundColor Yellow
     Write-Host "      The backup will still be fully restorable (it includes .git and your .key)," -ForegroundColor Yellow
-    Write-Host "      but it is RECOMMENDED to unlock first so Profiles are captured as readable" -ForegroundColor Yellow
+    Write-Host "      but it is RECOMMENDED to unlock first so encrypted content is captured as readable" -ForegroundColor Yellow
     Write-Host "      files. Run START-HERE\Windows\unlock-git-crypt.cmd, then re-run this backup." -ForegroundColor Yellow
     Write-Host ""
 }

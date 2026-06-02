@@ -1,2 +1,0 @@
-# Optional dashboard widget overrides for the Artificial Intelligence dashboard.
-# Keep public AI links, local model notes, and non-sensitive resources here.

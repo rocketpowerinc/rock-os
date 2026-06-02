@@ -109,6 +109,27 @@ func TestServerRefreshHandlerRejectsNonClone(t *testing.T) {
 	}
 }
 
+func TestRequireUnlockedContentRejectsLockedContent(t *testing.T) {
+	siteRoot := t.TempDir()
+	encryptedRoot := filepath.Join(siteRoot, encryptedDir)
+	if err := os.MkdirAll(encryptedRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(encryptedRoot, "locked.md"), []byte("GITCRYPT\nencrypted data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/search?q=test", nil)
+	recorder := httptest.NewRecorder()
+	requireUnlockedContent(siteRoot, func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("locked content reached the wrapped handler")
+	})(recorder, request)
+
+	if recorder.Code != http.StatusLocked {
+		t.Fatalf("expected status 423, got %d", recorder.Code)
+	}
+}
+
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
 	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
 	if err == nil {
@@ -448,7 +469,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -462,7 +483,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "menu/wiki/Test.md" {
+	if response.Path != "ENCRYPTED/menu/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -487,7 +508,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -511,7 +532,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=menu/wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -562,7 +583,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "menu/wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "ENCRYPTED/menu/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -698,7 +719,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "menu/wiki/Fresh.md" {
+	if files[0].Path != "ENCRYPTED/menu/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -801,17 +822,11 @@ func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
-	if err := os.RemoveAll(filepath.Join(siteRoot, profilesDir)); err != nil {
+	if err := os.RemoveAll(filepath.Join(siteRoot, encryptedDir)); err != nil {
 		t.Fatal(err)
 	}
 
-	// Write a wiki markdown file to ensure WikiCount is 1
-	wikiDoc := filepath.Join(siteRoot, markdownDir, "doc.md")
-	if err := os.WriteFile(wikiDoc, []byte("# Hello"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	// Case 1: missing (Private folder doesn't exist)
+	// Case 1: missing (encrypted content folder doesn't exist)
 	req := httptest.NewRequest(http.MethodGet, "/api/server/status", nil)
 	rec := httptest.NewRecorder()
 	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec, req)
@@ -828,8 +843,8 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status.GitCrypt != "missing" {
 		t.Errorf("expected gitCrypt to be 'missing', got %q", status.GitCrypt)
 	}
-	if status.WikiCount != 1 {
-		t.Errorf("expected wikiCount to be 1, got %d", status.WikiCount)
+	if status.WikiCount != 0 {
+		t.Errorf("expected wikiCount to be 0, got %d", status.WikiCount)
 	}
 	if status.ScriptsCount != 0 {
 		t.Errorf("expected scriptsCount to be 0, got %d", status.ScriptsCount)
@@ -844,12 +859,21 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected commit to be empty outside a Git clone, got %q", status.Commit)
 	}
 
-	// Case 2: unlocked (Profiles Folder exists with non-encrypted file)
+	// Case 2: unlocked (encrypted content folder exists with readable files)
 	privateDir := filepath.Join(siteRoot, profilesDir)
 	if err := os.MkdirAll(privateDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(privateDir, "doc.md"), []byte("plain text doc"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write a wiki markdown file to ensure WikiCount is 1.
+	wikiDoc := filepath.Join(siteRoot, markdownDir, "doc.md")
+	if err := os.MkdirAll(filepath.Dir(wikiDoc), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(wikiDoc, []byte("# Hello"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -880,7 +904,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Errorf("expected scriptsCount to be 1, got %d", status2.ScriptsCount)
 	}
 
-	// Case 3: locked (Profiles Folder exists with locked git-crypt file)
+	// Case 3: locked (encrypted content contains a git-crypt file)
 	if err := os.WriteFile(filepath.Join(privateDir, "locked-doc.md"), []byte("GITCRYPT\nencrypted data here"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -960,25 +984,25 @@ func TestResolveGuideDoc(t *testing.T) {
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "menu/guides/Setup.md")
+	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "menu/guides/Setup.md" {
-		t.Errorf("expected menu/guides/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "ENCRYPTED/menu/guides/Setup.md" {
+		t.Errorf("expected ENCRYPTED/menu/guides/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveGuideDoc(siteRoot, "menu/guides/../secret.md")
+	_, _, err = resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveGuideDoc(siteRoot, "menu/guides/Setup.txt")
+	_, _, err = resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
@@ -1013,8 +1037,8 @@ func TestGuidesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "menu/guides/Install.md" {
-		t.Errorf("expected menu/guides/Install.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/menu/guides/Install.md" {
+		t.Errorf("expected ENCRYPTED/menu/guides/Install.md, got %q", index[0].Path)
 	}
 }
 
@@ -1047,8 +1071,8 @@ func TestCheatsheetsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "menu/cheatsheets/Commands.md" {
-		t.Errorf("expected menu/cheatsheets/Commands.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/menu/cheatsheets/Commands.md" {
+		t.Errorf("expected ENCRYPTED/menu/cheatsheets/Commands.md, got %q", index[0].Path)
 	}
 }
 
@@ -1081,8 +1105,8 @@ func TestDotfilesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "menu/dotfiles/Shell.md" {
-		t.Errorf("expected menu/dotfiles/Shell.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/menu/dotfiles/Shell.md" {
+		t.Errorf("expected ENCRYPTED/menu/dotfiles/Shell.md, got %q", index[0].Path)
 	}
 }
 
@@ -1115,8 +1139,8 @@ func TestBookmarksIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "menu/bookmarks/Links.md" {
-		t.Errorf("expected menu/bookmarks/Links.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/menu/bookmarks/Links.md" {
+		t.Errorf("expected ENCRYPTED/menu/bookmarks/Links.md, got %q", index[0].Path)
 	}
 }
 
@@ -1132,7 +1156,7 @@ func TestProfilesDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=profiles/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=ENCRYPTED/profiles/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	profilesDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -1146,7 +1170,7 @@ func TestProfilesDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "profiles/Test.md" {
+	if response.Path != "ENCRYPTED/profiles/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -1168,11 +1192,11 @@ func TestResolveProfilesDoc(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	normalized, target, err := resolveProfilesDoc(siteRoot, "profiles/Target.md")
+	normalized, target, err := resolveProfilesDoc(siteRoot, "ENCRYPTED/profiles/Target.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if normalized != "profiles/Target.md" {
+	if normalized != "ENCRYPTED/profiles/Target.md" {
 		t.Errorf("unexpected normalized path: %q", normalized)
 	}
 	if target != docPath {
@@ -1180,7 +1204,7 @@ func TestResolveProfilesDoc(t *testing.T) {
 	}
 
 	// Traversals check
-	_, _, err = resolveProfilesDoc(siteRoot, "profiles/../outside.md")
+	_, _, err = resolveProfilesDoc(siteRoot, "ENCRYPTED/profiles/../outside.md")
 	if err == nil {
 		t.Error("expected traversal error")
 	}
@@ -1220,8 +1244,8 @@ func TestProfilesIndexHandlerRefreshesIndex(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "profiles/PrivateFile.md" {
-		t.Errorf("expected profiles/PrivateFile.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/profiles/PrivateFile.md" {
+		t.Errorf("expected ENCRYPTED/profiles/PrivateFile.md, got %q", index[0].Path)
 	}
 }
 
@@ -1253,7 +1277,7 @@ func TestProfilesIndexHandlerFiltersProfile(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 profile file, got %d", len(index))
 	}
-	if index[0].Path != "profiles/Kids/Profile.md" {
+	if index[0].Path != "ENCRYPTED/profiles/Kids/Profile.md" {
 		t.Errorf("expected Kids profile file, got %q", index[0].Path)
 	}
 }
@@ -1282,7 +1306,7 @@ func TestProfilesHandlersRejectLockedContent(t *testing.T) {
 		},
 		{
 			name:    "doc",
-			request: httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=profiles/Locked.md", nil),
+			request: httptest.NewRequest(http.MethodGet, "/api/profiles/doc?path=ENCRYPTED/profiles/Locked.md", nil),
 			handler: profilesDocHandler(siteRoot),
 		},
 		{
