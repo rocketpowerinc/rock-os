@@ -152,7 +152,7 @@ func TestCollectLaunchPointsParsesOrderedLockedMarkdownCards(t *testing.T) {
 	if len(points) != 2 {
 		t.Fatalf("expected 2 launch points, got %d", len(points))
 	}
-	if points[0].Title != "Dashboards" || points[0].Href != "../dashboards.html" {
+	if points[0].Title != "Dashboards" || points[0].Href != "../dashboards.html" || points[0].Path != "/launch-point-cards-locked/01-Dashboards.md" {
 		t.Fatalf("unexpected first launch point: %#v", points[0])
 	}
 	if points[1].Title != "Wiki" || points[1].Description != "Browse notes." {

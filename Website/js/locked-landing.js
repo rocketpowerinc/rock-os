@@ -1,7 +1,7 @@
 // Shared "locked landing" shown while git-crypt content is locked.
 //
 // Instead of a generic "content locked" message, each page shows its matching
-// card from Website/launch-point-locked. Those markdown files are never
+// card from Website/launch-point-cards-locked. Those markdown files are never
 // encrypted and are exposed (parsed) through /api/launch-points; each card's
 // link points at a page (e.g. ../dashboards.html), so we match a card to the
 // current page by that link's filename. If the matching card can't be loaded
@@ -67,7 +67,7 @@ function lockedPanelHTML(title, body) {
 
 // Renders the locked landing into contentEl. pageFileName is the page this
 // content belongs to (e.g. "dashboards.html", "wiki.html"), used to pick the
-// matching launch-point-locked card.
+// matching launch-point-cards-locked card.
 export async function renderLockedLanding(contentEl, pageFileName) {
     if (!contentEl) {
         return;

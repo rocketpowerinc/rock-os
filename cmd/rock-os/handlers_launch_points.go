@@ -58,6 +58,7 @@ func collectLaunchPoints(siteRoot string) ([]launchPoint, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", entry.Name(), err)
 		}
+		point.Path = "/" + filepath.ToSlash(filepath.Join(launchPointsDir, entry.Name()))
 		points = append(points, point)
 	}
 

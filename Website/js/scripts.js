@@ -807,7 +807,7 @@ function renderScriptSearchResults() {
 }
 
 // Shown when /api/scripts returns 423 (git-crypt content is locked): render the
-// matching launch-point-locked card instead of a status-bar error, since those
+// matching launch-point-cards-locked card instead of a status-bar error, since those
 // files are never encrypted.
 function renderScriptsLocked() {
     const sidebar = document.getElementById('sidebar');

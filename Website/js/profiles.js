@@ -115,7 +115,7 @@ function renderLockedProfiles() {
         toc.innerHTML = '';
     }
     if (content) {
-        // Show this page's matching launch-point-locked card (those files are
+        // Show this page's matching launch-point-cards-locked card (those files are
         // never encrypted) instead of a generic locked message.
         renderLockedLanding(content, appMode.mainPage);
     }

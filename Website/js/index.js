@@ -7,15 +7,17 @@ const serverModeTitle =
 const launchPointsGrid =
     document.getElementById('launchPointsGrid');
 
-function launchPointLink(point) {
+function launchPointLink(point, options = {}) {
     const link =
         document.createElement('a');
     const title =
         document.createElement('strong');
     const description =
         document.createElement('small');
+    const target =
+        options.useCardPath && point.path ? point.path : point.href;
     const href =
-        new URL(point.href, window.location.origin);
+        new URL(target, window.location.origin);
 
     if (href.protocol !== 'http:' && href.protocol !== 'https:') {
         return null;
@@ -58,13 +60,13 @@ async function loadLockedLaunchPoints() {
             await response.json();
         const links =
             Array.isArray(points)
-                ? points.map(launchPointLink).filter(Boolean)
+                ? points.map(point => launchPointLink(point, { useCardPath: true })).filter(Boolean)
                 : [];
 
         launchPointsGrid.replaceChildren();
         if (links.length === 0) {
             launchPointsGrid.innerHTML =
-                '<p class="launch-points-status">Add .md files under Website/launch-point-locked to create locked-mode launch cards.</p>';
+                '<p class="launch-points-status">Add .md files under Website/launch-point-cards-locked to create locked-mode launch cards.</p>';
             return;
         }
 

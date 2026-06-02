@@ -495,7 +495,7 @@ go run .</code></pre>
 }
 
 // Shown when the index request returns 423 (git-crypt content is locked):
-// render this page's matching launch-point-locked card instead of a generic
+// render this page's matching launch-point-cards-locked card instead of a generic
 // error, since those files are never encrypted.
 function renderWikiLocked() {
 
