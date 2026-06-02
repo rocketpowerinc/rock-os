@@ -93,6 +93,12 @@ overwrite unrelated files.
 
 ```powershell
 irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Windows/install-rock-os.ps1 | iex
+
+```
+
+Same line but it install git first
+```powershell
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) { winget install --id Git.Git -e --source winget; $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User') }; irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Windows/install-rock-os.ps1 | iex
 ```
 
 After install, open a new terminal and run:
