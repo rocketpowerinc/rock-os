@@ -111,7 +111,6 @@ func linkHealthSourceFiles(siteRoot string) ([]string, error) {
 		dotfilesDir,
 		bookmarksDir,
 		dashboardsDir,
-		profilesDir,
 	}
 
 	files := []string{}

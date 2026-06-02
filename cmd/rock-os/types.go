@@ -26,8 +26,6 @@ const (
 	dotfilesIndexFile    = "dotfiles-index.json"
 	bookmarksDir         = encryptedDir + "/menu/bookmarks"
 	bookmarksIndexFile   = "bookmarks-index.json"
-	profilesDir          = encryptedDir + "/profiles"
-	profilesIndexFile    = "profiles-index.json"
 	dashboardsDir        = encryptedDir + "/dashboards"
 	dashboardsIndexFile  = "dashboards-index.json"
 )
@@ -158,7 +156,6 @@ type CacheManager struct {
 	Cheatsheets *markdownIndexCache
 	Dotfiles    *markdownIndexCache
 	Bookmarks   *markdownIndexCache
-	Profiles    *markdownIndexCache
 	Dashboards  *markdownIndexCache
 	Search      *SearchCacheManager
 }
@@ -169,7 +166,6 @@ type SearchCacheManager struct {
 	Cheatsheets *markdownSearchIndex
 	Dotfiles    *markdownSearchIndex
 	Bookmarks   *markdownSearchIndex
-	Profiles    *markdownSearchIndex
 	Dashboards  *markdownSearchIndex
 }
 
@@ -181,7 +177,6 @@ func newApp() *App {
 			Cheatsheets: newMarkdownIndexCache(),
 			Dotfiles:    newMarkdownIndexCache(),
 			Bookmarks:   newMarkdownIndexCache(),
-			Profiles:    newMarkdownIndexCache(),
 			Dashboards:  newMarkdownIndexCache(),
 			Search: &SearchCacheManager{
 				Markdown:    newMarkdownSearchIndex(),
@@ -189,7 +184,6 @@ func newApp() *App {
 				Cheatsheets: newMarkdownSearchIndex(),
 				Dotfiles:    newMarkdownSearchIndex(),
 				Bookmarks:   newMarkdownSearchIndex(),
-				Profiles:    newMarkdownSearchIndex(),
 				Dashboards:  newMarkdownSearchIndex(),
 			},
 		},

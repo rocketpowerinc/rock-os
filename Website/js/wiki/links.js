@@ -8,7 +8,6 @@ const tabIndexes = {
     cheatsheets: '/cheatsheets-index.json',
     dotfiles: '/dotfiles-index.json',
     bookmarks: '/bookmarks-index.json',
-    profiles: '/profiles-index.json',
     dashboards: '/dashboards-index.json'
 };
 
@@ -50,10 +49,6 @@ function encodePathSegments(path) {
 async function loadTabIndex(tab) {
 
     let indexUrl = tabIndexes[tab];
-    if (!indexUrl && tab.startsWith('profiles-')) {
-        const profileName = tab.replace('profiles-', '');
-        indexUrl = `/profiles-index.json?profile=${encodeURIComponent(profileName)}`;
-    }
     if (!indexUrl && tab.startsWith('dashboards-')) {
         const dashboardName = tab.replace('dashboards-', '');
         indexUrl = `/dashboards-index.json?profile=${encodeURIComponent(dashboardName)}`;
@@ -113,7 +108,7 @@ export function resolveMarkdownLink(
         return normalizeDocPath(pathOnly);
     }
 
-    if (/^ENCRYPTED\/menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^ENCRYPTED\/(profiles|dashboards)\//.test(pathOnly)) {
+    if (/^ENCRYPTED\/menu\/(wiki|guides|cheatsheets|dotfiles|bookmarks)\//.test(pathOnly) || /^ENCRYPTED\/dashboards\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
@@ -135,11 +130,7 @@ export function resolveMarkdownLink(
 export function wikiDocHref(path) {
 
     let targetPage = '/wiki.html';
-    if (path.startsWith('ENCRYPTED/profiles/')) {
-        const parts = path.split('/');
-        const profile = parts.length > 2 ? parts[2] : '';
-        targetPage = profile ? `/ENCRYPTED/profiles/${encodeURIComponent(profile)}/` : '/dashboards.html';
-    } else if (path.startsWith('ENCRYPTED/dashboards/')) {
+    if (path.startsWith('ENCRYPTED/dashboards/')) {
         const parts = path.split('/');
         const dashboard = parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
         targetPage = dashboard ? `/ENCRYPTED/dashboards/${encodePathSegments(dashboard)}/` : '/dashboards.html';
@@ -164,11 +155,6 @@ export function wikiDocHref(path) {
 
 function getTabForPath(path) {
     if (path.startsWith('ENCRYPTED/menu/wiki/')) return 'wiki';
-    if (path.startsWith('ENCRYPTED/profiles/')) {
-        const parts = path.split('/');
-        const profile = parts.length > 2 ? parts[2] : '';
-        return `profiles-${profile}`;
-    }
     if (path.startsWith('ENCRYPTED/dashboards/')) {
         const parts = path.split('/');
         const dashboard = parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
@@ -185,24 +171,10 @@ function getCurrentTab() {
     const rawPath = window.location.pathname;
     const path = rawPath.toLowerCase();
     if (path.includes('wiki.html') || path.endsWith('/wiki')) return 'wiki';
-    if (path.includes('profiles.html') || path.endsWith('/profiles')) {
-        const params = new URLSearchParams(window.location.search);
-        const profile = params.get('profile') || '';
-        return `profiles-${profile}`;
-    }
     if (path.includes('dashboards.html') || path.endsWith('/dashboards')) {
         const params = new URLSearchParams(window.location.search);
         const dashboard = params.get('profile') || params.get('dashboard') || '';
         return `dashboards-${dashboard}`;
-    }
-    if (path.includes('/profiles/')) {
-        const parts = rawPath.split('/').filter(Boolean);
-        const lastPart = parts[parts.length - 1] || '';
-        const profile = lastPart === 'index.html' && parts.length > 1
-            ? parts[parts.length - 2]
-            : lastPart;
-        const decodedProfile = decodeURIComponent(profile);
-        return `profiles-${decodedProfile.charAt(0).toUpperCase() + decodedProfile.slice(1)}`;
     }
     if (path.includes('/dashboards/')) {
         const parts = rawPath.split('/').filter(Boolean);
@@ -225,7 +197,7 @@ function getCurrentTab() {
     const standardPages = ['wiki.html', 'guides.html', 'cheatsheets.html', 'dotfiles.html', 'bookmarks.html', 'scripts.html', 'index.html', 'dashboards.html'];
     const parts = path.split('/').filter(Boolean);
     const filename = parts.pop() || '';
-    if (filename && filename.endsWith('.html') && !standardPages.includes(filename) && filename !== 'profiles.html') {
+    if (filename && filename.endsWith('.html') && !standardPages.includes(filename)) {
         const itemName = filename === 'index.html' && parts.length > 0
             ? parts[parts.length - 1]
             : filename.replace('.html', '');
@@ -233,7 +205,7 @@ function getCurrentTab() {
         if (path.includes('/dashboards/')) {
             return `dashboards-${formattedName}`;
         }
-        return `profiles-${formattedName}`;
+        return `dashboards-${formattedName}`;
     }
 
     if (path.includes('guides.html') || path.endsWith('/guides')) return 'guides';
@@ -368,4 +340,3 @@ export function markdownLinksInText(
 
     return links;
 }
-

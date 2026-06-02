@@ -65,7 +65,6 @@ func siteRootLooksValid(siteRoot string) bool {
 		"dotfiles.html",
 		"bookmarks.html",
 		"scripts.html",
-		"profiles.html",
 		"dashboards.html",
 	}
 
@@ -83,7 +82,6 @@ func siteRootLooksValid(siteRoot string) bool {
 		dotfilesDir,
 		bookmarksDir,
 		scriptsDir,
-		profilesDir,
 		dashboardsDir,
 		"css",
 		"js",

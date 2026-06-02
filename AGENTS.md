@@ -126,14 +126,14 @@ Never break these without an explicit, specific request from the user:
 
 - Live under `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`. Group by category
   folder; `dashboards.html` renders category sections dynamically — do not
-  hardcode categories. Order categories with `OS` first, `Mobile` second, then
-  the rest alphabetically. In `Homelab`, keep `SelfHosting` first and sort the
-  rest alphabetically.
+  hardcode categories. Order categories with `Profiles` first, `OS` second,
+  `Mobile` third, then the rest alphabetically. In `Homelab`, keep
+  `SelfHosting` first and sort the rest alphabetically.
 - Dashboard names should preferably be one word. If the user proposes a
   multi-word name, warn them and ask for a one-word version before scaffolding.
   If they give exact casing or punctuation, preserve it and update all
   path-sensitive references.
-- Profiles stored under `Website/ENCRYPTED/profiles/` and Dashboards share
+- Profiles stored under `Website/ENCRYPTED/dashboards/Profiles/` and Dashboards share
   folder conventions: each item folder uses
   `index.html` as the entry page, with `dashboard.json`, `widgets.txt`,
   `Overview.md`, optional local `assets/`, and other markdown beside it.

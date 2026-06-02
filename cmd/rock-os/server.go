@@ -155,7 +155,6 @@ func shouldCompressPath(path string) bool {
 		path == "/cheatsheets-index.json" ||
 		path == "/dotfiles-index.json" ||
 		path == "/bookmarks-index.json" ||
-		path == "/profiles-index.json" ||
 		path == "/dashboards-index.json" {
 		return true
 	}

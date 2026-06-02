@@ -1,41 +1,21 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
 
-const isDashboardsMode =
-    window.location.pathname.includes('/dashboards/') ||
-    window.location.pathname.endsWith('/dashboards.html');
-
-const appMode = isDashboardsMode
-    ? {
-        rootDir: 'ENCRYPTED/dashboards',
-        indexFile: 'dashboards-index.json',
-        apiRoot: 'dashboards',
-        mainPage: 'dashboards.html',
-        pageTitle: 'Dashboards',
-        landingKicker: 'ENCRYPTED DASHBOARDS',
-        landingDescription: '',
-        cardDescription: '',
-        emptyLabel: 'dashboard files',
-        defaultSelectText: 'Select a dashboard document.',
-        viewNotesText: 'View Dashboard Notes',
-        searchPlaceholder: 'Search dashboards',
-        documentTitlePrefix: 'Rock-OS'
-    }
-    : {
-        rootDir: 'ENCRYPTED/profiles',
-        indexFile: 'profiles-index.json',
-        apiRoot: 'profiles',
-        mainPage: 'profiles.html',
-        pageTitle: 'Profiles',
-        landingKicker: 'Encrypted Profiles',
-        landingDescription: '',
-        cardDescription: '',
-        emptyLabel: 'profile files',
-        defaultSelectText: 'Select a profile document.',
-        viewNotesText: 'View Private Notes',
-        searchPlaceholder: 'Search profiles',
-        documentTitlePrefix: 'Rock-OS'
-    };
+const appMode = {
+    rootDir: 'ENCRYPTED/dashboards',
+    indexFile: 'dashboards-index.json',
+    apiRoot: 'dashboards',
+    mainPage: 'dashboards.html',
+    pageTitle: 'Dashboards',
+    landingKicker: 'ENCRYPTED DASHBOARDS',
+    landingDescription: '',
+    cardDescription: '',
+    emptyLabel: 'dashboard files',
+    defaultSelectText: 'Select a dashboard document.',
+    viewNotesText: 'View Dashboard Notes',
+    searchPlaceholder: 'Search dashboards',
+    documentTitlePrefix: 'Rock-OS'
+};
 
 function escapeHtml(value) {
 
@@ -213,9 +193,7 @@ function currentProfileName() {
                     .filter(part => part && part !== 'index.html');
 
             profile =
-                isDashboardsMode
-                    ? itemParts.slice(0, 2).join('/')
-                    : itemParts.slice(0, 1).join('/');
+                itemParts.slice(0, 2).join('/');
         }
     }
     return profile;
@@ -242,28 +220,15 @@ function profileItemFromPath(path) {
         return null;
     }
 
-    if (parts[1] === 'dashboards') {
-        if (parts.length < 4) {
-            return null;
-        }
-
-        return {
-            category: decodeURIComponent(parts[2]),
-            name: decodeURIComponent(parts[3]),
-            profile: `${decodeURIComponent(parts[2])}/${decodeURIComponent(parts[3])}`,
-            rootDir: 'ENCRYPTED/dashboards'
-        };
-    }
-
-    if (parts[1] !== 'profiles' || parts.length < 3) {
+    if (parts[1] !== 'dashboards' || parts.length < 4) {
         return null;
     }
 
     return {
-        category: isDashboardsMode ? 'Profiles' : '',
-        name: decodeURIComponent(parts[2]),
-        profile: decodeURIComponent(parts[2]),
-        rootDir: 'ENCRYPTED/profiles'
+        category: decodeURIComponent(parts[2]),
+        name: decodeURIComponent(parts[3]),
+        profile: `${decodeURIComponent(parts[2])}/${decodeURIComponent(parts[3])}`,
+        rootDir: 'ENCRYPTED/dashboards'
     };
 }
 
@@ -293,12 +258,8 @@ function uniqueProfileItems(files) {
     const seen = new Map();
 
     const dashboardCategoryRank = category => {
-        if (!isDashboardsMode) {
-            return 0;
-        }
-
         const categoryOrder =
-            ['os', 'mobile'];
+            ['profiles', 'os', 'mobile'];
         const index =
             categoryOrder.indexOf(String(category || '').toLowerCase());
 
@@ -332,7 +293,7 @@ function uniqueProfileItems(files) {
                 return categoryCompare;
             }
 
-            if (isDashboardsMode && a.category.toLowerCase() === 'os') {
+            if (a.category.toLowerCase() === 'os') {
                 const osOrder = ['windows', 'macos', 'linux'];
                 const aIndex = osOrder.indexOf(a.name.toLowerCase());
                 const bIndex = osOrder.indexOf(b.name.toLowerCase());
@@ -344,7 +305,19 @@ function uniqueProfileItems(files) {
                 }
             }
 
-            if (isDashboardsMode && a.category.toLowerCase() === 'homelab') {
+            if (a.category.toLowerCase() === 'profiles') {
+                const profileOrder = ['rocket', 'prepper', 'kids'];
+                const aIndex = profileOrder.indexOf(a.name.toLowerCase());
+                const bIndex = profileOrder.indexOf(b.name.toLowerCase());
+                const aRank = aIndex === -1 ? profileOrder.length : aIndex;
+                const bRank = bIndex === -1 ? profileOrder.length : bIndex;
+
+                if (aRank !== bRank) {
+                    return aRank - bRank;
+                }
+            }
+
+            if (a.category.toLowerCase() === 'homelab') {
                 const aIsSelfHosting = a.name.toLowerCase() === 'selfhosting';
                 const bIsSelfHosting = b.name.toLowerCase() === 'selfhosting';
 
@@ -402,30 +375,24 @@ function renderProfilesLanding(files) {
         uniqueProfileItems(files);
 
     const cardsHtml =
-        isDashboardsMode
-            ? Array.from(
-                profileItems.reduce((groups, item) => {
-                    if (!groups.has(item.category)) {
-                        groups.set(item.category, []);
-                    }
-                    groups.get(item.category).push(item);
-                    return groups;
-                }, new Map())
-            )
-                .map(([category, items]) => `
-                    <section class="dashboard-category">
-                        <h2>${escapeHtml(category)}</h2>
-                        <div class="profiles-card-grid">
-                            ${items.map(renderProfileCard).join('')}
-                        </div>
-                    </section>
-                `)
-                .join('')
-            : `
-                <div class="profiles-card-grid">
-                    ${profileItems.map(renderProfileCard).join('')}
-                </div>
-            `;
+        Array.from(
+            profileItems.reduce((groups, item) => {
+                if (!groups.has(item.category)) {
+                    groups.set(item.category, []);
+                }
+                groups.get(item.category).push(item);
+                return groups;
+            }, new Map())
+        )
+            .map(([category, items]) => `
+                <section class="dashboard-category">
+                    <h2>${escapeHtml(category)}</h2>
+                    <div class="profiles-card-grid">
+                        ${items.map(renderProfileCard).join('')}
+                    </div>
+                </section>
+            `)
+            .join('');
 
     content.classList.add('fullwidth');
     content.innerHTML = `
@@ -454,28 +421,13 @@ async function loadProfilesLanding() {
         const files =
             await response.json();
 
-        if (isDashboardsMode && Array.isArray(files)) {
-            const profilesResponse =
-                await fetch('/profiles-index.json?nocache=' + Date.now());
-
-            if (!profilesResponse.ok) {
-                throw new Error(`Profiles index failed with HTTP ${profilesResponse.status}`);
-            }
-
-            files.push(...await profilesResponse.json());
-        }
-
         renderProfilesLanding(
             Array.isArray(files) ? files : []
         );
     }
     catch (err) {
         console.warn(err);
-        if (isDashboardsMode) {
-            renderDashboardError('The dashboards index could not be loaded. Restart Rock-OS from the latest server source or release binary.');
-            return;
-        }
-        renderLockedProfiles();
+        renderDashboardError('The dashboards index could not be loaded. Restart Rock-OS from the latest server source or release binary.');
     }
 }
 

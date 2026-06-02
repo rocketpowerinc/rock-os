@@ -219,7 +219,7 @@ locked-content panel instead of attempting to render ciphertext.
 
 Dashboard folders live under category folders in
 `Website/ENCRYPTED/dashboards/`. Profile command centers such as Rocket, Kids,
-and Prepper remain stored under `Website/ENCRYPTED/profiles/`, but appear as a
+and Prepper remain stored under `Website/ENCRYPTED/dashboards/Profiles/`, but appear as a
 `Profiles` section on the Dashboards landing page rather than a separate tab.
 Each item can have its own `dashboard.json`, `widgets.txt`, markdown notes,
 search, favorites, and document view.
@@ -227,7 +227,7 @@ search, favorites, and document view.
 Profiles and Dashboards use the same item folder convention:
 
 ```text
-Website/ENCRYPTED/profiles/Rocket/index.html
+Website/ENCRYPTED/dashboards/Profiles/Rocket/index.html
 Website/ENCRYPTED/dashboards/OS/Windows/index.html
 ```
 
@@ -240,7 +240,7 @@ Profile and dashboard page icons should live inside that item's own folder, for
 example:
 
 ```text
-Website/ENCRYPTED/profiles/Rocket/assets/Rocket-Steel.svg
+Website/ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Steel.svg
 Website/ENCRYPTED/dashboards/OS/Windows/assets/windows.png
 ```
 
@@ -395,7 +395,7 @@ Website/ENCRYPTED/menu/guides/   Guided setup markdown
 Website/ENCRYPTED/menu/cheatsheets/ Quick-reference markdown
 Website/ENCRYPTED/menu/dotfiles/ Dotfile notes and configs
 Website/ENCRYPTED/menu/bookmarks/ Bookmark collections and link notes
-Website/ENCRYPTED/profiles/      Profile command centers
+Website/ENCRYPTED/dashboards/Profiles/      Profile command centers
 Website/ENCRYPTED/dashboards/    Dashboards grouped by category
 Website/ENCRYPTED/menu/scripts/  User-managed runnable scripts
 ```
@@ -767,7 +767,7 @@ Website/guides-index.json
 Website/cheatsheets-index.json
 Website/dotfiles-index.json
 Website/bookmarks-index.json
-Website/profiles-index.json
+Website/dashboards-index.json
 ```
 
 The browser reads the matching index endpoint and builds each sidebar tree. When

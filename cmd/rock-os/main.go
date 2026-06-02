@@ -53,9 +53,6 @@ func main() {
 		if _, err := writeBookmarksIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
-		if _, err := writeProfilesIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
 		if _, err := writeDashboardsIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
@@ -93,9 +90,6 @@ func main() {
 	mux.HandleFunc("/api/bookmarks/doc", requireUnlockedContent(siteRoot, bookmarksDocHandler(siteRoot)))
 	mux.HandleFunc("/api/bookmarks/search", requireUnlockedContent(siteRoot, bookmarksSearchHandler(siteRoot)))
 	mux.HandleFunc("/bookmarks-index.json", requireUnlockedContent(siteRoot, bookmarksIndexHandler(siteRoot)))
-	mux.HandleFunc("/api/profiles/doc", requireUnlockedContent(siteRoot, profilesDocHandler(siteRoot)))
-	mux.HandleFunc("/api/profiles/search", requireUnlockedContent(siteRoot, profilesSearchHandler(siteRoot)))
-	mux.HandleFunc("/profiles-index.json", requireUnlockedContent(siteRoot, profilesIndexHandler(siteRoot)))
 	mux.HandleFunc("/api/dashboards/doc", requireUnlockedContent(siteRoot, dashboardsDocHandler(siteRoot)))
 	mux.HandleFunc("/api/dashboards/search", requireUnlockedContent(siteRoot, dashboardsSearchHandler(siteRoot)))
 	mux.HandleFunc("/dashboards-index.json", requireUnlockedContent(siteRoot, dashboardsIndexHandler(siteRoot)))
