@@ -916,6 +916,10 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// The lock status is cached briefly; drop the cache so this call reflects the
+	// content we just created rather than the earlier "missing" result.
+	invalidatePrivateMarkdownStatus()
+
 	rec2 := httptest.NewRecorder()
 	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec2, req)
 
@@ -938,6 +942,9 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(privateDir, "locked-doc.md"), []byte("GITCRYPT\nencrypted data here"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+
+	// Drop the cached "unlocked" result so the locked file is detected now.
+	invalidatePrivateMarkdownStatus()
 
 	rec3 := httptest.NewRecorder()
 	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec3, req)
@@ -1248,5 +1255,115 @@ func TestFeedHandlers(t *testing.T) {
 		if recorder.Code != http.StatusBadRequest {
 			t.Errorf("expected Bad Request for empty channel_id, got %d", recorder.Code)
 		}
+	}
+}
+
+func newEncryptedGuardServer(siteRoot string) http.Handler {
+	return guardEncryptedStatic(siteRoot, http.FileServer(http.Dir(siteRoot)))
+}
+
+func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
+	siteRoot := t.TempDir()
+	assetDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "Foo", "assets")
+	if err := os.MkdirAll(assetDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(assetDir, "icon.txt"), []byte("icon-bytes"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+
+	// Directory requests must return 404 (no listing) rather than leaking the
+	// names of private folders/documents.
+	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/dashboards/Foo/assets/"} {
+		req := httptest.NewRequest(http.MethodGet, dirPath, nil)
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Errorf("expected 404 for directory %q, got %d", dirPath, rec.Code)
+		}
+	}
+
+	// Individual asset files are still served while unlocked (dashboards need
+	// their local icons/images).
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Foo/assets/icon.txt", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for asset file, got %d", rec.Code)
+	}
+	if rec.Body.String() != "icon-bytes" {
+		t.Fatalf("unexpected asset body: %q", rec.Body.String())
+	}
+}
+
+func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
+	siteRoot := t.TempDir()
+	wikiDir := filepath.Join(siteRoot, encryptedDir, "menu", "wiki")
+	if err := os.MkdirAll(wikiDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(wikiDir, "Secret.md"), []byte("\x00GITCRYPT\x00encrypted"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/menu/wiki/Secret.md", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusLocked {
+		t.Fatalf("expected 423 while locked, got %d", rec.Code)
+	}
+}
+
+func TestGuardEncryptedStaticPassesThroughNonEncrypted(t *testing.T) {
+	siteRoot := t.TempDir()
+	// Use a plain file (not index.html, which http.FileServer 301-redirects to "/").
+	if err := os.WriteFile(filepath.Join(siteRoot, "robots.txt"), []byte("ok"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+	req := httptest.NewRequest(http.MethodGet, "/robots.txt", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for non-encrypted file, got %d", rec.Code)
+	}
+	if rec.Body.String() != "ok" {
+		t.Fatalf("unexpected body: %q", rec.Body.String())
+	}
+}
+
+func TestPrivateMarkdownStatusCacheInvalidation(t *testing.T) {
+	siteRoot := t.TempDir()
+	encryptedRoot := filepath.Join(siteRoot, encryptedDir)
+	if err := os.MkdirAll(encryptedRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(encryptedRoot, "Plain.md"), []byte("# Plain\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	if status := privateMarkdownStatus(siteRoot); status != "unlocked" {
+		t.Fatalf("expected unlocked, got %q", status)
+	}
+
+	// Lock the tree on disk; the cached value should persist until invalidated.
+	if err := os.WriteFile(filepath.Join(encryptedRoot, "Plain.md"), []byte("\x00GITCRYPT\x00data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if status := privateMarkdownStatus(siteRoot); status != "unlocked" {
+		t.Fatalf("expected cached unlocked before invalidation, got %q", status)
+	}
+
+	invalidatePrivateMarkdownStatus()
+	if status := privateMarkdownStatus(siteRoot); status != "locked" {
+		t.Fatalf("expected locked after invalidation, got %q", status)
 	}
 }

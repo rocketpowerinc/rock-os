@@ -8,8 +8,28 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// privateMarkdownStatus walks the entire encrypted tree, so it is cached for a
+// short window to avoid repeating that walk on every gated request. The lock /
+// unlock state only changes when the user runs git-crypt, so a few seconds of
+// staleness is harmless. The cache is also cleared after a successful refresh.
+const privateMarkdownStatusTTL = 3 * time.Second
+
+var privateMarkdownStatusCache = struct {
+	mu       sync.Mutex
+	value    string
+	siteRoot string
+	expires  time.Time
+}{}
+
+func invalidatePrivateMarkdownStatus() {
+	privateMarkdownStatusCache.mu.Lock()
+	privateMarkdownStatusCache.expires = time.Time{}
+	privateMarkdownStatusCache.mu.Unlock()
+}
 
 func serverRefreshHandler(siteRoot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +72,10 @@ func serverRefreshHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, "Updated files but could not read the current Git commit", http.StatusInternalServerError)
 			return
 		}
+
+		// The pull may have changed which files are encrypted; drop the cache
+		// so the next status check re-walks the tree.
+		invalidatePrivateMarkdownStatus()
 
 		updated := beforeHead != afterHead
 		message := "Rock-OS is already up to date."
@@ -159,6 +183,29 @@ func colorize(color string, value string) string {
 }
 
 func privateMarkdownStatus(siteRoot string) string {
+	now := time.Now()
+
+	privateMarkdownStatusCache.mu.Lock()
+	if privateMarkdownStatusCache.siteRoot == siteRoot &&
+		now.Before(privateMarkdownStatusCache.expires) {
+		value := privateMarkdownStatusCache.value
+		privateMarkdownStatusCache.mu.Unlock()
+		return value
+	}
+	privateMarkdownStatusCache.mu.Unlock()
+
+	value := computePrivateMarkdownStatus(siteRoot)
+
+	privateMarkdownStatusCache.mu.Lock()
+	privateMarkdownStatusCache.value = value
+	privateMarkdownStatusCache.siteRoot = siteRoot
+	privateMarkdownStatusCache.expires = now.Add(privateMarkdownStatusTTL)
+	privateMarkdownStatusCache.mu.Unlock()
+
+	return value
+}
+
+func computePrivateMarkdownStatus(siteRoot string) string {
 	privateRoot := filepath.Join(siteRoot, encryptedDir)
 	if info, err := os.Stat(privateRoot); err != nil || !info.IsDir() {
 		return "missing"

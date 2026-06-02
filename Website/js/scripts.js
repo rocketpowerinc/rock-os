@@ -1,4 +1,5 @@
 import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from './server-refresh.js';
+import { renderLockedLanding } from './locked-landing.js';
 
 const scriptList =
     document.getElementById('scriptList');
@@ -805,12 +806,37 @@ function renderScriptSearchResults() {
     updateToggleAllScriptsButton();
 }
 
+// Shown when /api/scripts returns 423 (git-crypt content is locked): render the
+// matching launch-point-locked card instead of a status-bar error, since those
+// files are never encrypted.
+function renderScriptsLocked() {
+    const sidebar = document.getElementById('sidebar');
+    const resizer = document.getElementById('sidebarResizer');
+    const expandButton = document.getElementById('expandSidebarBtn');
+    const runButton = document.getElementById('runScriptBtn');
+
+    if (sidebar) sidebar.style.display = 'none';
+    if (resizer) resizer.style.display = 'none';
+    if (expandButton) expandButton.style.display = 'none';
+    if (runButton) runButton.style.display = 'none';
+
+    const stage = document.querySelector('.script-stage');
+    if (stage) {
+        renderLockedLanding(stage, 'scripts.html');
+    }
+}
+
 async function loadScripts() {
     try {
         const response =
             await fetch('/api/scripts');
 
         if (!response.ok) {
+            if (response.status === 423) {
+                renderScriptsLocked();
+                return;
+            }
+
             if (response.status === 404) {
                 throw new Error(
                     'The running Rock-OS server does not support the script dashboard yet. Start from Go source with the platform start-rock-os-from-source script in START-HERE, or build a new release binary.'

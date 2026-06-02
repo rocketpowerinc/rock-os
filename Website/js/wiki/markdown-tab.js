@@ -5,6 +5,7 @@ import { enhanceExternalLinks, enhanceWikiLinks, markdownLinksInText, wikiDocHre
 import { buildTableOfContents, clearToc, scrollToCurrentHash } from './toc.js';
 import { escapeHtml, fileTitle, formatEditedDate } from './utils.js';
 import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from '../server-refresh.js';
+import { renderLockedLanding } from '../locked-landing.js';
 
 export function createMarkdownTabApp(config) {
 
@@ -491,6 +492,29 @@ function renderWikiError(title, message, details = []) {
 go run .</code></pre>
         </div>
     `;
+}
+
+// Shown when the index request returns 423 (git-crypt content is locked):
+// render this page's matching launch-point-locked card instead of a generic
+// error, since those files are never encrypted.
+function renderWikiLocked() {
+
+    const sidebar =
+        getSidebar();
+
+    if (sidebar) {
+        sidebar.innerHTML = '';
+    }
+
+    const content =
+        document.getElementById('content');
+
+    if (!content) {
+        return;
+    }
+
+    clearToc();
+    renderLockedLanding(content, tab.directOpenPageName);
 }
 
 function isDirectFileOpen() {
@@ -1574,6 +1598,11 @@ async function loadIndex() {
         );
 
         if (!response.ok) {
+
+            if (response.status === 423) {
+                renderWikiLocked();
+                return;
+            }
 
             renderWikiError(
                 `Could not load the ${tab.key} index`,

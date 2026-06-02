@@ -66,7 +66,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fileServer := noCache(http.FileServer(http.Dir(siteRoot)))
+	fileServer := noCache(guardEncryptedStatic(siteRoot, http.FileServer(http.Dir(siteRoot))))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/scripts", requireUnlockedContent(siteRoot, scriptsListHandler(siteRoot)))
 	mux.HandleFunc("/api/scripts/content", requireUnlockedContent(siteRoot, scriptContentHandler(siteRoot)))

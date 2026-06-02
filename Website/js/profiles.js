@@ -1,5 +1,6 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
+import { renderLockedLanding } from './locked-landing.js';
 
 const appMode = {
     rootDir: 'ENCRYPTED/dashboards',
@@ -114,19 +115,9 @@ function renderLockedProfiles() {
         toc.innerHTML = '';
     }
     if (content) {
-        content.classList.add('fullwidth');
-        content.innerHTML = `
-            <section class="profiles-locked-panel" aria-live="polite">
-                <div class="profiles-lock-badge">Locked</div>
-                <h1>Encrypted Content Locked</h1>
-                <p>Dashboards, Profiles, menu content, and scripts are locked with git-crypt. Unlock the repository to use Rock-OS content.</p>
-                <div class="profiles-lock-fake-button" aria-hidden="true">Content Locked</div>
-                <button id="refreshLockedProfilesBtn" class="command-button primary" type="button">Refresh</button>
-                <pre><code>START-HERE\\Windows\\unlock-git-crypt.cmd</code></pre>
-            </section>
-        `;
-
-        bindReloadRefresh('refreshLockedProfilesBtn');
+        // Show this page's matching launch-point-locked card (those files are
+        // never encrypted) instead of a generic locked message.
+        renderLockedLanding(content, appMode.mainPage);
     }
 }
 

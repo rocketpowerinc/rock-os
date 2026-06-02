@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -224,6 +226,44 @@ func writeJSON(w http.ResponseWriter, value any) {
 func noCache(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// guardEncryptedStatic protects the static file server's view of the encrypted
+// tree (Website/ENCRYPTED). The static server is needed so dashboards can load
+// their local assets (icons/images) when unlocked, but it must not:
+//   - serve directory listings, which would leak the names of private folders
+//     and documents even while the content bytes are encrypted, and
+//   - hand out any encrypted bytes (ciphertext included) while locked.
+// Document content itself is always fetched through the gated /api/* handlers,
+// so this only ever allows individual asset files through, and only when
+// unlocked. Everything outside ENCRYPTED passes straight through.
+func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
+	prefix := "/" + encryptedDir
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cleaned := path.Clean(r.URL.Path)
+		if cleaned != prefix && !strings.HasPrefix(cleaned, prefix+"/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if privateMarkdownStatus(siteRoot) != "unlocked" {
+			http.Error(w, "encrypted Rock-OS content is locked", http.StatusLocked)
+			return
+		}
+
+		// Map to a filesystem path (Clean on a rooted, forward-slash path strips
+		// any "../" traversal) and refuse directory requests so no listing is
+		// produced.
+		relative := filepath.FromSlash(strings.TrimPrefix(cleaned, "/"))
+		fsPath := filepath.Join(siteRoot, relative)
+		if info, err := os.Stat(fsPath); err == nil && info.IsDir() {
+			http.NotFound(w, r)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
