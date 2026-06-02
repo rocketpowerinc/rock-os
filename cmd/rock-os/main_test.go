@@ -130,6 +130,36 @@ func TestRequireUnlockedContentRejectsLockedContent(t *testing.T) {
 	}
 }
 
+func TestCollectLaunchPointsParsesOrderedLockedMarkdownCards(t *testing.T) {
+	siteRoot := t.TempDir()
+	root := filepath.Join(siteRoot, launchPointsDir)
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(root, "02-Wiki.md"), []byte("# Wiki\n\nBrowse notes.\n\n[Open Wiki](../wiki.html)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "01-Dashboards.md"), []byte("# Dashboards\n\nOpen command centers.\n\n[Open Dashboards](../dashboards.html)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	points, err := collectLaunchPoints(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(points) != 2 {
+		t.Fatalf("expected 2 launch points, got %d", len(points))
+	}
+	if points[0].Title != "Dashboards" || points[0].Href != "../dashboards.html" {
+		t.Fatalf("unexpected first launch point: %#v", points[0])
+	}
+	if points[1].Title != "Wiki" || points[1].Description != "Browse notes." {
+		t.Fatalf("unexpected second launch point: %#v", points[1])
+	}
+}
+
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
 	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
 	if err == nil {

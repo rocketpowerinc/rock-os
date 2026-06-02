@@ -4,6 +4,78 @@ const serverModeBanner =
     document.getElementById('serverModeBanner');
 const serverModeTitle =
     document.getElementById('serverModeTitle');
+const launchPointsGrid =
+    document.getElementById('launchPointsGrid');
+
+function launchPointLink(point) {
+    const link =
+        document.createElement('a');
+    const title =
+        document.createElement('strong');
+    const description =
+        document.createElement('small');
+    const href =
+        new URL(point.href, window.location.origin);
+
+    if (href.protocol !== 'http:' && href.protocol !== 'https:') {
+        return null;
+    }
+
+    link.className =
+        'launch-link';
+    link.href =
+        href.href;
+    title.textContent =
+        point.title;
+    description.textContent =
+        point.description;
+
+    if (href.origin !== window.location.origin) {
+        link.target =
+            '_blank';
+        link.rel =
+            'noopener noreferrer';
+    }
+
+    link.append(title, description);
+    return link;
+}
+
+async function loadLockedLaunchPoints() {
+    if (!launchPointsGrid) {
+        return;
+    }
+
+    try {
+        const response =
+            await fetch('/api/launch-points?nocache=' + Date.now());
+
+        if (!response.ok) {
+            throw new Error('Could not load launch points');
+        }
+
+        const points =
+            await response.json();
+        const links =
+            Array.isArray(points)
+                ? points.map(launchPointLink).filter(Boolean)
+                : [];
+
+        launchPointsGrid.replaceChildren();
+        if (links.length === 0) {
+            launchPointsGrid.innerHTML =
+                '<p class="launch-points-status">Add .md files under Website/launch-point-locked to create locked-mode launch cards.</p>';
+            return;
+        }
+
+        launchPointsGrid.append(...links);
+    }
+    catch (err) {
+        console.warn(err);
+        launchPointsGrid.innerHTML =
+            '<p class="launch-points-status">Locked-mode launch points are unavailable. Restart Rock-OS with the latest release binary.</p>';
+    }
+}
 
 function parseQuoteBullets(markdown) {
 
@@ -159,6 +231,9 @@ function renderServerMode(status) {
     }
 
     const cryptStatus = status?.gitCrypt || 'unknown';
+    if (cryptStatus !== 'unlocked') {
+        loadLockedLaunchPoints();
+    }
     const cryptElement = document.getElementById('encryptedFolderStatus');
     if (cryptElement) {
         if (cryptStatus === 'unlocked') {

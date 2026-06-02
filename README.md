@@ -147,6 +147,7 @@ copy and prints a warning.
 - Markdown files rendered server-side by the local Go wiki server
 - Theme-aware command center landing page with launch links and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
+- Editable locked-mode launch cards loaded from `Website/launch-point-locked/*.md`
 - Automatic sidebar tree from nested markdown folders
 - Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
@@ -389,6 +390,7 @@ source ~/.bashrc
 cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               Public HTML, CSS, JS, assets, and media shell
+Website/launch-point-locked/ Public markdown cards shown while encrypted content is locked
 Website/ENCRYPTED/     git-crypt protected user content
 Website/ENCRYPTED/menu/wiki/     Wiki markdown
 Website/ENCRYPTED/menu/guides/   Guided setup markdown
@@ -402,6 +404,24 @@ Website/ENCRYPTED/menu/scripts/  User-managed runnable scripts
 
 For a plain-language guide to the launcher scripts, read
 `START-HERE/instructions.md`.
+
+## Launch Points
+
+While encrypted content is unlocked, the home page shows its standard launch
+cards. While encrypted content is locked, it reads public fallback cards from
+`Website/launch-point-locked/*.md`. Filename order controls fallback card order.
+Each file uses a heading, a short description, and one Markdown link:
+
+```markdown
+# Dashboards
+
+Open encrypted dashboards and profile command centers.
+
+[Open Dashboards](../dashboards.html)
+```
+
+Locked-mode Launch Point files stay public so the home page remains useful while
+`Website/ENCRYPTED/` is locked. Do not put private notes or URLs in them.
 
 Run Go tests from the server module:
 

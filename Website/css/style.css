@@ -1875,6 +1875,12 @@ color:#88ff88;
 	grid-template-columns:repeat(4, minmax(0, 1fr));
 }
 
+.launch-points-status {
+	color:var(--text-muted);
+	grid-column:1 / -1;
+	margin:0;
+}
+
 .launch-link {
 	background:var(--panel-bg);
 	border:1px solid rgba(var(--accent-rgb), .18);

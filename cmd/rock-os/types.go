@@ -15,6 +15,7 @@ var startupTime = time.Now()
 
 const (
 	encryptedDir         = "ENCRYPTED"
+	launchPointsDir      = "launch-point-locked"
 	indexFile            = "wiki-index.json"
 	markdownDir          = encryptedDir + "/menu/wiki"
 	scriptsDir           = encryptedDir + "/menu/scripts"
@@ -64,6 +65,12 @@ type scriptEntry struct {
 
 type scriptRunRequest struct {
 	ID string `json:"id"`
+}
+
+type launchPoint struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Href        string `json:"href"`
 }
 
 type serverRefreshResponse struct {

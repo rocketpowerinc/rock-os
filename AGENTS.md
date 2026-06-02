@@ -52,6 +52,9 @@ Never break these without an explicit, specific request from the user:
 
 - Internal Rock-OS links open in the same browser tab. External `http`/`https`
   links open in a new tab with `rel="noopener noreferrer"`.
+- Keep locked-mode home-page launch cards under `Website/launch-point-locked/`
+  as public markdown files. Treat filename order as card order, and never put
+  private content in that public folder.
 - UI changes stay professional and theme-aware. Support the existing presets:
   Steel, Rugged, Cyberpunk, and Blue-Grass.
 - Keep wiki frontend code organized as native browser modules under
