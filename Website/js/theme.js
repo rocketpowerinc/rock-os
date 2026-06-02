@@ -83,6 +83,20 @@ async function updateMenuLockState() {
         return;
     }
 
+    function setMenuLocked(locked) {
+        menu.classList.toggle('is-locked', locked);
+        menu.classList.toggle('is-unlocked', !locked);
+        trigger.disabled = locked;
+        trigger.setAttribute('aria-disabled', String(locked));
+        trigger.title =
+            locked ? 'Unlock Rock-OS content to open the menu.' : '';
+        list.inert =
+            locked;
+    }
+
+    // Fail closed until the server explicitly confirms encrypted content is unlocked.
+    setMenuLocked(true);
+
     try {
         const response =
             await fetch('/api/server/status?nocache=' + Date.now());
@@ -91,22 +105,11 @@ async function updateMenuLockState() {
         const locked =
             status?.gitCrypt !== 'unlocked';
 
-        menu.classList.toggle('is-locked', locked);
-        trigger.disabled = locked;
-        trigger.setAttribute('aria-disabled', String(locked));
-        trigger.title =
-            locked ? 'Unlock Rock-OS content to open the menu.' : '';
-        list.inert =
-            locked;
+        setMenuLocked(locked);
     }
     catch (err) {
         console.warn('Could not load encrypted content status:', err);
-        menu.classList.add('is-locked');
-        trigger.disabled = true;
-        trigger.setAttribute('aria-disabled', 'true');
-        trigger.title =
-            'Unlock Rock-OS content to open the menu.';
-        list.inert = true;
+        setMenuLocked(true);
     }
 }
 

@@ -269,19 +269,20 @@ text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
 	z-index:30;
 }
 
-.nav-menu:not(.is-locked):hover .nav-menu-list,
-.nav-menu:not(.is-locked):focus-within .nav-menu-list {
+.nav-menu.is-unlocked:hover .nav-menu-list,
+.nav-menu.is-unlocked:focus-within .nav-menu-list {
 	display:grid;
 }
 
-.nav-menu:not(.is-locked):hover .nav-menu-trigger,
-.nav-menu:not(.is-locked):focus-within .nav-menu-trigger {
+.nav-menu.is-unlocked:hover .nav-menu-trigger,
+.nav-menu.is-unlocked:focus-within .nav-menu-trigger {
 	text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
 }
 
-.nav-menu.is-locked .nav-menu-trigger {
+.nav-menu:not(.is-unlocked) .nav-menu-trigger {
 	cursor:not-allowed;
 	opacity:.5;
+	pointer-events:none;
 	text-shadow:none;
 }
 
