@@ -185,6 +185,25 @@ function renderServerMode(status) {
             typeof status?.scriptsCount === 'number' ? `${status.scriptsCount} Files` : '—';
     }
 
+    const commitElement = document.getElementById('serverCommit');
+    if (commitElement) {
+        const commit =
+            typeof status?.commit === 'string' ? status.commit.trim() : '';
+
+        if (/^[0-9a-f]{40}$/i.test(commit)) {
+            commitElement.textContent = commit.slice(0, 7);
+            commitElement.href =
+                `https://github.com/rocketpowerinc/rock-os/commit/${commit}`;
+            commitElement.title =
+                `Rock-OS is running commit ${commit}.`;
+        } else {
+            commitElement.textContent = 'Unavailable';
+            commitElement.removeAttribute('href');
+            commitElement.title =
+                'Commit metadata is unavailable when Rock-OS is not running from a Git clone.';
+        }
+    }
+
     const uptimeElement = document.getElementById('serverUptime');
     if (uptimeElement) {
         if (status && typeof status.uptime === 'number') {
@@ -259,7 +278,7 @@ async function loadLinkHealth() {
                 `${checked} links checked. Open /api/health/links for details.`;
         } else {
             element.textContent =
-                `${checked} OK`;
+                'OK';
             element.style.color =
                 'var(--success)';
             element.title =

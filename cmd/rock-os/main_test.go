@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -839,6 +840,9 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if status.LastSync < 0 {
 		t.Errorf("expected lastSync to be non-negative, got %d", status.LastSync)
 	}
+	if status.Commit != "" {
+		t.Errorf("expected commit to be empty outside a Git clone, got %q", status.Commit)
+	}
 
 	// Case 2: unlocked (Profiles Folder exists with non-encrypted file)
 	privateDir := filepath.Join(siteRoot, profilesDir)
@@ -897,6 +901,49 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	}
 	if status3.ScriptsCount != 1 {
 		t.Errorf("expected scriptsCount to be 1, got %d", status3.ScriptsCount)
+	}
+}
+
+func TestServerStatusHandlerReturnsCurrentCommit(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+
+	repoRoot := t.TempDir()
+	siteRoot := filepath.Join(repoRoot, "Website")
+	createTestWebsiteRoot(t, siteRoot)
+
+	runGit := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = repoRoot
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %s failed: %v\n%s", strings.Join(args, " "), err, output)
+		}
+		return strings.TrimSpace(string(output))
+	}
+
+	runGit("init")
+	runGit("add", ".")
+	runGit("-c", "user.name=Rock-OS Tests", "-c", "user.email=tests@rock-os.local", "commit", "-m", "initial")
+	expectedCommit := runGit("rev-parse", "HEAD")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/server/status", nil)
+	rec := httptest.NewRecorder()
+	serverStatusHandler("127.0.0.1", []string{"localhost"}, 8000, siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var status serverStatus
+	if err := json.Unmarshal(rec.Body.Bytes(), &status); err != nil {
+		t.Fatal(err)
+	}
+
+	if status.Commit != expectedCommit {
+		t.Fatalf("expected commit %q, got %q", expectedCommit, status.Commit)
 	}
 }
 

@@ -113,6 +113,7 @@ type serverStatus struct {
 	ScriptsCount int      `json:"scriptsCount"`
 	Uptime       int64    `json:"uptime"`
 	LastSync     int64    `json:"lastSync"`
+	Commit       string   `json:"commit,omitempty"`
 }
 
 type wikiDocResponse struct {

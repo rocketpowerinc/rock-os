@@ -250,6 +250,7 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 		if scripts, err := collectScripts(siteRoot); err == nil {
 			scriptsCount = len(scripts)
 		}
+		commit, _ := gitHead(filepath.Dir(siteRoot))
 
 		writeJSON(w, serverStatus{
 			Mode:         mode,
@@ -261,6 +262,7 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 			ScriptsCount: scriptsCount,
 			Uptime:       int64(time.Since(startupTime).Seconds()),
 			LastSync:     lastCommitTime(siteRoot),
+			Commit:       commit,
 		})
 	}
 }
