@@ -1,6 +1,6 @@
 ---
 name: release-new
-description: Use when the user invokes /release-new, says "Release new", or asks to publish a new Rock-OS server release. Run the project's Windows release helper in publish mode so it asks the user for the version, validates changes, creates the release commit, builds binaries, pushes, and publishes the GitHub release.
+description: Use when the user invokes /release-new, says "Release new", or asks to publish a new Rock-OS server release. Run the project's Windows release helper so it asks the user for the version, validates changes, creates the release commit, builds binaries, pushes, and publishes the GitHub release.
 ---
 
 # Release New
@@ -22,7 +22,7 @@ confirmation.
 ```powershell
 Start-Process `
   -FilePath 'C:\Program Files\PowerShell\7\pwsh.exe' `
-  -ArgumentList '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', '.\dev\windows-create-release.ps1', '-Publish' `
+  -ArgumentList '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', '.\dev\windows-create-release.ps1' `
   -WorkingDirectory (Get-Location) `
   -Wait
 ```
@@ -34,7 +34,7 @@ Start-Process `
 
 ## Script Contract
 
-`dev/windows-create-release.ps1 -Publish` owns the release transaction:
+`dev/windows-create-release.ps1` owns the release transaction:
 
 - Prompt for the version.
 - Refuse pre-existing staged changes.

@@ -3,8 +3,16 @@
 
 param(
     [string]$Version,
-    [switch]$Publish
+    [switch]$Publish,
+    [switch]$SkipPublish
 )
+
+if ($Publish -and $SkipPublish) {
+    Write-Host "[ERROR] Use either -Publish or -SkipPublish, not both." -ForegroundColor Red
+    Exit 1
+}
+
+$shouldPublish = -not $SkipPublish
 
 # Ensure we run from the repo root
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -236,7 +244,7 @@ Get-ChildItem $releaseDir | ForEach-Object {
 }
 
 Write-Host
-if ($Publish) {
+if ($shouldPublish) {
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         Write-Host "[ERROR] gh command not found. Please install GitHub CLI to publish releases." -ForegroundColor Red
         Exit 1
@@ -261,7 +269,7 @@ if ($Publish) {
     Write-Host "[OK] Release published successfully to GitHub!" -ForegroundColor Green
 } else {
     Write-Host "Skipped publishing to GitHub. Binaries are prepared locally in $releaseDir." -ForegroundColor Yellow
-    Write-Host "Re-run with -Publish only when you explicitly want to push and publish. The script will prompt for the version." -ForegroundColor Yellow
+    Write-Host "Re-run with -SkipPublish only when you explicitly want a local-only build. The script will prompt for the version." -ForegroundColor Yellow
 }
 
 Write-Host

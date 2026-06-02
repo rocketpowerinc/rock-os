@@ -200,15 +200,15 @@ Use the release helper after reviewing server-side changes:
 The helper prompts for the next version number, stages pending source changes,
 rejects known secrets and generated artifacts, runs `git diff --cached --check`
 and `go test ./...`, creates a release-preparation commit, cross-compiles all six
-supported binaries, and writes the checksum file under `.release/`. It does not
-push or publish by default. When you intentionally want the helper to push the
-current branch and create the GitHub release, add `-Publish`:
+supported binaries, writes the checksum file under `.release/`, then pushes the
+current branch and creates the GitHub release by default. When you intentionally
+want a local-only build without pushing or publishing, add `-SkipPublish`:
 
 ```powershell
-.\dev\windows-create-release.ps1 -Publish
+.\dev\windows-create-release.ps1 -SkipPublish
 ```
 
-The `/release-new` Codex skill runs the `-Publish` workflow in a visible
+The `/release-new` Codex skill runs the same publish workflow in a visible
 PowerShell window. The version prompt is the only interactive question.
 
 ## Dashboards

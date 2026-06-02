@@ -11,7 +11,7 @@ Never break these without an explicit, specific request from the user:
 - **Never** commit, stage, stash, push, or open pull requests. The user reviews
   and commits everything themselves. Leave nothing staged — including
   executable-mode changes. The sole standing exception is the user-invoked
-  `/release-new` workflow: it may run `dev/windows-create-release.ps1 -Publish`,
+  `/release-new` workflow: it may run `dev/windows-create-release.ps1`,
   which stages, commits, pushes, and publishes the reviewed release changes.
 - **Never** commit `.key` files.
 - **Never** move, rename, split, or restructure locked `git-crypt` content. Tell
@@ -109,8 +109,8 @@ Never break these without an explicit, specific request from the user:
 - If `cmd/rock-os/main.go` or server behavior changes, remind the user to build
   and publish a new release binary.
 - When the user invokes `/release-new`, follow the `release-new` Codex skill.
-  Let `dev/windows-create-release.ps1 -Publish` prompt the user for the version,
-  then allow that script to stage, commit, push, and publish the release without
+  Let `dev/windows-create-release.ps1` prompt the user for the version, then
+  allow that script to stage, commit, push, and publish the release without
   additional confirmation. Do not create a release for HTML, CSS, JavaScript,
   markdown, or asset-only changes unless the user explicitly requests one.
 
