@@ -70,3 +70,44 @@ if (themeSelect) {
         applyTheme(themeSelect.value);
     });
 }
+
+async function updateMenuLockState() {
+    const menu =
+        document.querySelector('.nav-menu');
+    const trigger =
+        menu?.querySelector('.nav-menu-trigger');
+    const list =
+        menu?.querySelector('.nav-menu-list');
+
+    if (!menu || !trigger || !list) {
+        return;
+    }
+
+    try {
+        const response =
+            await fetch('/api/server/status?nocache=' + Date.now());
+        const status =
+            response.ok ? await response.json() : null;
+        const locked =
+            status?.gitCrypt !== 'unlocked';
+
+        menu.classList.toggle('is-locked', locked);
+        trigger.disabled = locked;
+        trigger.setAttribute('aria-disabled', String(locked));
+        trigger.title =
+            locked ? 'Unlock Rock-OS content to open the menu.' : '';
+        list.inert =
+            locked;
+    }
+    catch (err) {
+        console.warn('Could not load encrypted content status:', err);
+        menu.classList.add('is-locked');
+        trigger.disabled = true;
+        trigger.setAttribute('aria-disabled', 'true');
+        trigger.title =
+            'Unlock Rock-OS content to open the menu.';
+        list.inert = true;
+    }
+}
+
+updateMenuLockState();
