@@ -1,0 +1,4 @@
+interface:
+  display_name: "Recap"
+  short_description: "Catch up on recent Rock-OS work"
+  default_prompt: "Use Recap to get current on Rock-OS before continuing."
