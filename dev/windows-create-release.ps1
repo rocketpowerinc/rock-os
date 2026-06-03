@@ -7,9 +7,25 @@ param(
     [switch]$SkipPublish
 )
 
+function Wait-ForReleaseExit {
+    if ([Environment]::UserInteractive) {
+        Write-Host
+        Read-Host "Press Enter to exit"
+    }
+}
+
+function Exit-Release {
+    param(
+        [int]$Code = 0
+    )
+
+    Wait-ForReleaseExit
+    Exit $Code
+}
+
 if ($Publish -and $SkipPublish) {
     Write-Host "[ERROR] Use either -Publish or -SkipPublish, not both." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 $shouldPublish = -not $SkipPublish
@@ -27,13 +43,13 @@ Write-Host
 # 1. Check if git is available
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] git command not found. Please install git and add it to your PATH." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 # 2. Check if go is available
 if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] go command not found. Go is required to compile release binaries." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 # 3. Run server tests before building release binaries
@@ -43,7 +59,7 @@ try {
     go test ./...
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Go server tests failed. Release build stopped." -ForegroundColor Red
-        Exit 1
+        Exit-Release 1
     }
 } finally {
     Pop-Location
@@ -82,10 +98,7 @@ try {
 } catch {
     Write-Host "[ERROR] Could not fetch the latest release version from GitHub: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "Please check your internet connection and verify that the repository is public." -ForegroundColor Yellow
-    Write-Host
-    Write-Host "Press any key to exit..." -ForegroundColor Gray
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    Exit 1
+    Exit-Release 1
 }
 
 $rawVersion = $Version
@@ -94,7 +107,7 @@ if (-not $rawVersion) {
 }
 if (-not $rawVersion) {
     Write-Host "[ERROR] Version number cannot be empty." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 # Normalize version (strip leading 'v' or 'v.' if present, then build clean vX.Y)
@@ -107,7 +120,7 @@ if ($cleanVersion.StartsWith(".")) {
 }
 if ($cleanVersion -notmatch "^\d+\.\d+(\.\d+)?$") {
     Write-Host "[ERROR] Version must look like 8.0 or 8.0.1." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 $versionName = "v$cleanVersion"
@@ -119,13 +132,13 @@ Write-Host "Preparing release commit..." -ForegroundColor Gray
 git diff --cached --quiet
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] The Git index already contains staged changes. Unstage them before creating a release." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 git add --all
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Could not stage release changes." -ForegroundColor Red
-    Exit 1
+    Exit-Release 1
 }
 
 $stagedFiles = @(git diff --cached --name-only)
@@ -150,14 +163,14 @@ if ($forbiddenFiles.Count -gt 0) {
     Write-Host "[ERROR] Refusing to commit generated artifacts or secrets:" -ForegroundColor Red
     $forbiddenFiles | ForEach-Object { Write-Host " - $_" -ForegroundColor Red }
     git reset --mixed HEAD
-    Exit 1
+    Exit-Release 1
 }
 
 git diff --cached --check
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Staged changes failed the whitespace check." -ForegroundColor Red
     git reset --mixed HEAD
-    Exit 1
+    Exit-Release 1
 }
 
 if ($stagedFiles.Count -gt 0) {
@@ -165,7 +178,7 @@ if ($stagedFiles.Count -gt 0) {
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Could not create the release commit." -ForegroundColor Red
         git reset --mixed HEAD
-        Exit 1
+        Exit-Release 1
     }
     Write-Host "[OK] Created release commit for $versionName." -ForegroundColor Green
 } else {
@@ -215,7 +228,7 @@ try {
 
         if ($LASTEXITCODE -ne 0) {
             Write-Host "[ERROR] Failed to compile binary for $os/$arch" -ForegroundColor Red
-            Exit 1
+            Exit-Release 1
         }
 
         # Generate checksum
@@ -247,7 +260,7 @@ Write-Host
 if ($shouldPublish) {
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         Write-Host "[ERROR] gh command not found. Please install GitHub CLI to publish releases." -ForegroundColor Red
-        Exit 1
+        Exit-Release 1
     }
 
     $currentBranch = git branch --show-current
@@ -255,7 +268,7 @@ if ($shouldPublish) {
     git push origin $currentBranch
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Failed to push commits to GitHub." -ForegroundColor Red
-        Exit 1
+        Exit-Release 1
     }
 
     Write-Host "Creating GitHub release $versionName and uploading assets..." -ForegroundColor Gray
@@ -263,7 +276,7 @@ if ($shouldPublish) {
     gh release create $versionName $filesToUpload --title "$versionName" --notes "Release $versionName"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Failed to publish release to GitHub." -ForegroundColor Red
-        Exit 1
+        Exit-Release 1
     }
 
     Write-Host "[OK] Release published successfully to GitHub!" -ForegroundColor Green
@@ -274,3 +287,4 @@ if ($shouldPublish) {
 
 Write-Host
 Write-Host "Done." -ForegroundColor Green
+Exit-Release 0
