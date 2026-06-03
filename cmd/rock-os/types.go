@@ -15,6 +15,7 @@ var startupTime = time.Now()
 
 const (
 	encryptedDir         = "ENCRYPTED"
+	adminKeyFile         = "admin.key"
 	launchPointsDir      = "launch-point-cards-locked"
 	sessionsFile         = "Sessions/sessions.json"
 	indexFile            = "wiki-index.json"

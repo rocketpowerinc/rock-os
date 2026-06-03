@@ -38,14 +38,20 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 	config := defaultDashboardSessionsConfig()
 	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(sessionsFile)))
 	if err != nil {
-		return config
+		return applyAdminSessionAvailability(siteRoot, config)
 	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
-		return defaultDashboardSessionsConfig()
+		return applyAdminSessionAvailability(siteRoot, defaultDashboardSessionsConfig())
 	}
 
-	return sanitizeDashboardSessionsConfig(config)
+	if adminSessionUnlocked(siteRoot) &&
+		strings.EqualFold(strings.TrimSpace(config.Active), "Admin") &&
+		!dashboardSessionExists(config.Sessions, "Admin") {
+		config.Sessions = append(config.Sessions, adminDashboardSession())
+	}
+
+	return applyAdminSessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
 }
 
 func defaultDashboardSessionsConfig() dashboardSessionsConfig {
@@ -54,7 +60,6 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 		Notes: []string{
 			"Rock-OS uses active as the current dashboard session.",
 			"Public shows dashboards but hides Profiles.",
-			"Admin shows every dashboard section, including Profiles.",
 			"Path sessions show only one dashboard folder, such as Profiles/Kids.",
 			"Add future sessions to the sessions list so they appear in the home-page dropdown.",
 		},
@@ -65,17 +70,53 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 				Description: "Shows normal dashboard sections, but hides Profiles.",
 			},
 			{
-				Name:        "Admin",
-				Mode:        "admin",
-				Description: "Shows every dashboard section, including Profiles.",
-			},
-			{
 				Name:        "Kids",
 				AllowedPath: "Profiles/Kids",
 				Description: "Shows only the Kids profile dashboard.",
 			},
 		},
 	})
+}
+
+func applyAdminSessionAvailability(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
+	sessions := []dashboardSession{}
+	for _, session := range config.Sessions {
+		if session.Admin || strings.EqualFold(session.Name, "Admin") || strings.EqualFold(session.Mode, "admin") {
+			continue
+		}
+		sessions = append(sessions, session)
+	}
+
+	if adminSessionUnlocked(siteRoot) {
+		insertAt := min(1, len(sessions))
+		sessions = append(sessions[:insertAt], append([]dashboardSession{adminDashboardSession()}, sessions[insertAt:]...)...)
+	} else if strings.EqualFold(config.Active, "Admin") {
+		config.Active = "Public"
+	}
+
+	config.Sessions = sessions
+	if !dashboardSessionExists(config.Sessions, config.Active) {
+		config.Active = "Public"
+	}
+	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
+		config.Active = config.Sessions[0].Name
+	}
+
+	return config
+}
+
+func adminDashboardSession() dashboardSession {
+	return dashboardSession{
+		Name:        "Admin",
+		Mode:        "admin",
+		Description: "Shows every dashboard section.",
+		Admin:       true,
+	}
+}
+
+func adminSessionUnlocked(siteRoot string) bool {
+	info, err := os.Stat(filepath.Join(filepath.Dir(siteRoot), adminKeyFile))
+	return err == nil && !info.IsDir()
 }
 
 func sanitizeDashboardSessionsConfig(config dashboardSessionsConfig) dashboardSessionsConfig {
@@ -239,7 +280,13 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 }
 
 func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfig) error {
+	if adminSessionUnlocked(siteRoot) &&
+		strings.EqualFold(strings.TrimSpace(config.Active), "Admin") &&
+		!dashboardSessionExists(config.Sessions, "Admin") {
+		config.Sessions = append(config.Sessions, adminDashboardSession())
+	}
 	config = sanitizeDashboardSessionsConfig(config)
+	config.Sessions = stripAdminSessions(config.Sessions)
 	content, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -251,4 +298,15 @@ func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfi
 		return err
 	}
 	return os.WriteFile(path, content, 0o644)
+}
+
+func stripAdminSessions(sessions []dashboardSession) []dashboardSession {
+	filtered := []dashboardSession{}
+	for _, session := range sessions {
+		if session.Admin || strings.EqualFold(session.Name, "Admin") || strings.EqualFold(session.Mode, "admin") {
+			continue
+		}
+		filtered = append(filtered, session)
+	}
+	return filtered
 }

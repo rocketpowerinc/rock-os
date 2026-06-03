@@ -277,10 +277,6 @@ dropdown beside the theme selector.
       "mode": "public"
     },
     {
-      "name": "Admin",
-      "mode": "admin"
-    },
-    {
       "name": "Kids",
       "path": "Profiles/Kids"
     }
@@ -289,10 +285,9 @@ dropdown beside the theme selector.
 ```
 
 `Public` is the default and shows dashboard sections while hiding `Profiles`.
-`Admin` shows every dashboard section, including `Profiles`. Any session with a
-`path` shows only that dashboard folder, so `Kids` with `Profiles/Kids` shows
-only `Website/ENCRYPTED/dashboards/Profiles/Kids`. For dashboards outside
-`Profiles`, use a path such as `Homelab/SelfHosting`.
+Any session with a `path` shows only that dashboard folder, so `Kids` with
+`Profiles/Kids` shows only `Website/ENCRYPTED/dashboards/Profiles/Kids`. For
+dashboards outside `Profiles`, use a path such as `Homelab/SelfHosting`.
 
 ## Dependencies
 
