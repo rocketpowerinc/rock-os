@@ -236,6 +236,7 @@ func noCache(next http.Handler) http.Handler {
 //   - serve directory listings, which would leak the names of private folders
 //     and documents even while the content bytes are encrypted, and
 //   - hand out any encrypted bytes (ciphertext included) while locked.
+//
 // Document content itself is always fetched through the gated /api/* handlers,
 // so this only ever allows individual asset files through, and only when
 // unlocked. Everything outside ENCRYPTED passes straight through.
@@ -256,16 +257,36 @@ func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 
 		// Map to a filesystem path (Clean on a rooted, forward-slash path strips
 		// any "../" traversal) and refuse directory requests so no listing is
-		// produced.
+		// produced. Dashboard item folders are the exception: they need to serve
+		// their own index.html entry page while unlocked.
 		relative := filepath.FromSlash(strings.TrimPrefix(cleaned, "/"))
 		fsPath := filepath.Join(siteRoot, relative)
 		if info, err := os.Stat(fsPath); err == nil && info.IsDir() {
+			if encryptedDashboardIndexDirectory(cleaned, fsPath) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			http.NotFound(w, r)
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
+	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
+	if len(parts) != 4 ||
+		parts[0] != encryptedDir ||
+		parts[1] != "dashboards" ||
+		parts[2] == "" ||
+		parts[3] == "" {
+		return false
+	}
+
+	info, err := os.Stat(filepath.Join(fsPath, "index.html"))
+	return err == nil && !info.IsDir()
 }
 
 func requireUnlockedContent(siteRoot string, next http.HandlerFunc) http.HandlerFunc {

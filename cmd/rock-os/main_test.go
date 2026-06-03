@@ -1516,6 +1516,30 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 	}
 }
 
+func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
+	siteRoot := t.TempDir()
+	dashboardDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "OS", "Windows")
+	if err := os.MkdirAll(dashboardDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dashboardDir, "index.html"), []byte("dashboard-index"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/OS/Windows/", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for dashboard index directory, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "dashboard-index") {
+		t.Fatalf("expected dashboard index body, got %q", rec.Body.String())
+	}
+}
+
 func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	siteRoot := t.TempDir()
 	wikiDir := filepath.Join(siteRoot, encryptedDir, "menu", "wiki")
