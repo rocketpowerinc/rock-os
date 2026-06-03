@@ -29,6 +29,10 @@ type dashboardSessionUpdateRequest struct {
 	Active string `json:"active"`
 }
 
+type activeDashboardSessionState struct {
+	Active string `json:"active"`
+}
+
 func activeDashboardSession(siteRoot string) dashboardSession {
 	config := readDashboardSessionsConfig(siteRoot)
 	session := resolveDashboardSession(config)
@@ -39,11 +43,13 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 	config := defaultDashboardSessionsConfig()
 	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(sessionsFile)))
 	if err != nil {
-		return applyLocalKeySessionAvailability(siteRoot, config)
+		config = applyLocalKeySessionAvailability(siteRoot, config)
+		return applyActiveDashboardSessionState(siteRoot, config)
 	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
-		return applyLocalKeySessionAvailability(siteRoot, defaultDashboardSessionsConfig())
+		config = applyLocalKeySessionAvailability(siteRoot, defaultDashboardSessionsConfig())
+		return applyActiveDashboardSessionState(siteRoot, config)
 	}
 
 	if localKeySessionUnlocked(siteRoot, adminKeyFile) &&
@@ -55,7 +61,8 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 		config.Sessions = append(config.Sessions, rocketDashboardSession())
 	}
 
-	return applyLocalKeySessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
+	config = applyLocalKeySessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
+	return applyActiveDashboardSessionState(siteRoot, config)
 }
 
 func defaultDashboardSessionsConfig() dashboardSessionsConfig {
@@ -142,6 +149,38 @@ func localKeySessionUnlocked(siteRoot string, keyFile string) bool {
 func localKeySessionRequested(config dashboardSessionsConfig, name string) bool {
 	return strings.EqualFold(strings.TrimSpace(config.Active), name) &&
 		!dashboardSessionExists(config.Sessions, name)
+}
+
+func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
+	active, ok := readActiveDashboardSessionState(siteRoot)
+	if ok && dashboardSessionExists(config.Sessions, active) {
+		config.Active = active
+	}
+	if !dashboardSessionExists(config.Sessions, config.Active) {
+		config.Active = "Public"
+	}
+	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
+		config.Active = config.Sessions[0].Name
+	}
+	return config
+}
+
+func readActiveDashboardSessionState(siteRoot string) (string, bool) {
+	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(activeSessionFile)))
+	if err != nil {
+		return "", false
+	}
+
+	var state activeDashboardSessionState
+	if err := json.Unmarshal(content, &state); err != nil {
+		return "", false
+	}
+
+	active := strings.TrimSpace(state.Active)
+	if active == "" {
+		return "", false
+	}
+	return active, true
 }
 
 func sanitizeDashboardSessionsConfig(config dashboardSessionsConfig) dashboardSessionsConfig {
@@ -331,7 +370,7 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 			}
 
 			config.Active = request.Active
-			if err := writeDashboardSessionsConfig(siteRoot, config); err != nil {
+			if err := writeActiveDashboardSessionState(siteRoot, config.Active); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -341,6 +380,23 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	}
+}
+
+func writeActiveDashboardSessionState(siteRoot string, active string) error {
+	state := activeDashboardSessionState{
+		Active: strings.TrimSpace(active),
+	}
+	content, err := json.MarshalIndent(state, "", "  ")
+	if err != nil {
+		return err
+	}
+	content = append(content, '\n')
+
+	path := filepath.Join(siteRoot, filepath.FromSlash(activeSessionFile))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, content, 0o644)
 }
 
 func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfig) error {

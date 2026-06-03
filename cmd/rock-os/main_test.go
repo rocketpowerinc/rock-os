@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"io"
@@ -1496,6 +1497,52 @@ func TestSessionsHandlerUpdatesAdminSessionFromLoopbackWithKey(t *testing.T) {
 	config := readDashboardSessionsConfig(siteRoot)
 	if config.Active != "Admin" {
 		t.Fatalf("expected active Admin session, got %#v", config)
+	}
+}
+
+func TestSessionsHandlerWritesLocalActiveSessionState(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
+		t.Fatal(err)
+	}
+	configPath := filepath.Join(siteRoot, filepath.FromSlash(sessionsFile))
+	before, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Kids"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	after, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Fatalf("expected tracked sessions config to remain unchanged")
+	}
+
+	statePath := filepath.Join(siteRoot, filepath.FromSlash(activeSessionFile))
+	content, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var state activeDashboardSessionState
+	if err := json.Unmarshal(content, &state); err != nil {
+		t.Fatal(err)
+	}
+	if state.Active != "Kids" {
+		t.Fatalf("expected local active session to be Kids, got %#v", state)
 	}
 }
 

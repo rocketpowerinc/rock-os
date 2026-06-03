@@ -261,9 +261,14 @@ markdown tree by using `?view=notes`, for example
 ### Dashboard Sessions
 
 `Website/Sessions/sessions.json` controls which dashboard sections are
-available on `dashboards.html`. The `active` value is the current session, and
-the `sessions` list controls which choices appear in the home-page session
-dropdown beside the theme selector.
+available on `dashboards.html`. Its `sessions` list controls which choices
+appear in the home-page session dropdown beside the theme selector, and its
+`active` value is only the default session for a fresh checkout.
+
+When a user changes sessions from the home page, Rock-OS saves that local choice
+to ignored state at `Website/Sessions/active-session.json`. That keeps everyday
+session switching from dirtying the Git working tree, which matters because
+`git-crypt` lock/unlock workflows expect a clean repo.
 
 ```json
 {
@@ -714,6 +719,26 @@ names.
 
 The exported `git-crypt` key is ignored by Git through `*.key` in `.gitignore`.
 Do not commit the key.
+
+### Ignored Local State
+
+Some Rock-OS files are intentionally local-only so normal use does not dirty the
+Git working tree. That matters for `git-crypt`: unlock and lock operations are
+much less fragile when generated files, downloaded binaries, caches, and user
+runtime choices stay out of Git.
+
+| Path or pattern | Why it is ignored |
+| --- | --- |
+| `*.key` | Keeps exported `git-crypt` keys private while allowing unlock helpers to restore the key to the repo root. |
+| `Website/Sessions/active-session.json` | Stores the current dashboard session chosen from the home-page dropdown without changing tracked session definitions. |
+| `Website/*-index.json` | Stores generated wiki, guide, cheatsheet, dotfile, bookmark, and dashboard indexes. |
+| `Website/.rock-os-version` | Records the downloaded release tag used by launchers to decide whether a binary is current. |
+| `Website/rock-os-*`, `Website/*.download`, `.release/` | Keeps downloaded release binaries, in-progress downloads, and local release output out of commits. |
+| `.gocache/`, `.gotmp/`, `Website/.gocache/`, `Website/.gotmp/` | Keeps Go build and temporary runtime files out of the working tree. |
+| `Website/media/*` | Keeps large local media files out of Git while preserving the folder README and `.gitkeep`. |
+
+If `git status` is dirty before locking or unlocking, check whether the changes
+are real source/content edits or just local state that should be ignored.
 
 ### Fresh Clone Unlock Steps
 

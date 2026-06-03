@@ -19,6 +19,7 @@ const (
 	rocketKeyFile        = "rocket.key"
 	launchPointsDir      = "launch-point-cards-locked"
 	sessionsFile         = "Sessions/sessions.json"
+	activeSessionFile    = "Sessions/active-session.json"
 	indexFile            = "wiki-index.json"
 	markdownDir          = encryptedDir + "/menu/wiki"
 	scriptsDir           = encryptedDir + "/menu/scripts"

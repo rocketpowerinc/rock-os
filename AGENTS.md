@@ -55,8 +55,10 @@ Never break these without an explicit, specific request from the user:
 - Keep locked-mode home-page launch cards under `Website/launch-point-cards-locked/`
   as public markdown files. Treat filename order as card order, and never put
   private content in that public folder.
-- Keep dashboard session selection in `Website/Sessions/sessions.json`. Treat it
-  as public routing config only; never put private content in that public folder.
+- Keep dashboard session definitions in `Website/Sessions/sessions.json` and
+  mutable active-session state in ignored `Website/Sessions/active-session.json`.
+  Treat both as public routing state only; never put private content in that
+  public folder.
 - UI changes stay professional and theme-aware. Support the existing presets:
   Steel, Rugged, Cyberpunk, and Blue-Grass.
 - Keep wiki frontend code organized as native browser modules under
