@@ -38,7 +38,7 @@ if not "%ROCK_OS_BUILD_EXIT%"=="0" (
 )
 
 echo Starting Rock-OS from local dev binary...
-"%CD%\%DEV_BINARY%" --site-root "%ROCK_OS_WEBSITE%" --host "%ROCK_OS_HOST%"
+start "" /wait "%CD%\%DEV_BINARY%" --site-root "%ROCK_OS_WEBSITE%" --host "%ROCK_OS_HOST%"
 set "ROCK_OS_EXIT=%ERRORLEVEL%"
 
 if not "%ROCK_OS_EXIT%"=="0" (

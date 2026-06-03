@@ -51,6 +51,7 @@ build/
 *.out
 coverage.out
 .gocache/
+.gotmp/
 
 # Node and frontend tool output, if added later
 node_modules/
@@ -74,6 +75,7 @@ Website/.rock-os-version
 Website/*.download
 Website/rock-os-*
 Website/.gocache/
+Website/.gotmp/
 Website/.codex-tmp/
 Website/static-web-server/
 Website/media/*
