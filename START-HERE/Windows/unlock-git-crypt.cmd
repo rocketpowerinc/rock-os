@@ -21,20 +21,22 @@ if errorlevel 1 (
 set "KEY_FILE="
 set "KEY_NAME="
 for %%F in (*.key) do (
-    if not defined KEY_FILE (
-        set "KEY_FILE=%%~fF"
-        set "KEY_NAME=%%~nxF"
-    ) else (
-        echo More than one .key file was found in the repo root:
-        echo "%ROCK_OS_ROOT%"
-        echo Keep only the git-crypt key in that folder, then run this script again.
-        call :wait
-        exit /b 1
+    if /I not "%%~nxF"=="admin.key" (
+        if not defined KEY_FILE (
+            set "KEY_FILE=%%~fF"
+            set "KEY_NAME=%%~nxF"
+        ) else (
+            echo More than one git-crypt .key file was found in the repo root:
+            echo "%ROCK_OS_ROOT%"
+            echo Keep only one git-crypt key in that folder, then run this script again.
+            call :wait
+            exit /b 1
+        )
     )
 )
 
 if not defined KEY_FILE (
-    echo No .key file was found in the repo root:
+    echo No git-crypt .key file was found in the repo root:
     echo "%ROCK_OS_ROOT%"
     echo Copy your exported git-crypt key to the repo root folder, then run this script again.
     call :wait

@@ -97,12 +97,12 @@ call :check_private
 
 set "KEY_FOUND="
 for %%K in (*.key) do (
-    set "KEY_FOUND=1"
+    if /I not "%%~nxK"=="admin.key" set "KEY_FOUND=1"
 )
 if defined KEY_FOUND (
-    call :warn ".key file present in repo root. Keep it private and never commit it."
+    call :warn "git-crypt .key file present in repo root. Keep it private and never commit it."
 ) else (
-    call :ok "No .key files found in repo root."
+    call :ok "No git-crypt .key files found in repo root."
 )
 
 call :section "Full git-crypt status"

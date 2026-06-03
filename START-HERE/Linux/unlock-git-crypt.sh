@@ -56,24 +56,40 @@ fi
 set -- ./*.key
 
 if [ "$1" = "./*.key" ]; then
-    echo "No .key file was found in the repo root:"
+    echo "No git-crypt .key file was found in the repo root:"
     echo "$REPO_ROOT"
     echo "Copy your exported git-crypt key to the repo root folder, then run this script again."
     exit 1
 fi
 
-if [ "$#" -gt 1 ]; then
-    echo "More than one .key file was found in the repo root:"
+git_crypt_keys=
+for key_file do
+    [ "$(basename "$key_file")" = "admin.key" ] && continue
+    git_crypt_keys="${git_crypt_keys}${git_crypt_keys:+
+}$key_file"
+done
+
+if [ -z "$git_crypt_keys" ]; then
+    echo "No git-crypt .key file was found in the repo root:"
     echo "$REPO_ROOT"
-    echo "Keep only the git-crypt key in that folder, then run this script again."
+    echo "Copy your exported git-crypt key to the repo root folder, then run this script again."
     exit 1
 fi
 
-echo "Unlocking repository with $1..."
-key_name="$(basename "$1")"
+key_count=$(printf '%s\n' "$git_crypt_keys" | wc -l | tr -d ' ')
+if [ "$key_count" -gt 1 ]; then
+    echo "More than one git-crypt .key file was found in the repo root:"
+    echo "$REPO_ROOT"
+    echo "Keep only one git-crypt key in that folder, then run this script again."
+    exit 1
+fi
+
+key_file=$git_crypt_keys
+echo "Unlocking repository with $key_file..."
+key_name="$(basename "$key_file")"
 temp_key="${TMPDIR:-/tmp}/rock-os-git-crypt-$$.key"
-cp "$1" "$temp_key"
-rm "$1"
+cp "$key_file" "$temp_key"
+rm "$key_file"
 set +e
 git-crypt unlock "$temp_key"
 unlock_result=$?
