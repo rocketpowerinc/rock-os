@@ -250,7 +250,13 @@ func gitCryptKeyPresent(siteRoot string) bool {
 		return false
 	}
 
-	return len(matches) > 0
+	for _, match := range matches {
+		if !strings.EqualFold(filepath.Base(match), adminKeyFile) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func lastCommitTime(siteRoot string) int64 {

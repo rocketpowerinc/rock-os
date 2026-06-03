@@ -167,7 +167,7 @@ still encrypted.
 
 How it works:
 
-- Looks for exactly one `.key` file in the repo root.
+- Looks for exactly one git-crypt `.key` file in the repo root.
 - Copies the key to a temporary system folder.
 - Removes the root key copy before unlocking so the working tree stays clean
   enough for `git-crypt unlock`.
