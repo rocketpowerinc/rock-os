@@ -482,8 +482,9 @@ if (sessionSelect) {
             true;
 
         try {
-            await updateActiveSession(nextSession);
-            window.location.reload();
+            renderSessionSelect(
+                await updateActiveSession(nextSession)
+            );
         }
         catch (err) {
             console.warn(err);
