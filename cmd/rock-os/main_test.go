@@ -188,6 +188,42 @@ func TestCollectLaunchPointsAllowsEmptyLockedMarkdownCards(t *testing.T) {
 	}
 }
 
+func TestLaunchPointMarkdownPageHandlerRendersMarkdown(t *testing.T) {
+	siteRoot := t.TempDir()
+	root := filepath.Join(siteRoot, launchPointsDir)
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "8.md"), []byte("# Hello\n\nA **styled** card."), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/launch-point-cards-locked/8.md", nil)
+	rec := httptest.NewRecorder()
+	launchPointMarkdownPageHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "<h1 id=\"hello\">Hello</h1>") ||
+		!strings.Contains(rec.Body.String(), "<strong>styled</strong>") {
+		t.Fatalf("expected rendered markdown HTML, got %q", rec.Body.String())
+	}
+	if rec.Header().Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Fatalf("expected html content type, got %q", rec.Header().Get("Content-Type"))
+	}
+}
+
+func TestLaunchPointMarkdownPageHandlerRejectsNestedPath(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/launch-point-cards-locked/../README.md", nil)
+	rec := httptest.NewRecorder()
+	launchPointMarkdownPageHandler(t.TempDir()).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", rec.Code)
+	}
+}
+
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
 	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
 	if err == nil {
