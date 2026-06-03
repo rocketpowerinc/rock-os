@@ -126,7 +126,7 @@ Never break these without an explicit, specific request from the user:
   explicitly asks.
 - Remember that GitHub ZIP downloads are not real clones and cannot unlock
   `git-crypt` content.
-- Never document local admin session markers in README.md, public website
+- Never document local session marker files in README.md, public website
   content, or user-facing docs. Keep them ignored and local-only.
 
 ## Dashboards (`Website/ENCRYPTED/dashboards/`)

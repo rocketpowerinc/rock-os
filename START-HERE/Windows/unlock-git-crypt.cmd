@@ -21,7 +21,7 @@ if errorlevel 1 (
 set "KEY_FILE="
 set "KEY_NAME="
 for %%F in (*.key) do (
-    if /I not "%%~nxF"=="admin.key" (
+    if /I not "%%~nxF"=="admin.key" if /I not "%%~nxF"=="rocket.key" (
         if not defined KEY_FILE (
             set "KEY_FILE=%%~fF"
             set "KEY_NAME=%%~nxF"

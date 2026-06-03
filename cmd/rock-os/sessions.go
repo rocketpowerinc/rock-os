@@ -16,6 +16,7 @@ type dashboardSession struct {
 	Description string `json:"description,omitempty"`
 	Admin       bool   `json:"-"`
 	Public      bool   `json:"-"`
+	Rocket      bool   `json:"-"`
 }
 
 type dashboardSessionsConfig struct {
@@ -38,20 +39,23 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 	config := defaultDashboardSessionsConfig()
 	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(sessionsFile)))
 	if err != nil {
-		return applyAdminSessionAvailability(siteRoot, config)
+		return applyLocalKeySessionAvailability(siteRoot, config)
 	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
-		return applyAdminSessionAvailability(siteRoot, defaultDashboardSessionsConfig())
+		return applyLocalKeySessionAvailability(siteRoot, defaultDashboardSessionsConfig())
 	}
 
-	if adminSessionUnlocked(siteRoot) &&
-		strings.EqualFold(strings.TrimSpace(config.Active), "Admin") &&
-		!dashboardSessionExists(config.Sessions, "Admin") {
+	if localKeySessionUnlocked(siteRoot, adminKeyFile) &&
+		localKeySessionRequested(config, "Admin") {
 		config.Sessions = append(config.Sessions, adminDashboardSession())
 	}
+	if localKeySessionUnlocked(siteRoot, rocketKeyFile) &&
+		localKeySessionRequested(config, "Rocket") {
+		config.Sessions = append(config.Sessions, rocketDashboardSession())
+	}
 
-	return applyAdminSessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
+	return applyLocalKeySessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
 }
 
 func defaultDashboardSessionsConfig() dashboardSessionsConfig {
@@ -78,19 +82,26 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 	})
 }
 
-func applyAdminSessionAvailability(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
+func applyLocalKeySessionAvailability(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
 	sessions := []dashboardSession{}
 	for _, session := range config.Sessions {
-		if session.Admin || strings.EqualFold(session.Name, "Admin") || strings.EqualFold(session.Mode, "admin") {
+		if isLocalKeySession(session) {
 			continue
 		}
 		sessions = append(sessions, session)
 	}
 
-	if adminSessionUnlocked(siteRoot) {
+	if localKeySessionUnlocked(siteRoot, adminKeyFile) {
 		insertAt := min(1, len(sessions))
 		sessions = append(sessions[:insertAt], append([]dashboardSession{adminDashboardSession()}, sessions[insertAt:]...)...)
 	} else if strings.EqualFold(config.Active, "Admin") {
+		config.Active = "Public"
+	}
+
+	if localKeySessionUnlocked(siteRoot, rocketKeyFile) {
+		insertAt := min(2, len(sessions))
+		sessions = append(sessions[:insertAt], append([]dashboardSession{rocketDashboardSession()}, sessions[insertAt:]...)...)
+	} else if strings.EqualFold(config.Active, "Rocket") {
 		config.Active = "Public"
 	}
 
@@ -109,14 +120,28 @@ func adminDashboardSession() dashboardSession {
 	return dashboardSession{
 		Name:        "Admin",
 		Mode:        "admin",
-		Description: "Shows every dashboard section.",
+		Description: "Shows dashboard sections except the Rocket profile.",
 		Admin:       true,
 	}
 }
 
-func adminSessionUnlocked(siteRoot string) bool {
-	info, err := os.Stat(filepath.Join(filepath.Dir(siteRoot), adminKeyFile))
+func rocketDashboardSession() dashboardSession {
+	return dashboardSession{
+		Name:        "Rocket",
+		Mode:        "rocket",
+		Description: "Shows every dashboard section.",
+		Rocket:      true,
+	}
+}
+
+func localKeySessionUnlocked(siteRoot string, keyFile string) bool {
+	info, err := os.Stat(filepath.Join(filepath.Dir(siteRoot), keyFile))
 	return err == nil && !info.IsDir()
+}
+
+func localKeySessionRequested(config dashboardSessionsConfig, name string) bool {
+	return strings.EqualFold(strings.TrimSpace(config.Active), name) &&
+		!dashboardSessionExists(config.Sessions, name)
 }
 
 func sanitizeDashboardSessionsConfig(config dashboardSessionsConfig) dashboardSessionsConfig {
@@ -173,6 +198,7 @@ func normalizeDashboardSession(session dashboardSession) dashboardSession {
 		session.Mode = "public"
 		session.Public = true
 		session.Admin = false
+		session.Rocket = false
 		session.AllowedPath = ""
 		return session
 	}
@@ -180,12 +206,22 @@ func normalizeDashboardSession(session dashboardSession) dashboardSession {
 		session.Mode = "admin"
 		session.Admin = true
 		session.Public = false
+		session.Rocket = false
+		session.AllowedPath = ""
+		return session
+	}
+	if strings.EqualFold(session.Name, "Rocket") || session.Mode == "rocket" {
+		session.Mode = "rocket"
+		session.Rocket = true
+		session.Admin = false
+		session.Public = false
 		session.AllowedPath = ""
 		return session
 	}
 
 	session.Public = false
 	session.Admin = false
+	session.Rocket = false
 	if session.AllowedPath == "" {
 		session.AllowedPath = "Profiles/" + session.Name
 	}
@@ -215,12 +251,24 @@ func normalizeDashboardSessionPath(value string) string {
 	return strings.Join(parts, "/")
 }
 
+func isLocalKeySession(session dashboardSession) bool {
+	return session.Admin || session.Rocket ||
+		strings.EqualFold(session.Name, "Admin") ||
+		strings.EqualFold(session.Name, "Rocket") ||
+		strings.EqualFold(session.Mode, "admin") ||
+		strings.EqualFold(session.Mode, "rocket")
+}
+
 func filterDashboardFilesForActiveSession(siteRoot string, files []markdownIndexEntry) []markdownIndexEntry {
 	return filterDashboardFilesForSession(files, activeDashboardSession(siteRoot))
 }
 
 func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboardSession) []markdownIndexEntry {
 	if session.Admin {
+		return filterDashboardFilesOutsidePath(files, "Profiles/Rocket")
+	}
+
+	if session.Rocket {
 		return files
 	}
 
@@ -240,6 +288,22 @@ func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboar
 	}
 
 	return filterDashboardFiles(files, session.AllowedPath)
+}
+
+func filterDashboardFilesOutsidePath(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
+	dashboard = normalizeDashboardSessionPath(dashboard)
+	if dashboard == "" {
+		return files
+	}
+
+	prefix := dashboardsDir + "/" + dashboard + "/"
+	filtered := []markdownIndexEntry{}
+	for _, file := range files {
+		if !strings.HasPrefix(file.Path, prefix) {
+			filtered = append(filtered, file)
+		}
+	}
+	return filtered
 }
 
 func sessionsHandler(siteRoot string) http.HandlerFunc {
@@ -280,13 +344,16 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 }
 
 func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfig) error {
-	if adminSessionUnlocked(siteRoot) &&
-		strings.EqualFold(strings.TrimSpace(config.Active), "Admin") &&
-		!dashboardSessionExists(config.Sessions, "Admin") {
+	if localKeySessionUnlocked(siteRoot, adminKeyFile) &&
+		localKeySessionRequested(config, "Admin") {
 		config.Sessions = append(config.Sessions, adminDashboardSession())
 	}
+	if localKeySessionUnlocked(siteRoot, rocketKeyFile) &&
+		localKeySessionRequested(config, "Rocket") {
+		config.Sessions = append(config.Sessions, rocketDashboardSession())
+	}
 	config = sanitizeDashboardSessionsConfig(config)
-	config.Sessions = stripAdminSessions(config.Sessions)
+	config.Sessions = stripLocalKeySessions(config.Sessions)
 	content, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -300,10 +367,10 @@ func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfi
 	return os.WriteFile(path, content, 0o644)
 }
 
-func stripAdminSessions(sessions []dashboardSession) []dashboardSession {
+func stripLocalKeySessions(sessions []dashboardSession) []dashboardSession {
 	filtered := []dashboardSession{}
 	for _, session := range sessions {
-		if session.Admin || strings.EqualFold(session.Name, "Admin") || strings.EqualFold(session.Mode, "admin") {
+		if isLocalKeySession(session) {
 			continue
 		}
 		filtered = append(filtered, session)

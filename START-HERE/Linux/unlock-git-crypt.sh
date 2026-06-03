@@ -64,7 +64,9 @@ fi
 
 git_crypt_keys=
 for key_file do
-    [ "$(basename "$key_file")" = "admin.key" ] && continue
+    case "$(basename "$key_file")" in
+        admin.key|rocket.key) continue ;;
+    esac
     git_crypt_keys="${git_crypt_keys}${git_crypt_keys:+
 }$key_file"
 done

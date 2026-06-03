@@ -1282,6 +1282,9 @@ func TestDashboardsIndexHandlerUsesAdminSession(t *testing.T) {
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
 		t.Fatal(err)
 	}
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Rocket", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
 	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Overview.md"); err != nil {
 		t.Fatal(err)
 	}
@@ -1306,7 +1309,48 @@ func TestDashboardsIndexHandlerUsesAdminSession(t *testing.T) {
 	if len(index) != 2 ||
 		!paths["ENCRYPTED/dashboards/Profiles/Kids/Overview.md"] ||
 		!paths["ENCRYPTED/dashboards/OS/Windows/Overview.md"] {
-		t.Fatalf("expected Admin session to include every dashboard file, got %#v", index)
+		t.Fatalf("expected Admin session to hide only Rocket profile, got %#v", index)
+	}
+	if paths["ENCRYPTED/dashboards/Profiles/Rocket/Overview.md"] {
+		t.Fatalf("expected Admin session to hide Rocket profile, got %#v", index)
+	}
+}
+
+func TestDashboardsIndexHandlerUsesRocketSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	createRocketKey(t, siteRoot)
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Rocket", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeSessionFile(siteRoot, "Rocket"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	paths := map[string]bool{}
+	for _, entry := range index {
+		paths[entry.Path] = true
+	}
+
+	if len(index) != 3 ||
+		!paths["ENCRYPTED/dashboards/Profiles/Kids/Overview.md"] ||
+		!paths["ENCRYPTED/dashboards/Profiles/Rocket/Overview.md"] ||
+		!paths["ENCRYPTED/dashboards/OS/Windows/Overview.md"] {
+		t.Fatalf("expected Rocket session to include every dashboard file, got %#v", index)
 	}
 }
 
@@ -1383,6 +1427,9 @@ func TestSessionsHandlerReturnsConfig(t *testing.T) {
 	if dashboardSessionExists(config.Sessions, "Admin") {
 		t.Fatalf("did not expect Admin without admin key, got %#v", config.Sessions)
 	}
+	if dashboardSessionExists(config.Sessions, "Rocket") {
+		t.Fatalf("did not expect Rocket without rocket key, got %#v", config.Sessions)
+	}
 }
 
 func TestSessionsHandlerReturnsAdminWithKey(t *testing.T) {
@@ -1403,6 +1450,27 @@ func TestSessionsHandlerReturnsAdminWithKey(t *testing.T) {
 
 	if !dashboardSessionExists(config.Sessions, "Admin") {
 		t.Fatalf("expected Admin with admin key, got %#v", config.Sessions)
+	}
+}
+
+func TestSessionsHandlerReturnsRocketWithKey(t *testing.T) {
+	siteRoot := t.TempDir()
+	createRocketKey(t, siteRoot)
+	if err := writeSessionFile(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sessions", nil)
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	var config dashboardSessionsConfig
+	if err := json.Unmarshal(rec.Body.Bytes(), &config); err != nil {
+		t.Fatal(err)
+	}
+
+	if !dashboardSessionExists(config.Sessions, "Rocket") {
+		t.Fatalf("expected Rocket with rocket key, got %#v", config.Sessions)
 	}
 }
 
@@ -1431,6 +1499,31 @@ func TestSessionsHandlerUpdatesAdminSessionFromLoopbackWithKey(t *testing.T) {
 	}
 }
 
+func TestSessionsHandlerUpdatesRocketSessionFromLoopbackWithKey(t *testing.T) {
+	siteRoot := t.TempDir()
+	createRocketKey(t, siteRoot)
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Rocket"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	config := readDashboardSessionsConfig(siteRoot)
+	if config.Active != "Rocket" {
+		t.Fatalf("expected active Rocket session, got %#v", config)
+	}
+}
+
 func TestSessionsHandlerRejectsAdminSessionWithoutKey(t *testing.T) {
 	siteRoot := t.TempDir()
 	if err := writeSessionFile(siteRoot, "Public"); err != nil {
@@ -1438,6 +1531,25 @@ func TestSessionsHandlerRejectsAdminSessionWithoutKey(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Admin"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func TestSessionsHandlerRejectsRocketSessionWithoutKey(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Rocket"}`))
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
@@ -1479,6 +1591,14 @@ func createAdminKey(t *testing.T, siteRoot string) {
 	t.Helper()
 
 	if err := os.WriteFile(filepath.Join(filepath.Dir(siteRoot), adminKeyFile), []byte("test admin marker"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func createRocketKey(t *testing.T, siteRoot string) {
+	t.Helper()
+
+	if err := os.WriteFile(filepath.Join(filepath.Dir(siteRoot), rocketKeyFile), []byte("test rocket marker"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

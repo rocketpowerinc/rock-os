@@ -146,7 +146,7 @@ else
     ok "Encrypted Content Unlocked."
 fi
 
-key_count="$(find . -maxdepth 1 -type f -name '*.key' ! -name 'admin.key' | wc -l | tr -d ' ')"
+key_count="$(find . -maxdepth 1 -type f -name '*.key' ! -name 'admin.key' ! -name 'rocket.key' | wc -l | tr -d ' ')"
 if [ "$key_count" -gt 0 ]; then
     warn "git-crypt .key file present in repo root. Keep it private and never commit it."
 else

@@ -23,6 +23,7 @@ $RECYCLE.BIN/
 *.local
 *.key
 admin.key
+rocket.key
 
 # Logs and runtime output
 *.log

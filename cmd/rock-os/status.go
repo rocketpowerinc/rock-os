@@ -251,7 +251,9 @@ func gitCryptKeyPresent(siteRoot string) bool {
 	}
 
 	for _, match := range matches {
-		if !strings.EqualFold(filepath.Base(match), adminKeyFile) {
+		name := filepath.Base(match)
+		if !strings.EqualFold(name, adminKeyFile) &&
+			!strings.EqualFold(name, rocketKeyFile) {
 			return true
 		}
 	}
