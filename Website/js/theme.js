@@ -78,15 +78,29 @@ async function updateMenuLockState() {
         menu?.querySelector('.nav-menu-trigger');
     const list =
         menu?.querySelector('.nav-menu-list');
+    const homeLinks =
+        document.querySelectorAll('.nav-links a[href$="index.html"]');
     const dashboardLinks =
         document.querySelectorAll('.nav-links a[href$="dashboards.html"]');
+    const sessionSelect =
+        document.getElementById('sessionSelect');
+    const isHomePage =
+        window.location.pathname === '/' ||
+        window.location.pathname.endsWith('/index.html');
 
-    if ((!menu || !trigger || !list) && dashboardLinks.length === 0) {
+    if (
+        (!menu || !trigger || !list) &&
+        homeLinks.length === 0 &&
+        dashboardLinks.length === 0 &&
+        !sessionSelect
+    ) {
         return;
     }
 
     function setNavigationLocked(locked) {
         if (menu && trigger && list) {
+            menu.hidden =
+                locked;
             menu.classList.toggle('is-locked', locked);
             menu.classList.toggle('is-unlocked', !locked);
             trigger.disabled = locked;
@@ -97,7 +111,14 @@ async function updateMenuLockState() {
                 locked;
         }
 
+        homeLinks.forEach(link => {
+            link.hidden =
+                locked || isHomePage;
+        });
+
         dashboardLinks.forEach(link => {
+            link.hidden =
+                locked;
             link.classList.toggle('is-locked', locked);
             link.classList.toggle('is-unlocked', !locked);
             link.setAttribute('aria-disabled', String(locked));
@@ -106,6 +127,11 @@ async function updateMenuLockState() {
             link.title =
                 locked ? 'Unlock Rock-OS content to open dashboards.' : '';
         });
+
+        if (sessionSelect) {
+            sessionSelect.hidden =
+                locked;
+        }
     }
 
     // Fail closed until the server explicitly confirms encrypted content is unlocked.
