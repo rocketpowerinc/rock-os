@@ -161,6 +161,33 @@ func TestCollectLaunchPointsParsesOrderedLockedMarkdownCards(t *testing.T) {
 	}
 }
 
+func TestCollectLaunchPointsAllowsEmptyLockedMarkdownCards(t *testing.T) {
+	siteRoot := t.TempDir()
+	root := filepath.Join(siteRoot, launchPointsDir)
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(root, "8.md"), []byte(""), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	points, err := collectLaunchPoints(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(points) != 1 {
+		t.Fatalf("expected 1 launch point, got %d", len(points))
+	}
+	if points[0].Title != "8" || points[0].Href != "/launch-point-cards-locked/8.md" || points[0].Path != "/launch-point-cards-locked/8.md" {
+		t.Fatalf("unexpected fallback launch point: %#v", points[0])
+	}
+	if points[0].Description == "" {
+		t.Fatalf("expected fallback description, got %#v", points[0])
+	}
+}
+
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
 	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
 	if err == nil {

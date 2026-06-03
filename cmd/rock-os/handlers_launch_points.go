@@ -56,7 +56,7 @@ func collectLaunchPoints(siteRoot string) ([]launchPoint, error) {
 
 		point, err := parseLaunchPoint(string(content))
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", entry.Name(), err)
+			point = fallbackLaunchPoint(entry.Name())
 		}
 		point.Title = strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
 		point.Path = "/" + filepath.ToSlash(filepath.Join(launchPointsDir, entry.Name()))
@@ -106,4 +106,13 @@ func parseLaunchPoint(markdown string) (launchPoint, error) {
 	}
 
 	return point, nil
+}
+
+func fallbackLaunchPoint(fileName string) launchPoint {
+	title := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	return launchPoint{
+		Title:       title,
+		Description: "Open this locked-mode launch card.",
+		Href:        "/" + filepath.ToSlash(filepath.Join(launchPointsDir, fileName)),
+	}
 }
