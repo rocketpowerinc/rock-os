@@ -78,24 +78,38 @@ async function updateMenuLockState() {
         menu?.querySelector('.nav-menu-trigger');
     const list =
         menu?.querySelector('.nav-menu-list');
+    const dashboardLinks =
+        document.querySelectorAll('.nav-links a[href$="dashboards.html"]');
 
-    if (!menu || !trigger || !list) {
+    if ((!menu || !trigger || !list) && dashboardLinks.length === 0) {
         return;
     }
 
-    function setMenuLocked(locked) {
-        menu.classList.toggle('is-locked', locked);
-        menu.classList.toggle('is-unlocked', !locked);
-        trigger.disabled = locked;
-        trigger.setAttribute('aria-disabled', String(locked));
-        trigger.title =
-            locked ? 'Unlock Rock-OS content to open the menu.' : '';
-        list.inert =
-            locked;
+    function setNavigationLocked(locked) {
+        if (menu && trigger && list) {
+            menu.classList.toggle('is-locked', locked);
+            menu.classList.toggle('is-unlocked', !locked);
+            trigger.disabled = locked;
+            trigger.setAttribute('aria-disabled', String(locked));
+            trigger.title =
+                locked ? 'Unlock Rock-OS content to open the menu.' : '';
+            list.inert =
+                locked;
+        }
+
+        dashboardLinks.forEach(link => {
+            link.classList.toggle('is-locked', locked);
+            link.classList.toggle('is-unlocked', !locked);
+            link.setAttribute('aria-disabled', String(locked));
+            link.tabIndex =
+                locked ? -1 : 0;
+            link.title =
+                locked ? 'Unlock Rock-OS content to open dashboards.' : '';
+        });
     }
 
     // Fail closed until the server explicitly confirms encrypted content is unlocked.
-    setMenuLocked(true);
+    setNavigationLocked(true);
 
     try {
         const response =
@@ -105,11 +119,11 @@ async function updateMenuLockState() {
         const locked =
             status?.gitCrypt !== 'unlocked';
 
-        setMenuLocked(locked);
+        setNavigationLocked(locked);
     }
     catch (err) {
         console.warn('Could not load encrypted content status:', err);
-        setMenuLocked(true);
+        setNavigationLocked(true);
     }
 }
 

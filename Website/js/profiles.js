@@ -1,6 +1,5 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
-import { renderLockedLanding } from './locked-landing.js';
 
 const appMode = {
     rootDir: 'ENCRYPTED/dashboards',
@@ -86,38 +85,6 @@ async function profilesAreLocked() {
     }
     catch {
         return true;
-    }
-}
-
-function renderLockedProfiles() {
-
-    const sidebar =
-        document.getElementById('sidebar');
-    const resizer =
-        document.getElementById('sidebarResizer');
-    const expandButton =
-        document.getElementById('expandSidebarBtn');
-    const toc =
-        document.getElementById('wikiToc');
-    const content =
-        document.getElementById('content');
-
-    if (sidebar) {
-        sidebar.style.display = 'none';
-    }
-    if (resizer) {
-        resizer.style.display = 'none';
-    }
-    if (expandButton) {
-        expandButton.style.display = 'none';
-    }
-    if (toc) {
-        toc.innerHTML = '';
-    }
-    if (content) {
-        // Show this page's matching launch-point-cards-locked card (those files are
-        // never encrypted) instead of a generic locked message.
-        renderLockedLanding(content, appMode.mainPage);
     }
 }
 
@@ -1039,7 +1006,7 @@ async function loadWidgetsConfig(profile) {
 
 async function startProfiles() {
     if (await profilesAreLocked()) {
-        renderLockedProfiles();
+        window.location.replace('/index.html');
         return;
     }
 
