@@ -1222,6 +1222,7 @@ func dashboardsIndexHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
+		files = filterDashboardFilesForActiveSession(siteRoot, files)
 		files = filterDashboardFiles(files, r.URL.Query().Get("profile"))
 
 		writeJSON(w, files)
@@ -1345,6 +1346,7 @@ func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSe
 	if err != nil {
 		return nil, err
 	}
+	files = filterDashboardFilesForActiveSession(siteRoot, files)
 	files = filterDashboardFiles(files, dashboard)
 	return searchMarkdownIndex(siteRoot, query, files, defaultApp.Caches.Search.Dashboards)
 }

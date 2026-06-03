@@ -422,6 +422,25 @@ async function loadProfilesLanding() {
     }
 }
 
+async function dashboardSessionAllows(profile) {
+    try {
+        const response =
+            await fetch(`/${appMode.indexFile}?profile=${encodeURIComponent(profile)}&nocache=` + Date.now());
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const files =
+            await response.json();
+
+        return Array.isArray(files) && files.length > 0;
+    }
+    catch {
+        return false;
+    }
+}
+
 const REDDIT_PLACEHOLDER = '/assets/widget-icons/reddit.png';
 
 const YOUTUBE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA1MCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjUwIj48cmVjdCB3aWR0aD0iODAiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMWExYTI0IiBzdHJva2U9IiMzZTRhNTYiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMzUsMTggNTAsMjUgMzUsMzIiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=';
@@ -1032,6 +1051,11 @@ async function startProfiles() {
 
     const displayName =
         displayNameFromProfile(profile);
+
+    if (!await dashboardSessionAllows(profile)) {
+        renderDashboardError(`${displayName} is not available in the active Rock-OS dashboard session.`);
+        return;
+    }
 
     document.title = `${appMode.documentTitlePrefix} ${displayName}`;
 

@@ -1192,6 +1192,9 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	if err := os.WriteFile(docPath, []byte("# Kids"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := writeSessionFile(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json?profile=Profiles/Kids", nil)
 	rec := httptest.NewRecorder()
@@ -1212,6 +1215,220 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
 		t.Errorf("expected Profiles/Kids dashboard file, got %q", index[0].Path)
 	}
+}
+
+func TestDashboardsIndexHandlerUsesPublicSessionByDefault(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected only non-profile dashboard file, got %#v", index)
+	}
+	if index[0].Path != "ENCRYPTED/dashboards/OS/Windows/Overview.md" {
+		t.Fatalf("unexpected dashboard file: %#v", index[0])
+	}
+}
+
+func TestDashboardsIndexHandlerUsesNamedProfileSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Rocket", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeSessionFile(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected only Kids profile file, got %#v", index)
+	}
+	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
+		t.Fatalf("unexpected dashboard file: %#v", index[0])
+	}
+}
+
+func TestDashboardsIndexHandlerUsesAdminSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeSessionFile(siteRoot, "Admin"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	paths := map[string]bool{}
+	for _, entry := range index {
+		paths[entry.Path] = true
+	}
+
+	if len(index) != 2 ||
+		!paths["ENCRYPTED/dashboards/Profiles/Kids/Overview.md"] ||
+		!paths["ENCRYPTED/dashboards/OS/Windows/Overview.md"] {
+		t.Fatalf("expected Admin session to include every dashboard file, got %#v", index)
+	}
+}
+
+func TestDashboardsIndexHandlerUsesMappedSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeDashboardTestDoc(siteRoot, "Homelab", "SelfHosting", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	config := defaultDashboardSessionsConfig()
+	config.Active = "SelfHosting"
+	config.Sessions = append(config.Sessions, dashboardSession{
+		Name:        "SelfHosting",
+		AllowedPath: "Homelab/SelfHosting",
+		Description: "Shows only SelfHosting.",
+	})
+	if err := writeDashboardSessionsConfig(siteRoot, config); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(index) != 1 {
+		t.Fatalf("expected only mapped dashboard file, got %#v", index)
+	}
+	if index[0].Path != "ENCRYPTED/dashboards/Homelab/SelfHosting/Overview.md" {
+		t.Fatalf("unexpected dashboard file: %#v", index[0])
+	}
+}
+
+func writeDashboardTestDoc(siteRoot string, category string, dashboard string, fileName string) error {
+	root := filepath.Join(siteRoot, dashboardsDir, category, dashboard)
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(root, fileName), []byte("# Test"), 0o644)
+}
+
+func TestSessionsHandlerReturnsConfig(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sessions", nil)
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var config dashboardSessionsConfig
+	if err := json.Unmarshal(rec.Body.Bytes(), &config); err != nil {
+		t.Fatal(err)
+	}
+
+	if config.Active != "Kids" {
+		t.Fatalf("expected active Kids session, got %#v", config)
+	}
+	if !dashboardSessionExists(config.Sessions, "Public") ||
+		!dashboardSessionExists(config.Sessions, "Admin") ||
+		!dashboardSessionExists(config.Sessions, "Kids") {
+		t.Fatalf("expected starter sessions, got %#v", config.Sessions)
+	}
+}
+
+func TestSessionsHandlerUpdatesActiveSessionFromLoopback(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Admin"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	config := readDashboardSessionsConfig(siteRoot)
+	if config.Active != "Admin" {
+		t.Fatalf("expected active Admin session, got %#v", config)
+	}
+}
+
+func TestSessionsHandlerRejectsUnknownSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Missing"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func writeSessionFile(siteRoot string, active string) error {
+	config := defaultDashboardSessionsConfig()
+	config.Active = active
+	return writeDashboardSessionsConfig(siteRoot, config)
 }
 
 func TestFeedHandlers(t *testing.T) {

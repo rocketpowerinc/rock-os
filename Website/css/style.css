@@ -3570,6 +3570,10 @@ h3,
 	outline:1px solid var(--accent);
 }
 
+.session-select {
+	min-width:118px;
+}
+
 .wiki-search input,
 .copy-code-btn {
 	background:var(--page-bg);

@@ -1,0 +1,27 @@
+{
+  "active": "Public",
+  "notes": [
+    "Rock-OS uses active as the current dashboard session.",
+    "Public shows dashboards but hides Profiles.",
+    "Admin shows every dashboard section, including Profiles.",
+    "Path sessions show only one dashboard folder, such as Profiles/Kids.",
+    "Add future sessions to the sessions list so they appear in the home-page dropdown."
+  ],
+  "sessions": [
+    {
+      "name": "Public",
+      "mode": "public",
+      "description": "Shows normal dashboard sections, but hides Profiles."
+    },
+    {
+      "name": "Admin",
+      "mode": "admin",
+      "description": "Shows every dashboard section, including Profiles."
+    },
+    {
+      "name": "Kids",
+      "path": "Profiles/Kids",
+      "description": "Shows only the Kids profile dashboard."
+    }
+  ]
+}

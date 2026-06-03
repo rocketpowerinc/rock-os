@@ -74,6 +74,7 @@ func main() {
 	mux.HandleFunc("/api/scripts/run", requireUnlockedContent(siteRoot, scriptRunHandler(siteRoot, *allowLanScriptRuns)))
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/server/refresh", serverRefreshHandler(siteRoot))
+	mux.HandleFunc("/api/sessions", sessionsHandler(siteRoot))
 	mux.HandleFunc("/api/launch-points", launchPointsHandler(siteRoot))
 	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/doc", requireUnlockedContent(siteRoot, wikiDocHandler(siteRoot)))

@@ -258,6 +258,42 @@ dashboard stays available. Dashboard/profile cards can link directly to their
 markdown tree by using `?view=notes`, for example
 `/ENCRYPTED/dashboards/OS/Windows/?view=notes`.
 
+### Dashboard Sessions
+
+`Website/Sessions/sessions.json` controls which dashboard sections are
+available on `dashboards.html`. The `active` value is the current session, and
+the `sessions` list controls which choices appear in the home-page session
+dropdown beside the theme selector.
+
+```json
+{
+  "active": "Public",
+  "notes": [
+    "Add future sessions to the sessions list so they appear in the home-page dropdown."
+  ],
+  "sessions": [
+    {
+      "name": "Public",
+      "mode": "public"
+    },
+    {
+      "name": "Admin",
+      "mode": "admin"
+    },
+    {
+      "name": "Kids",
+      "path": "Profiles/Kids"
+    }
+  ]
+}
+```
+
+`Public` is the default and shows dashboard sections while hiding `Profiles`.
+`Admin` shows every dashboard section, including `Profiles`. Any session with a
+`path` shows only that dashboard folder, so `Kids` with `Profiles/Kids` shows
+only `Website/ENCRYPTED/dashboards/Profiles/Kids`. For dashboards outside
+`Profiles`, use a path such as `Homelab/SelfHosting`.
+
 ## Dependencies
 
 You can run Rock OS from a release binary without Go installed. Go is only
