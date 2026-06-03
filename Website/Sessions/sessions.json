@@ -1,5 +1,5 @@
 {
-  "active": "Kids",
+  "active": "Public",
   "notes": [
     "Rock-OS uses active as the current dashboard session.",
     "Public shows dashboards but hides Profiles.",
