@@ -1,0 +1,4 @@
+interface:
+  display_name: "Features New"
+  short_description: "Brainstorm next-level Rock-OS features"
+  default_prompt: "Use Features New to suggest creative, useful, project-fitting Rock-OS features."

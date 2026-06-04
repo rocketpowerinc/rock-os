@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safety Check"
+  short_description: "Scan Rock-OS for risks and weirdness"
+  default_prompt: "Use Safety Check to scan Rock-OS for security, integrity, and best-practice issues."

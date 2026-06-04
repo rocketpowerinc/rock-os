@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deep Dive"
+  short_description: "Thoroughly audit Rock-OS"
+  default_prompt: "Use Deep Dive to thoroughly audit Rock-OS for architecture, behavior, vulnerabilities, red flags, and best-practice issues."
