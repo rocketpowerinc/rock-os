@@ -1085,6 +1085,21 @@ color:#88ff88;
 :root[data-theme="rugged"] .kids-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Rugged.svg'); }
 :root[data-theme="blue-grass"] .kids-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Blue-Grass.svg'); }
 
+.family-avatar-display {
+	width:80px;
+	height:80px;
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
+}
+
+:root[data-theme="cyberpunk"] .family-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Cyberpunk.svg'); }
+:root[data-theme="steel"] .family-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Steel.svg'); }
+:root[data-theme="rugged"] .family-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Rugged.svg'); }
+:root[data-theme="blue-grass"] .family-avatar-display { background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Blue-Grass.svg'); }
+
 .rocket-avatar-display {
 	width:80px;
 	height:80px;
@@ -1510,6 +1525,9 @@ color:#88ff88;
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Cyberpunk.svg');
 }
+:root[data-theme="cyberpunk"] .profiles-card[data-profile="Family"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Cyberpunk.svg');
+}
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Kids"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Cyberpunk.svg');
 }
@@ -1520,6 +1538,9 @@ color:#88ff88;
 /* Steel */
 :root[data-theme="steel"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Steel.svg');
+}
+:root[data-theme="steel"] .profiles-card[data-profile="Family"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Kids"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Steel.svg');
@@ -1532,6 +1553,9 @@ color:#88ff88;
 :root[data-theme="rugged"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Rugged.svg');
 }
+:root[data-theme="rugged"] .profiles-card[data-profile="Family"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Rugged.svg');
+}
 :root[data-theme="rugged"] .profiles-card[data-profile="Kids"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Rugged.svg');
 }
@@ -1542,6 +1566,9 @@ color:#88ff88;
 /* Blue-Grass */
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Blue-Grass.svg');
+}
+:root[data-theme="blue-grass"] .profiles-card[data-profile="Family"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/dashboards/Profiles/Family/assets/Family-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Kids"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/dashboards/Profiles/Kids/assets/Kids-Blue-Grass.svg');
