@@ -84,9 +84,6 @@ async function updateMenuLockState() {
         document.querySelectorAll('.nav-links a[href$="dashboards.html"]');
     const sessionSelect =
         document.getElementById('sessionSelect');
-    const isHomePage =
-        window.location.pathname === '/' ||
-        window.location.pathname.endsWith('/index.html');
 
     if (
         (!menu || !trigger || !list) &&
@@ -113,7 +110,7 @@ async function updateMenuLockState() {
 
         homeLinks.forEach(link => {
             link.hidden =
-                locked || isHomePage;
+                false;
         });
 
         dashboardLinks.forEach(link => {
