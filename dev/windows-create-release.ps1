@@ -52,10 +52,16 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Exit-Release 1
 }
 
-# 3. Run server tests before building release binaries
-Write-Host "Running Go server tests..." -ForegroundColor Gray
+# 3. Run server checks before building release binaries
+Write-Host "Running Go server checks..." -ForegroundColor Gray
 Push-Location "cmd/rock-os"
 try {
+    go vet ./...
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Go vet failed. Release build stopped." -ForegroundColor Red
+        Exit-Release 1
+    }
+
     go test ./...
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[ERROR] Go server tests failed. Release build stopped." -ForegroundColor Red
@@ -64,7 +70,7 @@ try {
 } finally {
     Pop-Location
 }
-Write-Host "[OK] Go server tests passed." -ForegroundColor Green
+Write-Host "[OK] Go server checks passed." -ForegroundColor Green
 
 # 4. Ask for next version interactively unless supplied by the caller
 $currentVersion = "none"

@@ -29,6 +29,7 @@ try {
 
     $lines.Add("`n=== go vet ./... ===")
     $vetOut = @(& go vet ./... 2>&1 | ForEach-Object { "$_" })
+    $vetOk = ($LASTEXITCODE -eq 0)
     if ($vetOut.Count) { $lines.AddRange([string[]]$vetOut) }
     $lines.Add("(exit code: $LASTEXITCODE)")
 
@@ -38,7 +39,7 @@ try {
     if ($testOut.Count) { $lines.AddRange([string[]]$testOut) }
     $lines.Add("(exit code: $LASTEXITCODE)")
 
-    $summary = if ($buildOk -and $testOk) { 'RESULT: PASS' } else { 'RESULT: FAIL' }
+    $summary = if ($buildOk -and $vetOk -and $testOk) { 'RESULT: PASS' } else { 'RESULT: FAIL' }
     $lines.Add("`n$summary")
 }
 finally {
@@ -48,8 +49,13 @@ finally {
 # Console output
 $lines | ForEach-Object { Write-Host $_ }
 
-# File output (UTF-8, no Tee dependency so it works on Windows PowerShell 5.1)
-$lines -join "`r`n" | Out-File -FilePath $LogFile -Encoding utf8
+# File output (UTF-8 without BOM, with project-standard LF line endings)
+$logText = ($lines -join "`n") + "`n"
+[System.IO.File]::WriteAllText($LogFile, $logText, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host ''
 Write-Host "Full results written to: $LogFile" -ForegroundColor Green
+
+if (-not ($buildOk -and $vetOk -and $testOk)) {
+    exit 1
+}
