@@ -264,7 +264,7 @@ function uniqueProfileItems(files) {
             }
 
             if (a.category.toLowerCase() === 'profiles') {
-                const profileOrder = ['rocket', 'family', 'kids', 'prepper'];
+                const profileOrder = ['rocket', 'family', 'kids', 'admin', 'prepper'];
                 const aIndex = profileOrder.indexOf(a.name.toLowerCase());
                 const bIndex = profileOrder.indexOf(b.name.toLowerCase());
                 const aRank = aIndex === -1 ? profileOrder.length : aIndex;
