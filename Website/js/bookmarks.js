@@ -1,15 +1,10 @@
-import { createMarkdownTabApp } from './wiki/markdown-tab.js';
+import { startProfileMarkdownSection } from './profile-workspace.js';
 
-createMarkdownTabApp({
+startProfileMarkdownSection({
     key: 'bookmarks',
     label: 'Bookmarks',
     emptyLabel: 'bookmarks',
     searchStatusId: 'bookmarksSearchStatus',
     searchInputId: 'bookmarksSearchInput',
-    refreshButtonId: 'refreshBookmarksBtn',
-    indexUrl: 'bookmarks-index.json',
-    docApiUrl: '/api/bookmarks/doc',
-    searchApiUrl: '/api/bookmarks/search',
-    pathPrefix: 'ENCRYPTED/menu/bookmarks',
-    directOpenPageName: 'bookmarks.html'
+    refreshButtonId: 'refreshBookmarksBtn'
 });

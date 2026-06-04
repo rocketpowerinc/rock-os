@@ -6,76 +6,118 @@ const serverModeTitle =
     document.getElementById('serverModeTitle');
 const launchPointsGrid =
     document.getElementById('launchPointsGrid');
+const launchPointsSection =
+    launchPointsGrid?.closest('.quick-start');
 
-function launchPointLink(point, options = {}) {
+function hideProfileLaunchPoints() {
+    if (launchPointsSection) {
+        launchPointsSection.hidden =
+            true;
+    }
+}
+
+function profileFromDashboardPath(path) {
+    const parts =
+        String(path || '').split('/');
+
+    if (
+        parts.length >= 5 &&
+        parts[0] === 'ENCRYPTED' &&
+        parts[1] === 'dashboards' &&
+        parts[2] === 'Profiles'
+    ) {
+        return parts[3];
+    }
+
+    return '';
+}
+
+function profileCard(profile) {
     const link =
         document.createElement('a');
+    const icon =
+        document.createElement('div');
+    const info =
+        document.createElement('div');
     const title =
-        document.createElement('strong');
-    const description =
-        document.createElement('small');
-    const target =
-        options.useCardPath && point.path ? point.path : point.href;
-    const href =
-        new URL(target, window.location.origin);
-
-    if (href.protocol !== 'http:' && href.protocol !== 'https:') {
-        return null;
-    }
+        document.createElement('span');
 
     link.className =
-        'launch-link';
+        'profiles-card';
+    link.dataset.profile =
+        profile;
     link.href =
-        href.href;
+        `/ENCRYPTED/dashboards/Profiles/${encodeURIComponent(profile)}/`;
+
+    icon.className =
+        'profile-card-icon';
+    info.className =
+        'profiles-card-info';
     title.textContent =
-        point.title;
-    description.textContent =
-        point.description;
+        profile;
 
-    if (href.origin !== window.location.origin) {
-        link.target =
-            '_blank';
-        link.rel =
-            'noopener noreferrer';
-    }
-
-    link.append(title, description);
+    info.append(title);
+    link.append(icon, info);
     return link;
 }
 
-async function loadLockedLaunchPoints() {
+async function loadProfileLaunchPoints() {
     if (!launchPointsGrid) {
         return;
     }
 
     try {
         const response =
-            await fetch('/api/launch-points?nocache=' + Date.now());
+            await fetch('/dashboards-index.json?nocache=' + Date.now());
 
         if (!response.ok) {
-            throw new Error('Could not load launch points');
+            throw new Error('Could not load profile launch points');
         }
 
-        const points =
+        const files =
             await response.json();
-        const links =
-            Array.isArray(points)
-                ? points.map(point => launchPointLink(point, { useCardPath: true })).filter(Boolean)
-                : [];
+        const profiles =
+            Array.from(
+                new Set(
+                    (Array.isArray(files) ? files : [])
+                        .map(file => profileFromDashboardPath(file?.path || file))
+                        .filter(Boolean)
+                )
+            );
+        const profileOrder =
+            ['Rocket', 'Family', 'Kids', 'Admin'];
+        const profileRank = profile => {
+            if (profile === 'Prepper') {
+                return profileOrder.length + 1;
+            }
 
-        launchPointsGrid.replaceChildren();
-        if (links.length === 0) {
-            launchPointsGrid.innerHTML =
-                '<p class="launch-points-status">Add .md files under Website/launch-point-cards-locked to create locked-mode launch cards.</p>';
-            return;
+            const rank =
+                profileOrder.indexOf(profile);
+
+            return rank === -1
+                ? profileOrder.length
+                : rank;
+        };
+
+        profiles.sort((first, second) => {
+            const rankCompare =
+                profileRank(first) - profileRank(second);
+
+            if (rankCompare !== 0) {
+                return rankCompare;
+            }
+            return first.localeCompare(second, undefined, { sensitivity: 'base' });
+        });
+
+        launchPointsGrid.replaceChildren(...profiles.map(profileCard));
+        if (launchPointsSection) {
+            launchPointsSection.hidden =
+                profiles.length === 0;
         }
-
-        launchPointsGrid.append(...links);
     }
     catch (err) {
         console.warn(err);
-        launchPointsGrid.innerHTML =
-            '<p class="launch-points-status">Locked-mode launch points are unavailable. Restart Rock-OS with the latest release binary.</p>';
+        hideProfileLaunchPoints();
     }
 }
 
@@ -253,8 +295,10 @@ function renderServerMode(status) {
     }
 
     const cryptStatus = status?.gitCrypt || 'unknown';
-    if (cryptStatus !== 'unlocked') {
-        loadLockedLaunchPoints();
+    if (cryptStatus === 'unlocked') {
+        loadProfileLaunchPoints();
+    } else {
+        hideProfileLaunchPoints();
     }
     const cryptElement = document.getElementById('encryptedFolderStatus');
     if (cryptElement) {

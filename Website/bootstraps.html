@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rock-OS Guides</title>
+<title>Rock-OS Bootstraps</title>
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -26,17 +26,6 @@
 <div class="nav-links">
 <a href="index.html">HOME</a>
 <a href="dashboards.html">DASHBOARDS</a>
-<div class="nav-menu">
-<button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">MENU</button>
-<div class="nav-menu-list" role="menu">
-<a href="bookmarks.html" role="menuitem">Bookmarks</a>
-<a href="cheatsheets.html" role="menuitem">Cheatsheets</a>
-<a href="dotfiles.html" role="menuitem">Dotfiles</a>
-<a href="guides.html" role="menuitem">Guides</a>
-<a href="scripts.html" role="menuitem">Scripts</a>
-<a href="wiki.html" role="menuitem">Wiki</a>
-</div>
-</div>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
 <option value="steel">Steel</option>
 <option value="rugged">Rugged</option>
@@ -49,19 +38,18 @@
 
 <div class="layout">
 
-
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-header">
-		<h3>Guides</h3>
+		<h3>Bootstraps</h3>
 		<div class="sidebar-actions">
-			<button id="refreshGuidesBtn" class="icon-sidebar-btn" aria-label="Refresh Guides" title="Refresh guides">&#x21BB;</button>
+			<button id="refreshBootstrapsBtn" class="icon-sidebar-btn" aria-label="Refresh Bootstraps" title="Refresh bootstraps">&#x21BB;</button>
 			<button id="toggleAllFoldersBtn" class="icon-sidebar-btn" aria-label="Expand all folders" title="Expand all folders">&#x229E;</button>
 			<button id="collapseSidebarBtn" class="icon-sidebar-btn" aria-label="Collapse Sidebar" title="Collapse sidebar">&#x2630;</button>
 		</div>
 	</div>
 	<div class="wiki-search">
-		<input id="guidesSearchInput" type="search" placeholder="Search guides" autocomplete="off" aria-label="Search guides">
-		<div id="guidesSearchStatus" class="wiki-search-status"></div>
+		<input id="bootstrapsSearchInput" type="search" placeholder="Search bootstraps" autocomplete="off" aria-label="Search bootstraps">
+		<div id="bootstrapsSearchStatus" class="wiki-search-status"></div>
 	</div>
 	<div id="sidebarListContainer"></div>
 </div>
@@ -70,9 +58,9 @@
 
 <div class="content" id="content">
 
-<h1>Guides</h1>
+<h1>Bootstraps</h1>
 
-<p>Select a guide document.</p>
+<p>Select a bootstrap document.</p>
 
 </div>
 
@@ -80,15 +68,13 @@
 
 </div>
 
-
 <script src="js/vendor/highlight.min.js"></script>
 <script src="js/vendor/languages/bash.min.js"></script>
 <script src="js/vendor/languages/powershell.min.js"></script>
 <script src="js/theme.js"></script>
-<script type="module" src="js/guides.js"></script>
+<script type="module" src="js/bootstraps.js"></script>
 <script src="js/sidebar-resizer.js"></script>
 <script>
-// Sidebar collapse/expand logic
 const sidebar = document.getElementById('sidebar');
 const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
 const expandSidebarBtn = document.getElementById('expandSidebarBtn');

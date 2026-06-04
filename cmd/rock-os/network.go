@@ -60,7 +60,7 @@ func siteRootLooksValid(siteRoot string) bool {
 	requiredFiles := []string{
 		"index.html",
 		"wiki.html",
-		"guides.html",
+		"bootstraps.html",
 		"cheatsheets.html",
 		"dotfiles.html",
 		"bookmarks.html",
@@ -76,13 +76,8 @@ func siteRootLooksValid(siteRoot string) bool {
 	}
 
 	requiredDirs := []string{
-		markdownDir,
-		guidesDir,
-		cheatsheetsDir,
-		dotfilesDir,
-		bookmarksDir,
-		scriptsDir,
 		dashboardsDir,
+		profilesDir,
 		"css",
 		"js",
 	}

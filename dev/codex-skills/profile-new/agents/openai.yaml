@@ -1,0 +1,4 @@
+interface:
+  display_name: "Profile New"
+  short_description: "Scaffold a Rock-OS profile workspace"
+  default_prompt: "Use $profile-new to create a new Rock-OS profile workspace."

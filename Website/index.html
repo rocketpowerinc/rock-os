@@ -35,17 +35,6 @@
 <div class="nav-links">
 <a href="index.html">HOME</a>
 <a href="dashboards.html">DASHBOARDS</a>
-<div class="nav-menu">
-<button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">MENU</button>
-<div class="nav-menu-list" role="menu">
-<a href="bookmarks.html" role="menuitem">Bookmarks</a>
-<a href="cheatsheets.html" role="menuitem">Cheatsheets</a>
-<a href="dotfiles.html" role="menuitem">Dotfiles</a>
-<a href="guides.html" role="menuitem">Guides</a>
-<a href="scripts.html" role="menuitem">Scripts</a>
-<a href="wiki.html" role="menuitem">Wiki</a>
-</div>
-</div>
 <select id="themeSelect" class="theme-select" aria-label="Theme">
 <option value="steel">Steel</option>
 <option value="rugged">Rugged</option>
@@ -133,49 +122,14 @@ Windows, macOS, Android, and iOS.
 <blockquote id="dailyQuote">Loading field note...</blockquote>
 </section>
 
-<section class="quick-start">
+<section class="quick-start" hidden>
 
 <div class="section-heading">
-<p class="command-kicker">Start here</p>
+<p class="command-kicker">Profiles</p>
 <h2>Launch Points</h2>
 </div>
 
-<div id="launchPointsGrid" class="launch-grid" aria-live="polite">
-<a class="launch-link" href="dashboards.html">
-<strong>Dashboards</strong>
-<small>Open encrypted dashboards and profile command centers.</small>
-</a>
-
-<a class="launch-link" href="bookmarks.html">
-<strong>Bookmarks</strong>
-<small>Browse structured directories of curated web links and offline resources.</small>
-</a>
-
-<a class="launch-link" href="cheatsheets.html">
-<strong>Cheatsheets</strong>
-<small>Quick reference sheets for common and not so common apps and tools.</small>
-</a>
-
-<a class="launch-link" href="dotfiles.html">
-<strong>Dotfiles</strong>
-<small>Standardized settings and dotfiles to bootstrap new platform configs.</small>
-</a>
-
-<a class="launch-link" href="guides.html">
-<strong>Guides</strong>
-<small>Bootstrap playbooks for distro hoppers and advanced users alike.</small>
-</a>
-
-<a class="launch-link" href="scripts.html">
-<strong>Scripts</strong>
-<small>Native command tools and scripts to automate environment configuration.</small>
-</a>
-
-<a class="launch-link" href="wiki.html">
-<strong>Wiki</strong>
-<small>Main local knowledge base with best practices for hardened practical systems.</small>
-</a>
-</div>
+<div id="launchPointsGrid" class="profiles-card-grid" aria-live="polite"></div>
 
 </section>
 

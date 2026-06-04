@@ -16,6 +16,67 @@ import (
 	"time"
 )
 
+const (
+	testProfileName = "Kids"
+	markdownDir     = profilesDir + "/" + testProfileName + "/wiki"
+	scriptsDir      = profilesDir + "/" + testProfileName + "/scripts"
+	bootstrapsDir   = profilesDir + "/" + testProfileName + "/bootstraps"
+	cheatsheetsDir  = profilesDir + "/" + testProfileName + "/cheatsheets"
+	dotfilesDir     = profilesDir + "/" + testProfileName + "/dotfiles"
+	bookmarksDir    = profilesDir + "/" + testProfileName + "/bookmarks"
+)
+
+func withTestProfile(siteRoot string, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_ = writeActiveDashboardSessionState(siteRoot, testProfileName)
+		_ = os.MkdirAll(filepath.Join(siteRoot, filepath.FromSlash(profilesDir), testProfileName), 0o755)
+		query := r.URL.Query()
+		query.Set("profile", testProfileName)
+		r.URL.RawQuery = query.Encode()
+		handler(w, r)
+	}
+}
+
+func wikiDocHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownDocHandler(siteRoot, "wiki"))
+}
+
+func markdownIndexHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownIndexHandler(siteRoot, "wiki"))
+}
+
+func wikiSearchHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownSearchHandler(siteRoot, "wiki"))
+}
+
+func resolveMarkdownDoc(siteRoot string, docPath string) (string, string, error) {
+	return resolveProfileMarkdownDoc(siteRoot, testProfileName, "wiki", docPath)
+}
+
+func collectMarkdownFiles(siteRoot string) ([]markdownIndexEntry, error) {
+	return collectProfileMarkdownFiles(siteRoot, testProfileName, "wiki")
+}
+
+func bootstrapsIndexHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownIndexHandler(siteRoot, "bootstraps"))
+}
+
+func cheatsheetsIndexHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownIndexHandler(siteRoot, "cheatsheets"))
+}
+
+func dotfilesIndexHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownIndexHandler(siteRoot, "dotfiles"))
+}
+
+func bookmarksIndexHandler(siteRoot string) http.HandlerFunc {
+	return withTestProfile(siteRoot, profileMarkdownIndexHandler(siteRoot, "bookmarks"))
+}
+
+func resolveBootstrapDoc(siteRoot string, docPath string) (string, string, error) {
+	return resolveProfileMarkdownDoc(siteRoot, testProfileName, "bootstraps", docPath)
+}
+
 func TestScriptRunRequestAllowedRequiresRockOSHeader(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/scripts/run", nil)
 	request.RemoteAddr = "127.0.0.1:49200"
@@ -131,101 +192,8 @@ func TestRequireUnlockedContentRejectsLockedContent(t *testing.T) {
 	}
 }
 
-func TestCollectLaunchPointsParsesOrderedLockedMarkdownCards(t *testing.T) {
-	siteRoot := t.TempDir()
-	root := filepath.Join(siteRoot, launchPointsDir)
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(filepath.Join(root, "02-Wiki.md"), []byte("# Wiki\n\nBrowse notes.\n\n[Open Wiki](../wiki.html)\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(root, "01-yoyoDashboards.md"), []byte("# Dashboards\n\nOpen command centers.\n\n[Open Dashboards](../dashboards.html)\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	points, err := collectLaunchPoints(siteRoot)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(points) != 2 {
-		t.Fatalf("expected 2 launch points, got %d", len(points))
-	}
-	if points[0].Title != "01-yoyoDashboards" || points[0].Href != "../dashboards.html" || points[0].Path != "/launch-point-cards-locked/01-yoyoDashboards.md" {
-		t.Fatalf("unexpected first launch point: %#v", points[0])
-	}
-	if points[1].Title != "02-Wiki" || points[1].Description != "Browse notes." {
-		t.Fatalf("unexpected second launch point: %#v", points[1])
-	}
-}
-
-func TestCollectLaunchPointsAllowsEmptyLockedMarkdownCards(t *testing.T) {
-	siteRoot := t.TempDir()
-	root := filepath.Join(siteRoot, launchPointsDir)
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(filepath.Join(root, "8.md"), []byte(""), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	points, err := collectLaunchPoints(siteRoot)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(points) != 1 {
-		t.Fatalf("expected 1 launch point, got %d", len(points))
-	}
-	if points[0].Title != "8" || points[0].Href != "/launch-point-cards-locked/8.md" || points[0].Path != "/launch-point-cards-locked/8.md" {
-		t.Fatalf("unexpected fallback launch point: %#v", points[0])
-	}
-	if points[0].Description == "" {
-		t.Fatalf("expected fallback description, got %#v", points[0])
-	}
-}
-
-func TestLaunchPointMarkdownPageHandlerRendersMarkdown(t *testing.T) {
-	siteRoot := t.TempDir()
-	root := filepath.Join(siteRoot, launchPointsDir)
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(root, "8.md"), []byte("# Hello\n\nA **styled** card."), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "/launch-point-cards-locked/8.md", nil)
-	rec := httptest.NewRecorder()
-	launchPointMarkdownPageHandler(siteRoot).ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", rec.Code)
-	}
-	if !strings.Contains(rec.Body.String(), "<h1 id=\"hello\">Hello</h1>") ||
-		!strings.Contains(rec.Body.String(), "<strong>styled</strong>") {
-		t.Fatalf("expected rendered markdown HTML, got %q", rec.Body.String())
-	}
-	if rec.Header().Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Fatalf("expected html content type, got %q", rec.Header().Get("Content-Type"))
-	}
-}
-
-func TestLaunchPointMarkdownPageHandlerRejectsNestedPath(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/launch-point-cards-locked/../README.md", nil)
-	rec := httptest.NewRecorder()
-	launchPointMarkdownPageHandler(t.TempDir()).ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusNotFound {
-		t.Fatalf("expected status 404, got %d", rec.Code)
-	}
-}
-
 func TestResolveScriptRejectsUnsupportedCharacters(t *testing.T) {
-	_, _, err := resolveScript(t.TempDir(), "Linux/update;rm.sh")
+	_, _, err := resolveScript(t.TempDir(), testProfileName, "Linux/update;rm.sh")
 	if err == nil {
 		t.Fatal("script id with shell metacharacter was allowed")
 	}
@@ -427,6 +395,9 @@ func TestScanLinkHealthReportsLocalAndExternalLinks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := writeActiveDashboardSessionState(siteRoot, testProfileName); err != nil {
+		t.Fatal(err)
+	}
 
 	report, err := scanLinkHealth(siteRoot)
 	if err != nil {
@@ -461,6 +432,9 @@ func TestScanLinkHealthIgnoresMarkedLinks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := writeActiveDashboardSessionState(siteRoot, testProfileName); err != nil {
+		t.Fatal(err)
+	}
 
 	report, err := scanLinkHealth(siteRoot)
 	if err != nil {
@@ -477,6 +451,31 @@ func TestScanLinkHealthIgnoresMarkedLinks(t *testing.T) {
 		if item.Href == "Future.md" {
 			t.Fatalf("ignored link was reported: %+v", item)
 		}
+	}
+}
+
+func TestLinkHealthSourceFilesRespectActiveSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	for _, profile := range []string{"Kids", "Rocket"} {
+		docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), profile, "wiki", profile+".md")
+		if err := os.MkdirAll(filepath.Dir(docPath), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(docPath, []byte("# "+profile), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := linkHealthSourceFiles(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 1 || files[0] != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Kids.md" {
+		t.Fatalf("expected only Kids link-health sources, got %#v", files)
 	}
 }
 
@@ -563,7 +562,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -577,7 +576,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "ENCRYPTED/menu/wiki/Test.md" {
+	if response.Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -602,7 +601,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -626,7 +625,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/menu/wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -677,7 +676,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "ENCRYPTED/menu/wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -724,7 +723,7 @@ func TestScriptsSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/api/scripts/search?q=ublock", nil)
 	recorder := httptest.NewRecorder()
 
-	scriptsSearchHandler(siteRoot).ServeHTTP(recorder, request)
+	withTestProfile(siteRoot, scriptsSearchHandler(siteRoot)).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
@@ -813,7 +812,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "ENCRYPTED/menu/wiki/Fresh.md" {
+	if files[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -900,13 +899,13 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, guidesDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, dashboardsDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, bootstrapsDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, dashboardsDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, file := range []string{"index.html", "wiki.html", "guides.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "dashboards.html"} {
+	for _, file := range []string{"index.html", "wiki.html", "bootstraps.html", "cheatsheets.html", "dotfiles.html", "bookmarks.html", "scripts.html", "dashboards.html"} {
 		if err := os.WriteFile(filepath.Join(siteRoot, file), []byte(file), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -977,6 +976,9 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(scriptsLinuxDir, "test.sh"), []byte("#!/bin/sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, testProfileName); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1072,59 +1074,59 @@ func TestServerStatusHandlerReturnsCurrentCommit(t *testing.T) {
 	}
 }
 
-func TestResolveGuideDoc(t *testing.T) {
+func TestResolveBootstrapDoc(t *testing.T) {
 	siteRoot := t.TempDir()
-	guidesRoot := filepath.Join(siteRoot, guidesDir)
-	if err := os.MkdirAll(guidesRoot, 0o755); err != nil {
+	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
+	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(guidesRoot, "Setup.md")
+	docPath := filepath.Join(bootstrapsRoot, "Setup.md")
 	if err := os.WriteFile(docPath, []byte("# Setup"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/Setup.md")
+	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "ENCRYPTED/menu/guides/Setup.md" {
-		t.Errorf("expected ENCRYPTED/menu/guides/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md" {
+		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/../secret.md")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveGuideDoc(siteRoot, "ENCRYPTED/menu/guides/Setup.txt")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
 }
 
-func TestGuidesIndexHandler(t *testing.T) {
+func TestBootstrapsIndexHandler(t *testing.T) {
 	siteRoot := t.TempDir()
 	createTestWebsiteRoot(t, siteRoot)
-	guidesRoot := filepath.Join(siteRoot, guidesDir)
-	if err := os.MkdirAll(guidesRoot, 0o755); err != nil {
+	bootstrapsRoot := filepath.Join(siteRoot, bootstrapsDir)
+	if err := os.MkdirAll(bootstrapsRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(guidesRoot, "Install.md")
+	docPath := filepath.Join(bootstrapsRoot, "Install.md")
 	if err := os.WriteFile(docPath, []byte("# Install"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/guides-index.json", nil)
+	req := httptest.NewRequest(http.MethodGet, "/bootstraps-index.json", nil)
 	rec := httptest.NewRecorder()
-	guidesIndexHandler(siteRoot).ServeHTTP(rec, req)
+	bootstrapsIndexHandler(siteRoot).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", rec.Code)
@@ -1138,8 +1140,8 @@ func TestGuidesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/menu/guides/Install.md" {
-		t.Errorf("expected ENCRYPTED/menu/guides/Install.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Install.md" {
+		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Install.md, got %q", index[0].Path)
 	}
 }
 
@@ -1172,8 +1174,8 @@ func TestCheatsheetsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/menu/cheatsheets/Commands.md" {
-		t.Errorf("expected ENCRYPTED/menu/cheatsheets/Commands.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/cheatsheets/Commands.md" {
+		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/cheatsheets/Commands.md, got %q", index[0].Path)
 	}
 }
 
@@ -1206,8 +1208,8 @@ func TestDotfilesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/menu/dotfiles/Shell.md" {
-		t.Errorf("expected ENCRYPTED/menu/dotfiles/Shell.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/dotfiles/Shell.md" {
+		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/dotfiles/Shell.md, got %q", index[0].Path)
 	}
 }
 
@@ -1240,8 +1242,112 @@ func TestBookmarksIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/menu/bookmarks/Links.md" {
-		t.Errorf("expected ENCRYPTED/menu/bookmarks/Links.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/bookmarks/Links.md" {
+		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bookmarks/Links.md, got %q", index[0].Path)
+	}
+}
+
+func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) {
+	siteRoot := t.TempDir()
+	kidsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "wiki")
+	rocketWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Rocket", "wiki")
+	for _, dir := range []string{kidsWiki, rocketWiki} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(kidsWiki, "Kids.md"), []byte("# Kids"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(rocketWiki, "Rocket.md"), []byte("# Rocket"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Kids", nil)
+	rec := httptest.NewRecorder()
+	profileMarkdownIndexHandler(siteRoot, "wiki").ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Kids.md" {
+		t.Fatalf("expected only Kids wiki content, got %#v", index)
+	}
+}
+
+func TestProfileContentHandlersRejectProfilesOutsideActiveSession(t *testing.T) {
+	siteRoot := t.TempDir()
+	for _, profile := range []string{"Kids", "Rocket"} {
+		if err := os.MkdirAll(filepath.Join(siteRoot, filepath.FromSlash(profilesDir), profile), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		name    string
+		handler http.HandlerFunc
+		target  string
+	}{
+		{
+			name:    "wiki index",
+			handler: profileMarkdownIndexHandler(siteRoot, "wiki"),
+			target:  "/wiki-index.json?profile=Rocket",
+		},
+		{
+			name:    "scripts list",
+			handler: scriptsListHandler(siteRoot),
+			target:  "/api/scripts?profile=Rocket",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, test.target, nil)
+			rec := httptest.NewRecorder()
+			test.handler.ServeHTTP(rec, req)
+
+			if rec.Code != http.StatusForbidden {
+				t.Fatalf("expected status 403, got %d: %s", rec.Code, rec.Body.String())
+			}
+		})
+	}
+}
+
+func TestDashboardsIndexExcludesProfileWorkspaceMarkdown(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Overview.md"); err != nil {
+		t.Fatal(err)
+	}
+	wikiDoc := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "wiki", "Private.md")
+	if err := os.MkdirAll(filepath.Dir(wikiDoc), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(wikiDoc, []byte("# Private"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json?profile=Profiles/Kids", nil)
+	rec := httptest.NewRecorder()
+	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
+		t.Fatalf("expected only profile dashboard notes, got %#v", index)
 	}
 }
 
@@ -1763,7 +1869,7 @@ func newEncryptedGuardServer(siteRoot string) http.Handler {
 
 func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 	siteRoot := t.TempDir()
-	assetDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "Foo", "assets")
+	assetDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "Foo", "Bar", "assets")
 	if err := os.MkdirAll(assetDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1776,7 +1882,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Directory requests must return 404 (no listing) rather than leaking the
 	// names of private folders/documents.
-	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/dashboards/Foo/assets/"} {
+	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/dashboards/Foo/Bar/assets/"} {
 		req := httptest.NewRequest(http.MethodGet, dirPath, nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
@@ -1787,7 +1893,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Individual asset files are still served while unlocked (dashboards need
 	// their local icons/images).
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Foo/assets/icon.txt", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Foo/Bar/assets/icon.txt", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -1795,6 +1901,29 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 	}
 	if rec.Body.String() != "icon-bytes" {
 		t.Fatalf("unexpected asset body: %q", rec.Body.String())
+	}
+}
+
+func TestGuardEncryptedStaticBlocksRawProfileMarkdown(t *testing.T) {
+	siteRoot := t.TempDir()
+	docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "wiki", "Secret.md")
+	if err := os.MkdirAll(filepath.Dir(docPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(docPath, []byte("# Secret"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Profiles/Kids/wiki/Secret.md", nil)
+	rec := httptest.NewRecorder()
+	newEncryptedGuardServer(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404 for raw profile markdown, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
 
@@ -1824,7 +1953,7 @@ func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 
 func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	siteRoot := t.TempDir()
-	wikiDir := filepath.Join(siteRoot, encryptedDir, "menu", "wiki")
+	wikiDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "wiki")
 	if err := os.MkdirAll(wikiDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1834,7 +1963,7 @@ func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/menu/wiki/Secret.md", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Profiles/Kids/wiki/Secret.md", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusLocked {

@@ -67,7 +67,7 @@ coverage/
 .gotest-cache/
 .release/
 Website/wiki-index.json
-Website/guides-index.json
+Website/bootstraps-index.json
 Website/cheatsheets-index.json
 Website/dotfiles-index.json
 Website/bookmarks-index.json

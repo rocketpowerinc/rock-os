@@ -15,8 +15,8 @@ operate.
 1. Work from the Rock-OS repo root.
 2. Read `AGENTS.md` first and follow it as the active rule source.
 3. Read enough of `README.md` to understand current purpose, architecture,
-   release flow, git-crypt behavior, sessions, dashboards, launchers, menu
-   scripts, wiki, and locked-mode behavior.
+   release flow, git-crypt behavior, sessions, dashboards, profile workspaces,
+   launchers, wiki, and locked-mode behavior.
 4. Build a compact feature map:
    - Inspect top-level folders.
    - Inspect key files under `Website/`, `cmd/rock-os/`, `START-HERE/`,
@@ -26,9 +26,9 @@ operate.
 5. Identify opportunity areas:
    - Locked vs unlocked experience.
    - Sessions and role-based visibility.
-   - Dashboards, profiles, widgets, launch cards, and markdown content.
+   - Dashboards, profiles, widgets, profile cards, and markdown content.
    - Wiki/documentation workflows.
-   - Menu scripts and safe local automation.
+   - Profile scripts and safe local automation.
    - Git-crypt, privacy, local state, backup, and recovery.
    - Release/update/install experience.
    - Mobile and LAN use.

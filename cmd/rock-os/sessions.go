@@ -302,6 +302,19 @@ func filterDashboardFilesForActiveSession(siteRoot string, files []markdownIndex
 	return filterDashboardFilesForSession(files, activeDashboardSession(siteRoot))
 }
 
+func dashboardSessionAllowsPath(siteRoot string, dashboard string) bool {
+	dashboard = normalizeDashboardSessionPath(dashboard)
+	if dashboard == "" {
+		return false
+	}
+
+	probe := []markdownIndexEntry{{
+		Path: dashboardsDir + "/" + dashboard + "/__access__.md",
+	}}
+
+	return len(filterDashboardFilesForSession(probe, activeDashboardSession(siteRoot))) == 1
+}
+
 func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboardSession) []markdownIndexEntry {
 	if session.Admin {
 		return filterDashboardFilesOutsidePath(files, "Profiles/Rocket")

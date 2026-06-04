@@ -31,9 +31,8 @@ International License.
 
 This includes, but is not limited to:
 
-- Markdown notes under `Website/ENCRYPTED/menu/`
 - Markdown notes under `Website/ENCRYPTED/dashboards/`
-- Markdown profile or guide content, where applicable
+- Markdown profile workspace content, including bootstraps and wiki notes
 - Project documentation and tutorial-style written content
 
 See:

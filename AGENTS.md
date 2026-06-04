@@ -14,13 +14,16 @@ Never break these without an explicit, specific request from the user:
   `/release-new` workflow: it may run `dev/windows-create-release.ps1`,
   which stages, commits, pushes, and publishes the reviewed release changes.
 - **Never** commit `.key` files.
+- **Never** document private local session-unlock marker filenames or their
+  behavior in README.md, user-facing docs, or Codex skills.
 - **Never** move, rename, split, or restructure locked `git-crypt` content. Tell
   the user to unlock `Website/ENCRYPTED/` first; moving locked ciphertext can
   corrupt it.
 - **Never** depend on external CDNs, icon services, fonts, or remote assets for
   the core website experience. Keep visual assets local in `Website/assets`.
 - **Never** turn the script dashboard into an arbitrary web command prompt. It
-  may only expose allowlisted script files from `Website/ENCRYPTED/menu/scripts/`.
+  may only expose allowlisted script files from
+  `Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/`.
 - **Never** add a frontend build step unless the user explicitly asks.
 - **Never** track generated indexes, release binaries, caches, downloaded
   artifacts, or `Website/.rock-os-version` in Git.
@@ -52,9 +55,8 @@ Never break these without an explicit, specific request from the user:
 
 - Internal Rock-OS links open in the same browser tab. External `http`/`https`
   links open in a new tab with `rel="noopener noreferrer"`.
-- Keep locked-mode home-page launch cards under `Website/launch-point-cards-locked/`
-  as public markdown files. Treat filename order as card order, and never put
-  private content in that public folder.
+- Hide the home-page Launch Points section while encrypted content is locked.
+  While unlocked, render only profile cards allowed by the active session.
 - Keep dashboard session definitions in `Website/Sessions/sessions.json` and
   mutable active-session state in ignored `Website/Sessions/active-session.json`.
   Treat both as public routing state only; never put private content in that
@@ -87,13 +89,14 @@ Never break these without an explicit, specific request from the user:
 
 ## Scripts & Binaries
 
-- User-managed website scripts live in `Website/ENCRYPTED/menu/scripts/`, organized under
+- User-managed website scripts live in each profile workspace under
+  `Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/`, organized under
   platform folders (`Windows/`, `Linux/`, `Mac/`) and rendered as a collapsible
   tree. Keep the dashboard preview-before-run; on Run, launch in the OS terminal,
   not a browser pseudo-terminal. Supported types: `.cmd`, `.bat`, `.sh`, `.ps1`.
 - Do not update `README.md` for ordinary additions under
-  `Website/ENCRYPTED/menu/scripts/`. Put self-explaining comments inside each script
-  instead.
+  a profile's `scripts/` folder. Put self-explaining comments inside each
+  script instead.
 - Shell scripts committed to Git must have executable mode `100755`. If a new
   `.sh` is added, tell the user it should be committed `100755` so Linux/macOS
   users avoid manual `chmod` that dirties the tree and blocks `git-crypt unlock`.
@@ -120,8 +123,8 @@ Never break these without an explicit, specific request from the user:
 
 ## Encrypted Content (`Website/ENCRYPTED/`)
 
-- Keep dashboards, profile items, menu markdown, and user-managed scripts under
-  `Website/ENCRYPTED/` so `git-crypt` protects all user content.
+- Keep dashboards, profile workspaces, profile markdown, and user-managed
+  scripts under `Website/ENCRYPTED/` so `git-crypt` protects all user content.
 - Show a locked state instead of rendering encrypted content while
   `Website/ENCRYPTED/` is still encrypted.
 - Do not break `git-crypt` workflows or remove key safety checks unless the user
@@ -143,9 +146,15 @@ Never break these without an explicit, specific request from the user:
   If they give exact casing or punctuation, preserve it and update all
   path-sensitive references.
 - Profiles stored under `Website/ENCRYPTED/dashboards/Profiles/` and Dashboards share
-  folder conventions: each item folder uses
+  the base folder conventions: each item folder uses
   `index.html` as the entry page, with `dashboard.json`, `widgets.txt`,
   `Overview.md`, optional local `assets/`, and other markdown beside it.
+- Treat Profiles as special workspaces, not ordinary dashboards. Keep each
+  profile's `bookmarks/`, `cheatsheets/`, `dotfiles/`, `bootstraps/`, `scripts/`,
+  and `wiki/` folders inside that profile folder. Call setup playbooks
+  **Bootstraps** everywhere.
+- Keep profile workspace APIs session-authorized server-side. Do not rely on
+  hidden frontend links to protect a profile's markdown or scripts.
 - Item icons live inside that item's own `assets/` folder, not global
   `Website/assets/`. Shared widget/feed fallback icons live under
   `Website/assets/widget-icons/`.
@@ -166,3 +175,5 @@ Never break these without an explicit, specific request from the user:
   the user's personal skills folder and keep an archival backup copy under
   `dev/codex-skills/<skill-name>/`. The repo copy is archival only, not the
   active loaded skill.
+- Use `/dashboard-new` only for ordinary dashboards outside `Profiles/`. Use
+  `/profile-new` for profile workspace scaffolding.

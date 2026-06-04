@@ -1,15 +1,10 @@
-import { createMarkdownTabApp } from './wiki/markdown-tab.js';
+import { startProfileMarkdownSection } from './profile-workspace.js';
 
-createMarkdownTabApp({
+startProfileMarkdownSection({
     key: 'wiki',
     label: 'Wiki',
     emptyLabel: 'markdown files',
     searchStatusId: 'wikiSearchStatus',
     searchInputId: 'wikiSearchInput',
-    refreshButtonId: 'refreshWikiBtn',
-    indexUrl: 'wiki-index.json',
-    docApiUrl: '/api/wiki/doc',
-    searchApiUrl: '/api/wiki/search',
-    pathPrefix: 'ENCRYPTED/menu/wiki',
-    directOpenPageName: 'wiki.html'
+    refreshButtonId: 'refreshWikiBtn'
 });

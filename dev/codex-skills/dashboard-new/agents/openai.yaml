@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dashboard New"
+  short_description: "Scaffold an ordinary Rock-OS dashboard"
+  default_prompt: "Use $dashboard-new to create a new Rock-OS dashboard."

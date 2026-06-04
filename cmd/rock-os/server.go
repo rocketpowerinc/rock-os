@@ -153,7 +153,7 @@ func requestAcceptsGzip(r *http.Request) bool {
 func shouldCompressPath(path string) bool {
 	if strings.HasPrefix(path, "/api/") ||
 		path == "/wiki-index.json" ||
-		path == "/guides-index.json" ||
+		path == "/bootstraps-index.json" ||
 		path == "/cheatsheets-index.json" ||
 		path == "/dotfiles-index.json" ||
 		path == "/bookmarks-index.json" ||
@@ -230,16 +230,8 @@ func noCache(next http.Handler) http.Handler {
 	})
 }
 
-// guardEncryptedStatic protects the static file server's view of the encrypted
-// tree (Website/ENCRYPTED). The static server is needed so dashboards can load
-// their local assets (icons/images) when unlocked, but it must not:
-//   - serve directory listings, which would leak the names of private folders
-//     and documents even while the content bytes are encrypted, and
-//   - hand out any encrypted bytes (ciphertext included) while locked.
-//
-// Document content itself is always fetched through the gated /api/* handlers,
-// so this only ever allows individual asset files through, and only when
-// unlocked. Everything outside ENCRYPTED passes straight through.
+// guardEncryptedStatic only exposes authorized dashboard entry pages, config,
+// and assets. Markdown and scripts must always pass through their gated APIs.
 func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 	prefix := "/" + encryptedDir
 
@@ -255,24 +247,46 @@ func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 			return
 		}
 
-		// Map to a filesystem path (Clean on a rooted, forward-slash path strips
-		// any "../" traversal) and refuse directory requests so no listing is
-		// produced. Dashboard item folders are the exception: they need to serve
-		// their own index.html entry page while unlocked.
-		relative := filepath.FromSlash(strings.TrimPrefix(cleaned, "/"))
-		fsPath := filepath.Join(siteRoot, relative)
-		if info, err := os.Stat(fsPath); err == nil && info.IsDir() {
-			if encryptedDashboardIndexDirectory(cleaned, fsPath) {
-				next.ServeHTTP(w, r)
-				return
-			}
-
+		dashboard, resource, ok := encryptedDashboardResource(cleaned)
+		if !ok || !dashboardSessionAllowsPath(siteRoot, dashboard) {
 			http.NotFound(w, r)
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		if resource == "" {
+			relative := filepath.FromSlash(strings.TrimPrefix(cleaned, "/"))
+			fsPath := filepath.Join(siteRoot, relative)
+			if encryptedDashboardIndexDirectory(cleaned, fsPath) {
+				next.ServeHTTP(w, r)
+				return
+			}
+			http.NotFound(w, r)
+			return
+		}
+
+		if resource == "index.html" ||
+			resource == "dashboard.json" ||
+			resource == "widgets.txt" ||
+			strings.HasPrefix(resource, "assets/") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		http.NotFound(w, r)
 	})
+}
+
+func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
+	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
+	if len(parts) < 4 ||
+		parts[0] != encryptedDir ||
+		parts[1] != "dashboards" ||
+		parts[2] == "" ||
+		parts[3] == "" {
+		return "", "", false
+	}
+
+	return parts[2] + "/" + parts[3], strings.Join(parts[4:], "/"), true
 }
 
 func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {

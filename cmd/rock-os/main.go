@@ -18,7 +18,7 @@ func main() {
 	host := flag.String("host", "127.0.0.1", "host to bind: 127.0.0.1, local, lan, 0.0.0.0, or a specific IP")
 	port := flag.Int("port", 8000, "port to listen on")
 	open := flag.Bool("open", true, "open the site in your default browser")
-	buildIndex := flag.Bool("build-index", false, "build wiki-index.json and exit")
+	buildIndex := flag.Bool("build-index", false, "build dashboards-index.json and exit")
 	siteRootFlag := flag.String("site-root", "", "path to the Website folder; auto-detected when omitted")
 	allowLanScriptRuns := flag.Bool("enable-lan-script-runs", false, "allow script execution requests from non-loopback LAN clients")
 	flag.Parse()
@@ -38,26 +38,11 @@ func main() {
 			log.Fatal("encrypted Rock-OS content is locked")
 		}
 
-		if _, err := writeMarkdownIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := writeGuidesIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := writeCheatsheetsIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := writeDotfilesIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := writeBookmarksIndex(siteRoot); err != nil {
-			log.Fatal(err)
-		}
 		if _, err := writeDashboardsIndex(siteRoot); err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Println("Wrote all index.json files")
+		fmt.Println("Wrote dashboards-index.json")
 		return
 	}
 
@@ -75,24 +60,22 @@ func main() {
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/server/refresh", serverRefreshHandler(siteRoot))
 	mux.HandleFunc("/api/sessions", sessionsHandler(siteRoot))
-	mux.HandleFunc("/api/launch-points", launchPointsHandler(siteRoot))
-	mux.HandleFunc("/"+launchPointsDir+"/", launchPointMarkdownPageHandler(siteRoot))
 	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
-	mux.HandleFunc("/api/wiki/doc", requireUnlockedContent(siteRoot, wikiDocHandler(siteRoot)))
-	mux.HandleFunc("/api/wiki/search", requireUnlockedContent(siteRoot, wikiSearchHandler(siteRoot)))
-	mux.HandleFunc("/wiki-index.json", requireUnlockedContent(siteRoot, markdownIndexHandler(siteRoot)))
-	mux.HandleFunc("/api/guides/doc", requireUnlockedContent(siteRoot, guidesDocHandler(siteRoot)))
-	mux.HandleFunc("/api/guides/search", requireUnlockedContent(siteRoot, guidesSearchHandler(siteRoot)))
-	mux.HandleFunc("/guides-index.json", requireUnlockedContent(siteRoot, guidesIndexHandler(siteRoot)))
-	mux.HandleFunc("/api/cheatsheets/doc", requireUnlockedContent(siteRoot, cheatsheetsDocHandler(siteRoot)))
-	mux.HandleFunc("/api/cheatsheets/search", requireUnlockedContent(siteRoot, cheatsheetsSearchHandler(siteRoot)))
-	mux.HandleFunc("/cheatsheets-index.json", requireUnlockedContent(siteRoot, cheatsheetsIndexHandler(siteRoot)))
-	mux.HandleFunc("/api/dotfiles/doc", requireUnlockedContent(siteRoot, dotfilesDocHandler(siteRoot)))
-	mux.HandleFunc("/api/dotfiles/search", requireUnlockedContent(siteRoot, dotfilesSearchHandler(siteRoot)))
-	mux.HandleFunc("/dotfiles-index.json", requireUnlockedContent(siteRoot, dotfilesIndexHandler(siteRoot)))
-	mux.HandleFunc("/api/bookmarks/doc", requireUnlockedContent(siteRoot, bookmarksDocHandler(siteRoot)))
-	mux.HandleFunc("/api/bookmarks/search", requireUnlockedContent(siteRoot, bookmarksSearchHandler(siteRoot)))
-	mux.HandleFunc("/bookmarks-index.json", requireUnlockedContent(siteRoot, bookmarksIndexHandler(siteRoot)))
+	mux.HandleFunc("/api/wiki/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "wiki")))
+	mux.HandleFunc("/api/wiki/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "wiki")))
+	mux.HandleFunc("/wiki-index.json", requireUnlockedContent(siteRoot, profileMarkdownIndexHandler(siteRoot, "wiki")))
+	mux.HandleFunc("/api/bootstraps/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "bootstraps")))
+	mux.HandleFunc("/api/bootstraps/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "bootstraps")))
+	mux.HandleFunc("/bootstraps-index.json", requireUnlockedContent(siteRoot, profileMarkdownIndexHandler(siteRoot, "bootstraps")))
+	mux.HandleFunc("/api/cheatsheets/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "cheatsheets")))
+	mux.HandleFunc("/api/cheatsheets/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "cheatsheets")))
+	mux.HandleFunc("/cheatsheets-index.json", requireUnlockedContent(siteRoot, profileMarkdownIndexHandler(siteRoot, "cheatsheets")))
+	mux.HandleFunc("/api/dotfiles/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "dotfiles")))
+	mux.HandleFunc("/api/dotfiles/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "dotfiles")))
+	mux.HandleFunc("/dotfiles-index.json", requireUnlockedContent(siteRoot, profileMarkdownIndexHandler(siteRoot, "dotfiles")))
+	mux.HandleFunc("/api/bookmarks/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "bookmarks")))
+	mux.HandleFunc("/api/bookmarks/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "bookmarks")))
+	mux.HandleFunc("/bookmarks-index.json", requireUnlockedContent(siteRoot, profileMarkdownIndexHandler(siteRoot, "bookmarks")))
 	mux.HandleFunc("/api/dashboards/doc", requireUnlockedContent(siteRoot, dashboardsDocHandler(siteRoot)))
 	mux.HandleFunc("/api/dashboards/search", requireUnlockedContent(siteRoot, dashboardsSearchHandler(siteRoot)))
 	mux.HandleFunc("/dashboards-index.json", requireUnlockedContent(siteRoot, dashboardsIndexHandler(siteRoot)))

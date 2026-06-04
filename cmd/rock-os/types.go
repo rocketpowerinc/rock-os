@@ -14,25 +14,14 @@ import (
 var startupTime = time.Now()
 
 const (
-	encryptedDir         = "ENCRYPTED"
-	adminKeyFile         = "admin.key"
-	rocketKeyFile        = "rocket.key"
-	launchPointsDir      = "launch-point-cards-locked"
-	sessionsFile         = "Sessions/sessions.json"
-	activeSessionFile    = "Sessions/active-session.json"
-	indexFile            = "wiki-index.json"
-	markdownDir          = encryptedDir + "/menu/wiki"
-	scriptsDir           = encryptedDir + "/menu/scripts"
-	guidesDir            = encryptedDir + "/menu/guides"
-	guidesIndexFile      = "guides-index.json"
-	cheatsheetsDir       = encryptedDir + "/menu/cheatsheets"
-	cheatsheetsIndexFile = "cheatsheets-index.json"
-	dotfilesDir          = encryptedDir + "/menu/dotfiles"
-	dotfilesIndexFile    = "dotfiles-index.json"
-	bookmarksDir         = encryptedDir + "/menu/bookmarks"
-	bookmarksIndexFile   = "bookmarks-index.json"
-	dashboardsDir        = encryptedDir + "/dashboards"
-	dashboardsIndexFile  = "dashboards-index.json"
+	encryptedDir        = "ENCRYPTED"
+	adminKeyFile        = "admin.key"
+	rocketKeyFile       = "rocket.key"
+	sessionsFile        = "Sessions/sessions.json"
+	activeSessionFile   = "Sessions/active-session.json"
+	dashboardsDir       = encryptedDir + "/dashboards"
+	profilesDir         = dashboardsDir + "/Profiles"
+	dashboardsIndexFile = "dashboards-index.json"
 )
 
 const (
@@ -69,13 +58,6 @@ type scriptEntry struct {
 
 type scriptRunRequest struct {
 	ID string `json:"id"`
-}
-
-type launchPoint struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Href        string `json:"href"`
-	Path        string `json:"path"`
 }
 
 type serverRefreshResponse struct {
@@ -130,6 +112,7 @@ type serverStatus struct {
 type wikiDocResponse struct {
 	Path       string `json:"path"`
 	HTML       string `json:"html"`
+	Text       string `json:"text,omitempty"`
 	LastEdited string `json:"lastEdited,omitempty"`
 }
 
@@ -163,8 +146,8 @@ type FlightManager struct {
 }
 
 type CacheManager struct {
-	Markdown    *markdownIndexCache
-	Guides      *markdownIndexCache
+	Wiki        *markdownIndexCache
+	Bootstraps  *markdownIndexCache
 	Cheatsheets *markdownIndexCache
 	Dotfiles    *markdownIndexCache
 	Bookmarks   *markdownIndexCache
@@ -173,8 +156,8 @@ type CacheManager struct {
 }
 
 type SearchCacheManager struct {
-	Markdown    *markdownSearchIndex
-	Guides      *markdownSearchIndex
+	Wiki        *markdownSearchIndex
+	Bootstraps  *markdownSearchIndex
 	Cheatsheets *markdownSearchIndex
 	Dotfiles    *markdownSearchIndex
 	Bookmarks   *markdownSearchIndex
@@ -184,15 +167,15 @@ type SearchCacheManager struct {
 func newApp() *App {
 	return &App{
 		Caches: &CacheManager{
-			Markdown:    newMarkdownIndexCache(),
-			Guides:      newMarkdownIndexCache(),
+			Wiki:        newMarkdownIndexCache(),
+			Bootstraps:  newMarkdownIndexCache(),
 			Cheatsheets: newMarkdownIndexCache(),
 			Dotfiles:    newMarkdownIndexCache(),
 			Bookmarks:   newMarkdownIndexCache(),
 			Dashboards:  newMarkdownIndexCache(),
 			Search: &SearchCacheManager{
-				Markdown:    newMarkdownSearchIndex(),
-				Guides:      newMarkdownSearchIndex(),
+				Wiki:        newMarkdownSearchIndex(),
+				Bootstraps:  newMarkdownSearchIndex(),
 				Cheatsheets: newMarkdownSearchIndex(),
 				Dotfiles:    newMarkdownSearchIndex(),
 				Bookmarks:   newMarkdownSearchIndex(),

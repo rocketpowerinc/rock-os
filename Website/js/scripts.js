@@ -1,5 +1,10 @@
 import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from './server-refresh.js';
-import { renderLockedLanding } from './locked-landing.js';
+import { renderLockedContent } from './locked-content.js';
+import {
+    currentProfileWorkspaceName,
+    renderMissingProfileContext,
+    renderProfileWorkspaceNav
+} from './profile-workspace.js';
 
 const scriptList =
     document.getElementById('scriptList');
@@ -19,8 +24,10 @@ const scriptSearchInput =
     document.getElementById('scriptSearchInput');
 const scriptSearchStatus =
     document.getElementById('scriptSearchStatus');
+const activeProfile =
+    currentProfileWorkspaceName();
 const pinnedScriptsStorageKey =
-    'rock-os-pinned-scripts';
+    `rock-os-${activeProfile || 'profile'}-pinned-scripts`;
 
 let selectedScript = null;
 let allScripts = [];
@@ -34,6 +41,24 @@ let scriptSearchDebounceTimer = null;
 let scriptSearchRequestId = 0;
 
 loadPinnedScripts();
+
+if (activeProfile) {
+    renderProfileWorkspaceNav(activeProfile);
+    document.title =
+        `Rock-OS ${activeProfile} Scripts`;
+    const sidebarHeading =
+        document.querySelector('.sidebar-header h3');
+    const pageHeading =
+        document.querySelector('.script-workbench-header h1');
+    if (sidebarHeading) {
+        sidebarHeading.textContent =
+            `${activeProfile} Scripts`;
+    }
+    if (pageHeading) {
+        pageHeading.textContent =
+            `${activeProfile} Scripts`;
+    }
+}
 
 function setStatus(message, type = 'info') {
     scriptStatus.textContent = message;
@@ -528,7 +553,7 @@ function renderScriptTree(scripts) {
         scriptList.textContent =
             allScripts.length
                 ? 'No scripts match your search.'
-                : 'No scripts found in Website/ENCRYPTED/menu/scripts.';
+                : `No scripts found in the ${activeProfile} profile workspace.`;
         updateToggleAllScriptsButton();
         return;
     }
@@ -676,7 +701,7 @@ async function runScriptSearch(query, requestId) {
     try {
         const response =
             await fetch(
-                `/api/scripts/search?q=${encodeURIComponent(query)}&nocache=${Date.now()}`
+                `/api/scripts/search?profile=${encodeURIComponent(activeProfile)}&q=${encodeURIComponent(query)}&nocache=${Date.now()}`
             );
 
         if (!response.ok) {
@@ -806,9 +831,6 @@ function renderScriptSearchResults() {
     updateToggleAllScriptsButton();
 }
 
-// Shown when /api/scripts returns 423 (git-crypt content is locked): render the
-// matching launch-point-cards-locked card instead of a status-bar error, since those
-// files are never encrypted.
 function renderScriptsLocked() {
     const sidebar = document.getElementById('sidebar');
     const resizer = document.getElementById('sidebarResizer');
@@ -822,14 +844,19 @@ function renderScriptsLocked() {
 
     const stage = document.querySelector('.script-stage');
     if (stage) {
-        renderLockedLanding(stage, 'scripts.html');
+        renderLockedContent(stage, 'Scripts');
     }
 }
 
 async function loadScripts() {
+    if (!activeProfile) {
+        renderMissingProfileContext('Scripts');
+        return;
+    }
+
     try {
         const response =
-            await fetch('/api/scripts');
+            await fetch(`/api/scripts?profile=${encodeURIComponent(activeProfile)}`);
 
         if (!response.ok) {
             if (response.status === 423) {
@@ -900,7 +927,9 @@ async function selectScript(script) {
 
     try {
         const response =
-            await fetch('/api/scripts/content?id=' + encodeURIComponent(script.id));
+            await fetch(
+                `/api/scripts/content?profile=${encodeURIComponent(activeProfile)}&id=${encodeURIComponent(script.id)}`
+            );
 
         if (!response.ok) {
             throw new Error(await response.text());
@@ -933,7 +962,7 @@ async function runSelectedScript() {
 
     try {
         const response =
-            await fetch('/api/scripts/run', {
+            await fetch(`/api/scripts/run?profile=${encodeURIComponent(activeProfile)}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -21,7 +21,12 @@ func scriptsListHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		scripts, err := collectScripts(siteRoot)
+		profile, ok := profileWorkspaceRequestProfile(w, r, siteRoot)
+		if !ok {
+			return
+		}
+
+		scripts, err := collectScripts(siteRoot, profile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -38,7 +43,12 @@ func scriptContentHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		script, path, err := resolveScript(siteRoot, r.URL.Query().Get("id"))
+		profile, ok := profileWorkspaceRequestProfile(w, r, siteRoot)
+		if !ok {
+			return
+		}
+
+		script, path, err := resolveScript(siteRoot, profile, r.URL.Query().Get("id"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -64,7 +74,12 @@ func scriptsSearchHandler(siteRoot string) http.HandlerFunc {
 			return
 		}
 
-		results, err := searchScripts(siteRoot, r.URL.Query().Get("q"))
+		profile, ok := profileWorkspaceRequestProfile(w, r, siteRoot)
+		if !ok {
+			return
+		}
+
+		results, err := searchScripts(siteRoot, profile, r.URL.Query().Get("q"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -86,13 +101,18 @@ func scriptRunHandler(siteRoot string, allowLanScriptRuns bool) http.HandlerFunc
 			return
 		}
 
+		profile, ok := profileWorkspaceRequestProfile(w, r, siteRoot)
+		if !ok {
+			return
+		}
+
 		var request scriptRunRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		script, path, err := resolveScript(siteRoot, request.ID)
+		script, path, err := resolveScript(siteRoot, profile, request.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -149,15 +169,20 @@ func sameOriginHeaderAllowed(r *http.Request, header string) bool {
 	return strings.EqualFold(parsed.Host, r.Host)
 }
 
-func collectScripts(siteRoot string) ([]scriptEntry, error) {
-	root := filepath.Join(siteRoot, scriptsDir)
+func collectScripts(siteRoot string, profile string) ([]scriptEntry, error) {
+	scriptsDir, err := profileWorkspaceDir(profile, "scripts")
+	if err != nil {
+		return nil, err
+	}
+
+	root := filepath.Join(siteRoot, filepath.FromSlash(scriptsDir))
 	scripts := []scriptEntry{}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
 		return scripts, nil
 	}
 
-	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+	err = filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -197,21 +222,38 @@ func collectScripts(siteRoot string) ([]scriptEntry, error) {
 	return scripts, nil
 }
 
-func searchScripts(siteRoot string, query string) ([]scriptSearchResult, error) {
+func collectAllowedProfileScripts(siteRoot string) ([]scriptEntry, error) {
+	profiles, err := allowedProfileNames(siteRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	scripts := []scriptEntry{}
+	for _, profile := range profiles {
+		profileScripts, err := collectScripts(siteRoot, profile)
+		if err != nil {
+			return nil, err
+		}
+		scripts = append(scripts, profileScripts...)
+	}
+	return scripts, nil
+}
+
+func searchScripts(siteRoot string, profile string, query string) ([]scriptSearchResult, error) {
 	query = strings.TrimSpace(query)
 	if query == "" {
 		return []scriptSearchResult{}, nil
 	}
 
 	normalizedQuery := strings.ToLower(query)
-	scripts, err := collectScripts(siteRoot)
+	scripts, err := collectScripts(siteRoot, profile)
 	if err != nil {
 		return nil, err
 	}
 
 	results := []scriptSearchResult{}
 	for _, script := range scripts {
-		_, path, err := resolveScript(siteRoot, script.ID)
+		_, path, err := resolveScript(siteRoot, profile, script.ID)
 		if err != nil {
 			continue
 		}
@@ -244,7 +286,7 @@ func searchScripts(siteRoot string, query string) ([]scriptSearchResult, error) 
 	return results, nil
 }
 
-func resolveScript(siteRoot string, id string) (scriptEntry, string, error) {
+func resolveScript(siteRoot string, profile string, id string) (scriptEntry, string, error) {
 	id = filepath.ToSlash(strings.TrimSpace(id))
 	if id == "" || strings.Contains(id, "..") || strings.HasPrefix(id, "/") {
 		return scriptEntry{}, "", fmt.Errorf("invalid script id")
@@ -253,8 +295,13 @@ func resolveScript(siteRoot string, id string) (scriptEntry, string, error) {
 		return scriptEntry{}, "", fmt.Errorf("script id contains unsupported characters")
 	}
 
-	path := filepath.Join(siteRoot, scriptsDir, filepath.FromSlash(id))
-	root := filepath.Join(siteRoot, scriptsDir)
+	scriptsDir, err := profileWorkspaceDir(profile, "scripts")
+	if err != nil {
+		return scriptEntry{}, "", err
+	}
+
+	path := filepath.Join(siteRoot, filepath.FromSlash(scriptsDir), filepath.FromSlash(id))
+	root := filepath.Join(siteRoot, filepath.FromSlash(scriptsDir))
 
 	cleanRoot, err := filepath.Abs(root)
 	if err != nil {

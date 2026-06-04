@@ -5,7 +5,7 @@ import { enhanceExternalLinks, enhanceWikiLinks, markdownLinksInText, wikiDocHre
 import { buildTableOfContents, clearToc, scrollToCurrentHash } from './toc.js';
 import { escapeHtml, fileTitle, formatEditedDate } from './utils.js';
 import { pullLatestRockOSAndReload, warnLiveUpdateFailed } from '../server-refresh.js';
-import { renderLockedLanding } from '../locked-landing.js';
+import { renderLockedContent } from '../locked-content.js';
 
 export function createMarkdownTabApp(config) {
 
@@ -422,16 +422,23 @@ async function loadMarkdownText(path) {
     }
 
     const pending =
-        fetch(path + '?nocache=' + Date.now())
+        fetch(
+            urlWithParams(tab.docApiUrl, {
+                path,
+                nocache: Date.now()
+            })
+        )
             .then(response => {
 
                 if (!response.ok) {
                     return '';
                 }
 
-                return response.text();
+                return response.json();
             })
-            .then(text => {
+            .then(doc => {
+                const text =
+                    typeof doc?.text === 'string' ? doc.text : '';
 
                 markdownContentCache.set(path, text);
                 markdownContentLoads.delete(path);
@@ -494,9 +501,6 @@ go run .</code></pre>
     `;
 }
 
-// Shown when the index request returns 423 (git-crypt content is locked):
-// render this page's matching launch-point-cards-locked card instead of a generic
-// error, since those files are never encrypted.
 function renderWikiLocked() {
 
     const sidebar =
@@ -514,7 +518,7 @@ function renderWikiLocked() {
     }
 
     clearToc();
-    renderLockedLanding(content, tab.directOpenPageName);
+    renderLockedContent(content, tab.label);
 }
 
 function isDirectFileOpen() {
@@ -931,7 +935,10 @@ async function loadDoc(path, options = {}) {
     }
 
     const response = await fetch(
-        `${tab.docApiUrl}?path=${encodeURIComponent(path)}&nocache=${Date.now()}`
+        urlWithParams(tab.docApiUrl, {
+            path,
+            nocache: Date.now()
+        })
     );
 
     if (!response.ok) {

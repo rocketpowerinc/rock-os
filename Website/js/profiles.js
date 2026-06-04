@@ -1,5 +1,6 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
+import { renderProfileWorkspaceNav } from './profile-workspace.js';
 
 const appMode = {
     rootDir: 'ENCRYPTED/dashboards',
@@ -264,11 +265,17 @@ function uniqueProfileItems(files) {
             }
 
             if (a.category.toLowerCase() === 'profiles') {
-                const profileOrder = ['rocket', 'family', 'kids', 'admin', 'prepper'];
-                const aIndex = profileOrder.indexOf(a.name.toLowerCase());
-                const bIndex = profileOrder.indexOf(b.name.toLowerCase());
-                const aRank = aIndex === -1 ? profileOrder.length : aIndex;
-                const bRank = bIndex === -1 ? profileOrder.length : bIndex;
+                const profileOrder = ['rocket', 'family', 'kids', 'admin'];
+                const profileRank = name => {
+                    if (name === 'prepper') {
+                        return profileOrder.length + 1;
+                    }
+
+                    const index = profileOrder.indexOf(name);
+                    return index === -1 ? profileOrder.length : index;
+                };
+                const aRank = profileRank(a.name.toLowerCase());
+                const bRank = profileRank(b.name.toLowerCase());
 
                 if (aRank !== bRank) {
                     return aRank - bRank;
@@ -1022,6 +1029,10 @@ async function startProfiles() {
     if (!await dashboardSessionAllows(profile)) {
         renderDashboardError(`${displayName} is not available in the active Rock-OS dashboard session.`);
         return;
+    }
+
+    if (profile.startsWith('Profiles/')) {
+        renderProfileWorkspaceNav(displayName);
     }
 
     document.title = `${appMode.documentTitlePrefix} ${displayName}`;

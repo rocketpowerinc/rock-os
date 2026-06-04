@@ -14,7 +14,7 @@ works, where it is fragile, and what the user should know before continuing.
 1. Work from the Rock-OS repo root.
 2. Read `AGENTS.md` first and follow it as the active rule source.
 3. Read `README.md` closely for project purpose, setup, architecture, release
-   flow, git-crypt behavior, sessions, dashboards, menu scripts, wiki,
+   flow, git-crypt behavior, sessions, dashboards, profile workspaces, wiki,
    locked-mode behavior, launchers, and known local-state conventions.
 4. Inspect repo state and history:
    - `git status --short --branch`
@@ -27,21 +27,20 @@ works, where it is fragile, and what the user should know before continuing.
    - List top-level folders.
    - Map `Website/`, `cmd/`, `START-HERE/`, `dev/`, `documentation/`, and
      `dev/codex-skills/`.
-   - Include encrypted-content boundaries, public locked-mode folders, ignored
-     local-state folders/files, generated artifacts, release assets, and binary
-     locations.
+   - Include encrypted-content boundaries, profile workspaces, ignored local-state
+     folders/files, generated artifacts, release assets, and binary locations.
 6. Audit server behavior:
    - Review `cmd/rock-os/` entry points, route registration, file serving,
      markdown rendering, link-health APIs, session APIs, update/sync behavior,
-     script execution, git-crypt detection, launch-point handling, and
-     LAN/host-mode rules.
+     profile workspace authorization, script execution, git-crypt detection,
+     and LAN/host-mode rules.
    - Look for path traversal, unrestricted file access, unsafe writes, command
      injection, arbitrary script execution, public exposure of encrypted
      content, weak locked-mode checks, and stale release behavior.
 7. Audit frontend behavior:
-   - Review `Website/index.html`, shared CSS, core JS, dashboards, menu,
-     sessions, wiki modules, launch-point cards, navigation, locked-mode UI,
-     theme behavior, and link handling.
+   - Review `Website/index.html`, shared CSS, core JS, dashboards, profile workspaces,
+     sessions, wiki modules, profile workspace navigation, unlocked profile
+     cards, locked-mode UI, theme behavior, and link handling.
    - Look for locked-mode flashes, hidden-but-clickable UI, unsafe external
      links, remote dependencies, broken same-tab/new-tab rules, inconsistent
      theme handling, and duplicated fragile code.
@@ -57,7 +56,7 @@ works, where it is fragile, and what the user should know before continuing.
      outputs, local binaries, and session-state files.
    - Do not move or restructure locked encrypted content.
 10. Audit scripts and dashboards:
-   - Inspect menu script discovery rules and representative scripts.
+   - Inspect profile script discovery rules and representative scripts.
    - Confirm script execution stays restricted to approved folders and supported
      extensions.
    - Inspect dashboard/profile folder conventions, widgets, icons, and markdown

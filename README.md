@@ -2,10 +2,10 @@
 
 Hardened for Collapse
 
-Rock OS is a lightweight local wiki website for keeping markdown notes,
-commands, media, and setup docs in a simple folder structure. It is served by a
-small cross-platform Go binary that renders markdown locally before sending it
-to the browser.
+Rock OS is a lightweight local profile workspace and wiki website for keeping
+markdown notes, commands, media, setup docs, dashboards, and scripts in a simple
+folder structure. It is served by a small cross-platform Go binary that renders
+markdown locally before sending it to the browser.
 
 For project direction and AI agent development rules, see `AGENTS.md`.
 
@@ -145,14 +145,15 @@ copy and prints a warning.
 ## Features
 
 - Markdown files rendered server-side by the local Go wiki server
-- Theme-aware command center landing page with launch links and status panels
+- Theme-aware command center landing page with session-filtered profile launch cards and status panels
 - Random landing page field notes loaded from `Website/quotes.md`
-- Editable locked-mode launch cards loaded from `Website/launch-point-cards-locked/*.md`
+- Profile workspaces with Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki sections
+- Horizontal profile navigation that keeps each profile's tools together
 - Automatic sidebar tree from nested markdown folders
-- Local script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
+- Per-profile script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?doc=menu/wiki/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?profile=Rocket&doc=ENCRYPTED/dashboards/Profiles/Rocket/wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -220,19 +221,40 @@ locked-content panel instead of attempting to render ciphertext.
 
 Dashboard folders live under category folders in
 `Website/ENCRYPTED/dashboards/`. Profile command centers such as Rocket, Kids,
-and Prepper remain stored under `Website/ENCRYPTED/dashboards/Profiles/`, but appear as a
-`Profiles` section on the Dashboards landing page rather than a separate tab.
-Each item can have its own `dashboard.json`, `widgets.txt`, markdown notes,
-search, favorites, and document view.
+and Prepper are stored under `Website/ENCRYPTED/dashboards/Profiles/`. They
+appear in the `Profiles` section on the Dashboards landing page and, when
+allowed by the active session, as Launch Points on the home page.
 
-Profiles and Dashboards use the same item folder convention:
+Profiles are special dashboards. In addition to the normal dashboard files,
+each profile owns separate Bookmarks, Cheatsheets, Dotfiles, Bootstraps,
+Scripts, and Wiki folders. Opening a profile shows a horizontal workspace bar
+for moving between those sections without a global Menu button.
+
+Profiles and Dashboards use the same base item folder convention:
 
 ```text
 Website/ENCRYPTED/dashboards/Profiles/Rocket/index.html
 Website/ENCRYPTED/dashboards/OS/Windows/index.html
 ```
 
-The profile folder name is the profile name. Dashboard paths use
+The profile folder name is the profile name. A profile workspace looks like:
+
+```text
+Website/ENCRYPTED/dashboards/Profiles/Rocket/
+  index.html
+  dashboard.json
+  widgets.txt
+  Overview.md
+  assets/
+  bookmarks/
+  cheatsheets/
+  dotfiles/
+  bootstraps/
+  scripts/
+  wiki/
+```
+
+Dashboard paths use
 `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`, where the category becomes a
 section heading on the Dashboards page. The `index.html` file is the entry page.
 Use `Overview.md` for the first note, with `dashboard.json`, `widgets.txt`, an
@@ -252,23 +274,25 @@ Reddit, podcasts, news feeds, bookmarks, featured spotlights, and clickable
 file cards). For every widget type, its configuration fields, and copy-paste
 examples, see the widget guide: [`documentation/Widgets.md`](documentation/Widgets.md).
 
-Internal Rock OS links, such as `/scripts.html` or `/ENCRYPTED/dashboards/OS/Windows/`, open
-in the same browser tab. External web links open in a new tab so the local
-dashboard stays available. Dashboard/profile cards can link directly to their
-markdown tree by using `?view=notes`, for example
+Internal Rock OS links, such as `/scripts.html?profile=Rocket` or
+`/ENCRYPTED/dashboards/OS/Windows/`, open in the same browser tab. External web
+links open in a new tab so the local dashboard stays available.
+Dashboard/profile cards can link directly to their markdown tree by using
+`?view=notes`, for example
 `/ENCRYPTED/dashboards/OS/Windows/?view=notes`.
 
 ### Dashboard Sessions
 
 `Website/Sessions/sessions.json` controls which dashboard sections are
 available on `dashboards.html`. Its `sessions` list controls which choices
-appear in the home-page session dropdown beside the theme selector, and its
-`active` value is only the default session for a fresh checkout.
+appear in the home-page and Dashboards-page session dropdowns beside the theme
+selector, and its `active` value is only the default session for a fresh
+checkout.
 
-When a user changes sessions from the home page, Rock-OS saves that local choice
-to ignored state at `Website/Sessions/active-session.json`. That keeps everyday
-session switching from dirtying the Git working tree, which matters because
-`git-crypt` lock/unlock workflows expect a clean repo.
+When a user changes sessions, Rock-OS saves that local choice to ignored state
+at `Website/Sessions/active-session.json`. That keeps everyday session switching
+from dirtying the Git working tree, which matters because `git-crypt`
+lock/unlock workflows expect a clean repo.
 
 ```json
 {
@@ -426,16 +450,15 @@ source ~/.bashrc
 cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               Public HTML, CSS, JS, assets, and media shell
-Website/launch-point-cards-locked/ Public markdown cards shown while encrypted content is locked
 Website/ENCRYPTED/     git-crypt protected user content
-Website/ENCRYPTED/menu/wiki/     Wiki markdown
-Website/ENCRYPTED/menu/guides/   Guided setup markdown
-Website/ENCRYPTED/menu/cheatsheets/ Quick-reference markdown
-Website/ENCRYPTED/menu/dotfiles/ Dotfile notes and configs
-Website/ENCRYPTED/menu/bookmarks/ Bookmark collections and link notes
-Website/ENCRYPTED/dashboards/Profiles/      Profile command centers
 Website/ENCRYPTED/dashboards/    Dashboards grouped by category
-Website/ENCRYPTED/menu/scripts/  User-managed runnable scripts
+Website/ENCRYPTED/dashboards/Profiles/      Profile workspaces
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/wiki/        Profile wiki markdown
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/bootstraps/  Setup playbooks
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/cheatsheets/ Quick-reference markdown
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/dotfiles/    Dotfile notes and configs
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/bookmarks/   Bookmark collections
+Website/ENCRYPTED/dashboards/Profiles/<Profile>/scripts/     User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -443,23 +466,13 @@ For a plain-language guide to the launcher scripts, read
 
 ## Launch Points
 
-While encrypted content is unlocked, the home page shows its standard launch
-cards. While encrypted content is locked, it reads public fallback cards from
-`Website/launch-point-cards-locked/*.md`. Filename order controls fallback card order.
-Each file uses a heading, a short description, and one Markdown link:
+While encrypted content is unlocked, the home page Launch Points section shows
+the profiles allowed by the active dashboard session. The same session rules
+used by `dashboards.html` decide which profile cards appear.
 
-```markdown
-# Dashboards
-
-Open encrypted dashboards and profile command centers.
-
-[Open Dashboards](../dashboards.html)
-```
-
-Locked-mode Launch Point files stay public so the home page remains useful while
-`Website/ENCRYPTED/` is locked. On the locked home page, each card opens its own
-public markdown file instead of the encrypted destination. Do not put private
-notes or URLs in them.
+While encrypted content is locked, the Launch Points section is omitted. That
+keeps profile names, destinations, and private workspace content out of the
+public locked shell.
 
 Run Go tests from the server module:
 
@@ -542,12 +555,19 @@ hidden temporary executable that `go run` creates inside `.gocache`.
 
 ## Local Script Dashboard
 
-Rock OS includes `Website/scripts.html`, a local dashboard for scripts stored in
-`Website/ENCRYPTED/menu/scripts/`. The dashboard lists allowed scripts, renders the script
-contents for review, and only then enables a run button for scripts compatible
-with the current operating system. When you click Run, the server opens the
-script in the operating system's default terminal so normal prompts, `sudo`,
-and long-running commands behave like they would outside the browser.
+Rock OS includes `Website/scripts.html`, a reusable local dashboard for scripts
+stored inside the active profile workspace:
+
+```text
+Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/
+```
+
+Open Scripts from a profile's horizontal workspace bar. The dashboard lists
+that profile's allowed scripts, renders the script contents for review, and only
+then enables a run button for scripts compatible with the current operating
+system. When you click Run, the server opens the script in the operating
+system's default terminal so normal prompts, `sudo`, and long-running commands
+behave like they would outside the browser.
 
 Refresh buttons inside Rock OS check for GitHub updates before reloading local
 content. The server runs a fixed `git pull --ff-only`, so it only accepts clean
@@ -557,15 +577,14 @@ requests are restricted to the computer running the server, even in LAN Mode:
 other LAN clients can browse refreshed content, but they cannot make the host
 pull code from GitHub.
 
-Organize scripts into folders such as `Website/ENCRYPTED/menu/scripts/Windows/`,
-`Website/ENCRYPTED/menu/scripts/Linux/`, and `Website/ENCRYPTED/menu/scripts/Mac/`. The dashboard renders
-those folders as a folded collapsible tree with an expand/fold-all control,
-similar to the wiki sidebar.
+Organize each profile's scripts into folders such as `Windows/`, `Linux/`, and
+`Mac/`. The dashboard renders those folders as a folded collapsible tree with
+an expand/fold-all control, similar to the wiki sidebar.
 
-For safety, the Go server only exposes scripts from `Website/ENCRYPTED/menu/scripts/` and does
-not provide an arbitrary command prompt. Supported script types are `.cmd`,
-`.bat`, `.sh`, and `.ps1`. PowerShell scripts require PowerShell to be installed
-on the machine running the Go server.
+For safety, the Go server only exposes scripts from an authorized profile's
+`scripts/` folder and does not provide an arbitrary command prompt. Supported
+script types are `.cmd`, `.bat`, `.sh`, and `.ps1`. PowerShell scripts require
+PowerShell to be installed on the machine running the Go server.
 
 Script IDs are restricted to ordinary path characters, spaces, dots, dashes,
 underscores, and supported script extensions. Shell metacharacters are rejected
@@ -701,8 +720,9 @@ go run . --site-root ../../Website
 
 Use `--host 127.0.0.1` to serve only on the current computer. Use `--host local`
 or `--host lan` only when you intentionally want other devices on the trusted
-LAN to connect. Use `--build-index` to rebuild all local tab index JSON files
-without starting the server. The server usually finds `Website` automatically, but
+LAN to connect. Profile workspace indexes are served on demand. Use
+`--build-index` to write `dashboards-index.json` for local inspection without
+starting the server. The server usually finds `Website` automatically, but
 `--site-root` is available for custom layouts.
 
 ## Unlocking Encrypted Content
@@ -730,8 +750,8 @@ runtime choices stay out of Git.
 | Path or pattern | Why it is ignored |
 | --- | --- |
 | `*.key` | Keeps exported `git-crypt` keys private while allowing unlock helpers to restore the key to the repo root. |
-| `Website/Sessions/active-session.json` | Stores the current dashboard session chosen from the home-page dropdown without changing tracked session definitions. |
-| `Website/*-index.json` | Stores generated wiki, guide, cheatsheet, dotfile, bookmark, and dashboard indexes. |
+| `Website/Sessions/active-session.json` | Stores the current dashboard session chosen from the session dropdown without changing tracked session definitions. |
+| `Website/*-index.json` | Stores generated wiki, bootstrap, cheatsheet, dotfile, bookmark, and dashboard indexes. |
 | `Website/.rock-os-version` | Records the downloaded release tag used by launchers to decide whether a binary is current. |
 | `Website/rock-os-*`, `Website/*.download`, `.release/` | Keeps downloaded release binaries, in-progress downloads, and local release output out of commits. |
 | `.gocache/`, `.gotmp/`, `Website/.gocache/`, `Website/.gotmp/` | Keeps Go build and temporary runtime files out of the working tree. |
@@ -789,8 +809,8 @@ macOS or Linux:
 ./START-HERE/Mac/unlock-git-crypt.sh
 ```
 
-The unlock scripts expect exactly one `.key` file in the repo root. After
-unlocking, files in `Website/ENCRYPTED/` should become readable, and the
+The unlock scripts require one usable git-crypt key file in the repo root.
+After unlocking, files in `Website/ENCRYPTED/` should become readable, and the
 key should be restored back to the repo root.
 
 Check status:
@@ -831,31 +851,33 @@ again.
 
 ## How The Wiki Works
 
-The Go server scans:
+Each profile has its own Wiki folder:
 
 ```text
-Website/ENCRYPTED/menu/wiki/
+Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/wiki/
 ```
 
-The server exposes:
+The same profile-owned pattern is used for Bookmarks, Cheatsheets, Dotfiles,
+Bootstraps, and Scripts. The browser includes the profile name when it requests
+the matching index endpoint:
 
 ```text
-Website/wiki-index.json
-Website/guides-index.json
-Website/cheatsheets-index.json
-Website/dotfiles-index.json
-Website/bookmarks-index.json
-Website/dashboards-index.json
+/wiki-index.json?profile=Rocket
+/bootstraps-index.json?profile=Rocket
+/cheatsheets-index.json?profile=Rocket
+/dotfiles-index.json?profile=Rocket
+/bookmarks-index.json?profile=Rocket
+/dashboards-index.json
 ```
 
-The browser reads the matching index endpoint and builds each sidebar tree. When
-you open a document, it asks the Go server to render that markdown through the
-matching local API endpoint, then the browser adds wiki features such as code
+The server validates that the active session can access the requested profile
+before it returns an index, renders markdown, searches content, previews a
+script, or launches a script. The browser then adds wiki features such as code
 copy buttons, callouts, backlinks, and the table of contents.
 
-The generated `*-index.json` files are local state and are intentionally ignored
-by Git. That keeps local private or experimental markdown files from constantly
-dirtying the repo or leaking filenames into commits.
+Generated `*-index.json` files, when created for local inspection, are ignored
+by Git. Normal browsing uses on-demand index endpoints so profile filenames do
+not need to be committed as public metadata.
 
 Raw HTML inside markdown is omitted for safety. That protects the local script
 dashboard and other same-origin APIs from malicious markdown files.
@@ -863,10 +885,10 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/ENCRYPTED/menu/wiki/
+Website/ENCRYPTED/dashboards/Profiles/Rocket/wiki/
   Linux/
     AnduinOS/
-      Guide.md
+      Setup.md
 ```
 
 ## Wiki Links
@@ -909,7 +931,7 @@ remove the link instead of hiding it from the report.
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?doc=menu/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?profile=Rocket&doc=ENCRYPTED/dashboards/Profiles/Rocket/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

@@ -124,20 +124,16 @@ func printStartupStatus(siteRoot string, bindHost string, address string, allowL
 		printStatus("OK", ansiGreen, "Script runs restricted to this computer.")
 	}
 
-	if _, err := os.Stat(filepath.Join(siteRoot, markdownDir)); err == nil {
-		if files, err := collectMarkdownFiles(siteRoot); err == nil {
-			printStatus("OK", ansiGreen, "Markdown docs indexed on demand: %d", len(files))
-		} else {
-			printStatus("WARN", ansiYellow, "Markdown docs could not be scanned: %v", err)
-		}
+	if files, err := collectAllowedProfileMarkdownFiles(siteRoot, "wiki"); err == nil {
+		printStatus("OK", ansiGreen, "Profile wiki docs indexed on demand: %d", len(files))
 	} else {
-		printStatus("WARN", ansiYellow, "Markdown folder not found.")
+		printStatus("WARN", ansiYellow, "Profile wiki docs could not be scanned: %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(siteRoot, scriptsDir)); err == nil {
-		printStatus("OK", ansiGreen, "Scripts folder mounted.")
+	if scripts, err := collectAllowedProfileScripts(siteRoot); err == nil {
+		printStatus("OK", ansiGreen, "Profile scripts available: %d", len(scripts))
 	} else {
-		printStatus("WARN", ansiYellow, "Scripts folder not found.")
+		printStatus("WARN", ansiYellow, "Profile scripts could not be scanned: %v", err)
 	}
 
 	if _, err := os.Stat(filepath.Join(siteRoot, "media")); err == nil {
@@ -298,11 +294,11 @@ func serverStatusHandler(bindHost string, displayHosts []string, port int, siteR
 
 		gitCrypt := privateMarkdownStatus(siteRoot)
 		markdownCount := 0
-		if files, err := collectMarkdownFiles(siteRoot); err == nil {
+		if files, err := collectAllowedProfileMarkdownFiles(siteRoot, "wiki"); err == nil {
 			markdownCount = len(files)
 		}
 		scriptsCount := 0
-		if scripts, err := collectScripts(siteRoot); err == nil {
+		if scripts, err := collectAllowedProfileScripts(siteRoot); err == nil {
 			scriptsCount = len(scripts)
 		}
 		commit, _ := gitHead(filepath.Dir(siteRoot))

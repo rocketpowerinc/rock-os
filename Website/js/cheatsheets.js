@@ -1,15 +1,10 @@
-import { createMarkdownTabApp } from './wiki/markdown-tab.js';
+import { startProfileMarkdownSection } from './profile-workspace.js';
 
-createMarkdownTabApp({
+startProfileMarkdownSection({
     key: 'cheatsheets',
     label: 'Cheatsheets',
     emptyLabel: 'cheatsheets',
     searchStatusId: 'cheatsheetsSearchStatus',
     searchInputId: 'cheatsheetsSearchInput',
-    refreshButtonId: 'refreshCheatsheetsBtn',
-    indexUrl: 'cheatsheets-index.json',
-    docApiUrl: '/api/cheatsheets/doc',
-    searchApiUrl: '/api/cheatsheets/search',
-    pathPrefix: 'ENCRYPTED/menu/cheatsheets',
-    directOpenPageName: 'cheatsheets.html'
+    refreshButtonId: 'refreshCheatsheetsBtn'
 });

@@ -1,15 +1,10 @@
-import { createMarkdownTabApp } from './wiki/markdown-tab.js';
+import { startProfileMarkdownSection } from './profile-workspace.js';
 
-createMarkdownTabApp({
+startProfileMarkdownSection({
     key: 'dotfiles',
     label: 'Dotfiles',
     emptyLabel: 'dotfiles',
     searchStatusId: 'dotfilesSearchStatus',
     searchInputId: 'dotfilesSearchInput',
-    refreshButtonId: 'refreshDotfilesBtn',
-    indexUrl: 'dotfiles-index.json',
-    docApiUrl: '/api/dotfiles/doc',
-    searchApiUrl: '/api/dotfiles/search',
-    pathPrefix: 'ENCRYPTED/menu/dotfiles',
-    directOpenPageName: 'dotfiles.html'
+    refreshButtonId: 'refreshDotfilesBtn'
 });

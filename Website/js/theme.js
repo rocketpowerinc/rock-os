@@ -71,13 +71,7 @@ if (themeSelect) {
     });
 }
 
-async function updateMenuLockState() {
-    const menu =
-        document.querySelector('.nav-menu');
-    const trigger =
-        menu?.querySelector('.nav-menu-trigger');
-    const list =
-        menu?.querySelector('.nav-menu-list');
+async function updateNavigationLockState() {
     const homeLinks =
         document.querySelectorAll('.nav-links a[href$="index.html"]');
     const dashboardLinks =
@@ -86,7 +80,6 @@ async function updateMenuLockState() {
         document.getElementById('sessionSelect');
 
     if (
-        (!menu || !trigger || !list) &&
         homeLinks.length === 0 &&
         dashboardLinks.length === 0 &&
         !sessionSelect
@@ -95,18 +88,8 @@ async function updateMenuLockState() {
     }
 
     function setNavigationLocked(locked) {
-        if (menu && trigger && list) {
-            menu.hidden =
-                locked;
-            menu.classList.toggle('is-locked', locked);
-            menu.classList.toggle('is-unlocked', !locked);
-            trigger.disabled = locked;
-            trigger.setAttribute('aria-disabled', String(locked));
-            trigger.title =
-                locked ? 'Unlock Rock-OS content to open the menu.' : '';
-            list.inert =
-                locked;
-        }
+        document.documentElement.dataset.encryptedNav =
+            locked ? 'locked' : 'unlocked';
 
         homeLinks.forEach(link => {
             link.hidden =
@@ -150,4 +133,4 @@ async function updateMenuLockState() {
     }
 }
 
-updateMenuLockState();
+updateNavigationLockState();

@@ -104,40 +104,31 @@ func linkHealthSourceFiles(siteRoot string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	scanDirs := []string{
-		markdownDir,
-		guidesDir,
-		cheatsheetsDir,
-		dotfilesDir,
-		bookmarksDir,
-		dashboardsDir,
+	dashboardFiles, err := collectDashboardsFiles(siteRoot)
+	if err != nil {
+		return nil, err
 	}
+	dashboardFiles = filterDashboardFilesForActiveSession(siteRoot, dashboardFiles)
 
 	files := []string{}
-	for _, dir := range scanDirs {
-		root := filepath.Join(siteRoot, dir)
-		if _, err := os.Stat(root); os.IsNotExist(err) {
-			continue
+	seen := map[string]bool{}
+	appendFiles := func(entries []markdownIndexEntry) {
+		for _, entry := range entries {
+			if entry.Path == "" || seen[entry.Path] {
+				continue
+			}
+			seen[entry.Path] = true
+			files = append(files, entry.Path)
 		}
+	}
+	appendFiles(dashboardFiles)
 
-		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if entry.IsDir() || !strings.EqualFold(filepath.Ext(entry.Name()), ".md") {
-				return nil
-			}
-
-			relativePath, err := filepath.Rel(siteRoot, path)
-			if err != nil {
-				return err
-			}
-			files = append(files, filepath.ToSlash(relativePath))
-			return nil
-		})
+	for _, section := range []string{"bookmarks", "bootstraps", "cheatsheets", "dotfiles", "wiki"} {
+		sectionFiles, err := collectAllowedProfileMarkdownFiles(siteRoot, section)
 		if err != nil {
 			return nil, err
 		}
+		appendFiles(sectionFiles)
 	}
 
 	sort.Strings(files)
@@ -233,10 +224,7 @@ func resolveLinkTargetPath(siteRoot string, source string, href string) (string,
 		target = filepath.Join(siteRoot, href)
 	} else if strings.HasPrefix(href, "assets"+string(os.PathSeparator)) ||
 		strings.HasPrefix(href, "media"+string(os.PathSeparator)) ||
-		strings.HasPrefix(href, encryptedDir+string(os.PathSeparator)) ||
-		strings.HasPrefix(href, "menu"+string(os.PathSeparator)) ||
-		strings.HasPrefix(href, "profiles"+string(os.PathSeparator)) ||
-		strings.HasPrefix(href, "dashboards"+string(os.PathSeparator)) {
+		strings.HasPrefix(href, encryptedDir+string(os.PathSeparator)) {
 		target = filepath.Join(siteRoot, href)
 	} else {
 		sourceDir := filepath.Dir(filepath.Join(siteRoot, filepath.FromSlash(source)))

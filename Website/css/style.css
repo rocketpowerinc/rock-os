@@ -221,6 +221,11 @@ align-items:center;
 gap:20px;
 }
 
+html:not([data-encrypted-nav="unlocked"]) .nav-links a[href$="dashboards.html"],
+html:not([data-encrypted-nav="unlocked"]) #sessionSelect {
+	display:none;
+}
+
 .nav-links a{
 color:var(--accent);
 font-weight:700;
@@ -229,74 +234,39 @@ letter-spacing:2px;
 transition:.3s;
 }
 
-.nav-links a:hover,
-.nav-menu-trigger:hover{
+.nav-links a:hover{
 text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
 }
 
-.nav-menu {
-	position:relative;
+.profile-workspace-nav {
+	background:rgba(var(--nav-bg-rgb), .82);
+	border-bottom:1px solid rgba(var(--accent-rgb), .2);
+	display:flex;
+	gap:8px;
+	overflow-x:auto;
+	padding:10px 40px;
+	position:sticky;
+	top:91px;
+	z-index:9;
 }
 
-.nav-menu-trigger {
-	background:transparent;
-	border:0;
-	color:var(--accent);
-	cursor:pointer;
-	font:inherit;
-	font-weight:700;
-	letter-spacing:2px;
-	padding:0;
+.profile-workspace-nav a {
+	border:1px solid transparent;
+	color:var(--text-muted);
+	font-size:.75rem;
+	font-weight:800;
+	letter-spacing:1.4px;
+	padding:8px 11px;
+	text-decoration:none;
 	text-transform:uppercase;
-}
-
-.nav-menu-trigger::after {
-	content:"▾";
-	font-size:.7rem;
-	margin-left:8px;
-}
-
-.nav-menu-list {
-	background:var(--panel-bg);
-	border:1px solid rgba(var(--accent-rgb), .28);
-	box-shadow:0 18px 48px rgba(0,0,0,.24);
-	display:none;
-	gap:4px;
-	min-width:190px;
-	padding:8px;
-	position:absolute;
-	right:0;
-	top:100%;
-	z-index:30;
-}
-
-.nav-menu.is-unlocked:hover .nav-menu-list,
-.nav-menu.is-unlocked:focus-within .nav-menu-list {
-	display:grid;
-}
-
-.nav-menu.is-unlocked:hover .nav-menu-trigger,
-.nav-menu.is-unlocked:focus-within .nav-menu-trigger {
-	text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
-}
-
-.nav-menu:not(.is-unlocked) .nav-menu-trigger {
-	cursor:not-allowed;
-	opacity:.5;
-	pointer-events:none;
-	text-shadow:none;
-}
-
-.nav-menu-list a {
-	color:var(--accent);
-	display:block;
-	padding:10px 12px;
 	white-space:nowrap;
 }
 
-.nav-menu-list a:hover {
+.profile-workspace-nav a:hover,
+.profile-workspace-nav a.is-active {
 	background:rgba(var(--accent-rgb), .1);
-	text-shadow:none;
+	border-color:rgba(var(--accent-rgb), .32);
+	color:var(--accent);
 }
 
 .github-link {
@@ -1924,55 +1894,6 @@ color:#88ff88;
 	margin:0;
 }
 
-.launch-grid {
-	display:grid;
-	gap:14px;
-	grid-template-columns:repeat(4, minmax(0, 1fr));
-}
-
-.launch-points-status {
-	color:var(--text-muted);
-	grid-column:1 / -1;
-	margin:0;
-}
-
-.launch-link {
-	background:var(--panel-bg);
-	border:1px solid rgba(var(--accent-rgb), .18);
-	color:var(--text-main);
-	display:grid;
-	gap:12px;
-	min-height:176px;
-	padding:20px;
-	text-decoration:none;
-	transition:border-color .2s, box-shadow .2s, transform .2s, background .2s;
-}
-
-.launch-link:hover {
-	background:rgba(var(--accent-rgb), .07);
-	border-color:rgba(var(--accent-rgb), .42);
-	box-shadow:0 18px 45px rgba(0,0,0,.14);
-	transform:translateY(-3px);
-}
-
-.launch-link span {
-	color:var(--accent);
-	font-size:.75rem;
-	font-weight:900;
-	letter-spacing:2px;
-}
-
-.launch-link strong {
-	font-size:1.05rem;
-	line-height:1.2;
-}
-
-.launch-link small {
-	color:var(--text-muted);
-	font-size:.86rem;
-	line-height:1.5;
-}
-
 .command-feature-grid {
 	gap:14px;
 	grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -3597,10 +3518,8 @@ h3,
 }
 
 :root[data-theme="steel"] .system-panel,
-:root[data-theme="steel"] .launch-link:hover,
 :root[data-theme="steel"] .command-card:hover,
 :root[data-theme="papers"] .system-panel,
-:root[data-theme="papers"] .launch-link:hover,
 :root[data-theme="papers"] .command-card:hover {
 	box-shadow:0 16px 42px rgba(24,32,39,.08);
 }
@@ -3709,7 +3628,6 @@ h3,
 	}
 
 	.status-strip,
-	.launch-grid,
 	.command-feature-grid,
 	.health-summary {
 		grid-template-columns:repeat(2, minmax(0, 1fr));
@@ -3729,9 +3647,9 @@ h3,
 		gap:12px;
 	}
 
-	.nav-menu-list {
-		left:0;
-		right:auto;
+	.profile-workspace-nav {
+		padding:10px 20px;
+		position:static;
 	}
 
 	.command-hero,
@@ -3772,7 +3690,6 @@ h3,
 
 	.system-stats,
 	.status-strip,
-	.launch-grid,
 	.command-feature-grid,
 	.health-summary,
 	.health-item {
@@ -3785,10 +3702,6 @@ h3,
 
 	.quote-panel {
 		margin-bottom:56px;
-	}
-
-	.launch-link {
-		min-height:auto;
 	}
 
 	.command-terminal-content {

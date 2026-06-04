@@ -15,7 +15,8 @@ coverage.
 2. Read `AGENTS.md` first and follow it as the active rule source.
 3. Read only the relevant parts of `README.md` needed to understand current
    architecture, release flow, git-crypt behavior, sessions, launchers,
-   dashboards, menu scripts, wiki, and locked-mode behavior.
+   dashboards, profile workspaces, profile scripts, wiki, and locked-mode
+   behavior.
 4. Inspect current repo state:
    - `git status --short --branch`
    - `git diff --stat`
