@@ -188,9 +188,16 @@ function updateLastSyncDisplay() {
     if (!element) return;
     if (serverLastSyncTimestamp === null || serverLastSyncTimestamp <= 0) {
         element.textContent = '—';
+        element.title =
+            'Rock-OS has not recorded a successful Git sync yet.';
         return;
     }
-    element.textContent = formatRelativeTime(serverLastSyncTimestamp);
+    const relative =
+        formatRelativeTime(serverLastSyncTimestamp);
+    element.textContent =
+        relative;
+    element.title =
+        `Last successful Git sync was ${relative}.`;
 }
 
 function startUptimeTicker() {
@@ -203,10 +210,17 @@ function startUptimeTicker() {
     function tick() {
         if (serverUptimeSeconds === null || lastFetchTime === null) {
             element.textContent = '—';
+            element.title =
+                'Server uptime is unavailable.';
             return;
         }
         const elapsed = Math.floor((Date.now() - lastFetchTime) / 1000);
-        element.textContent = formatUptime(serverUptimeSeconds + elapsed);
+        const uptime =
+            formatUptime(serverUptimeSeconds + elapsed);
+        element.textContent =
+            uptime;
+        element.title =
+            `Rock-OS has been running for ${uptime}.`;
         updateLastSyncDisplay();
     }
 
@@ -227,10 +241,16 @@ function renderServerMode(status) {
 
         if (mode === 'lan') {
             serverModeTitle.textContent = 'LAN';
+            serverModeBanner.title =
+                'LAN mode: Rock-OS is reachable from trusted devices on your local network.';
         } else if (mode === 'local') {
             serverModeTitle.textContent = 'Host';
+            serverModeBanner.title =
+                'Host mode: Rock-OS is only reachable from this computer.';
         } else {
             serverModeTitle.textContent = 'Unknown';
+            serverModeBanner.title =
+                'Server mode is unavailable.';
         }
     }
 
@@ -243,12 +263,18 @@ function renderServerMode(status) {
         if (cryptStatus === 'unlocked') {
             cryptElement.textContent = 'Unlocked';
             cryptElement.style.color = 'var(--success)';
+            cryptElement.title =
+                'Encrypted Rock-OS content is unlocked and available.';
         } else if (cryptStatus === 'locked') {
             cryptElement.textContent = 'Locked';
             cryptElement.style.color = '#ef4444';
+            cryptElement.title =
+                'Encrypted Rock-OS content is locked with git-crypt.';
         } else {
             cryptElement.textContent = 'Missing';
             cryptElement.style.color = 'var(--text-muted)';
+            cryptElement.title =
+                'Encrypted Rock-OS content status is unavailable.';
         }
     }
 
@@ -256,12 +282,20 @@ function renderServerMode(status) {
     if (countElement) {
         countElement.textContent =
             typeof status?.wikiCount === 'number' ? `${status.wikiCount} Files` : '—';
+        countElement.title =
+            typeof status?.wikiCount === 'number'
+                ? `${status.wikiCount} markdown documents are currently indexed.`
+                : 'Wiki document count is unavailable.';
     }
 
     const scriptsCountElement = document.getElementById('scriptsFilesCount');
     if (scriptsCountElement) {
         scriptsCountElement.textContent =
             typeof status?.scriptsCount === 'number' ? `${status.scriptsCount} Files` : '—';
+        scriptsCountElement.title =
+            typeof status?.scriptsCount === 'number'
+                ? `${status.scriptsCount} .cmd, .bat, .sh, and .ps1 scripts are currently available.`
+                : 'Script count is unavailable.';
     }
 
     const commitElement = document.getElementById('serverCommit');
@@ -295,6 +329,8 @@ function renderServerMode(status) {
             lastFetchTime = null;
             serverLastSyncTimestamp = null;
             uptimeElement.textContent = '—';
+            uptimeElement.title =
+                'Server uptime is unavailable.';
             updateLastSyncDisplay();
         }
     }
@@ -361,7 +397,7 @@ async function loadLinkHealth() {
             element.style.color =
                 'var(--success)';
             element.title =
-                `${checked} links checked.`;
+                checked === 0 ? '0 links exist.' : `${checked} links checked.`;
         }
     }
     catch (err) {
@@ -370,6 +406,8 @@ async function loadLinkHealth() {
             'Unavailable';
         element.style.color =
             'var(--text-muted)';
+        element.title =
+            'Link health is unavailable.';
     }
 }
 
