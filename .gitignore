@@ -72,7 +72,9 @@ Website/cheatsheets-index.json
 Website/dotfiles-index.json
 Website/bookmarks-index.json
 Website/dashboards-index.json
+Website/markdown-index.json
 Website/.rock-os-version
+Website/.rock-os-wiki-version
 Website/Sessions/active-session.json
 Website/*.download
 Website/rock-os-*

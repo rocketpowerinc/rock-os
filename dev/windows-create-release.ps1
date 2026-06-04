@@ -145,8 +145,9 @@ $stagedFiles = @(git diff --cached --name-only)
 $forbiddenPatterns = @(
     '(^|/).*\.key$',
     '^Website/\.rock-os-version$',
+    '^Website/\.rock-os-wiki-version$',
     '^Website/Sessions/active-session\.json$',
-    '^Website/(wiki|guides|cheatsheets|dotfiles|bookmarks|profiles|dashboards)-index\.json$',
+    '^Website/(markdown|wiki|guides|cheatsheets|dotfiles|bookmarks|profiles|dashboards)-index\.json$',
     '^Website/rock-os-',
     '^Website/.*\.download$',
     '(^|/)\.gocache/',
