@@ -1,6 +1,6 @@
 ---
 name: dashboard-new
-description: Use when the user invokes /dashboard-new or asks to create/scaffold a new Rock-OS dashboard under Website/ENCRYPTED/dashboards. The skill follows Rock-OS dashboard conventions, asks for the dashboard category, dashboard name, and icon asset URL when missing, downloads the icon locally into the dashboard folder, and creates the standard dashboard files.
+description: Use when the user invokes /dashboard-new or asks to create/scaffold a new Rock-OS dashboard under Website/ENCRYPTED/dashboards. The skill follows Rock-OS dashboard conventions, asks for the dashboard category, dashboard name, icon asset URL, and which dashboard sessions should not see it, downloads the icon locally into the dashboard folder, and creates the standard dashboard files.
 metadata:
   short-description: Scaffold a Rock-OS dashboard
 ---
@@ -24,6 +24,9 @@ If missing, ask briefly for:
   `Gaming`, `Homelab`, or a new one-word category. This determines which
   section title the dashboard appears under on `dashboards.html`.
 - Icon/image URL to download for the dashboard icon.
+- Dashboard session exclusions: ask which session or sessions should not be
+  able to see the new dashboard. Accept `none` when the dashboard should follow
+  normal session behavior.
 
 If any of these are missing, ask for only the missing pieces before editing files.
 
@@ -61,25 +64,36 @@ Rules:
 ## Workflow
 
 1. Inspect an existing dashboard, usually `Website/ENCRYPTED/dashboards/OS/Windows/`, before editing.
-2. Create the dashboard folder and `assets/` folder.
-3. Download the icon URL into the dashboard `assets/` folder.
+2. Inspect `Website/Sessions/sessions.json` and the session filtering code in
+   `cmd/rock-os/sessions.go` before applying session exclusions.
+   - Current session behavior may only support some exclusions directly, such
+     as `Public` hiding `Profiles`, path sessions seeing only one dashboard,
+     `Admin` hiding `Profiles/Rocket`, and `Rocket` seeing everything.
+   - If the requested exclusions cannot be represented by the current session
+     model, explain that a session-filtering feature change is needed before
+     scaffolding or ask whether to continue with normal session behavior.
+3. Create the dashboard folder and `assets/` folder.
+4. Download the icon URL into the dashboard `assets/` folder.
    - Prefer the original extension when obvious.
    - Use a safe lowercase filename such as `icon.png`, `windows.png`, or `<dashboard-name>.png`.
    - If network access is blocked, request approval to download the asset.
-4. Create `index.html` by adapting the current dashboard page convention.
+5. Create `index.html` by adapting the current dashboard page convention.
    - Use root-relative paths like `/css/style.css`, `/js/theme.js`, and `/js/profiles.js`.
    - Keep the same navbar and sidebar structure as other dashboard pages.
-5. Create `Overview.md` with a short practical intro and a few useful sections.
-6. Create `dashboard.json` with:
+6. Create `Overview.md` with a short practical intro and a few useful sections.
+7. Create `dashboard.json` with:
    - `title`: `<DashboardName> Command Center` unless user asks otherwise.
    - `subtitle`: a concise description.
    - `avatarClass`: a dashboard-specific class, for example `windows-dashboard-avatar-display`.
    - one starter `bookmarks` widget with useful internal links.
-7. Create `widgets.txt` with comments explaining that it can override or add widgets later.
-8. Update `Website/css/style.css`:
+8. Create `widgets.txt` with comments explaining that it can override or add widgets later.
+9. Update `Website/css/style.css`:
    - Add the avatar class pointing to `../ENCRYPTED/dashboards/<Category>/<DashboardName>/assets/<icon>`.
    - Add/confirm a landing-card icon rule for `.profiles-card[data-profile="<DashboardName>"]` pointing to the same icon.
-9. Run sanity checks:
+10. If session exclusions were requested and are supported by the current
+    session model, update the appropriate session configuration or code in the
+    same change and add/update focused tests.
+11. Run sanity checks:
    - `node --check Website\js\profiles.js` if JS changed.
    - `git diff --check`.
    - If Go server code changes, run `go test ./...` from `cmd/rock-os` and remind the user a new release binary is needed.
