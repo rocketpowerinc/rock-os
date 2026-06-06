@@ -61,14 +61,58 @@ function profileCard(profile) {
     return link;
 }
 
+function profileOrderForSession(sessionName) {
+    const normalized =
+        String(sessionName || '').trim().toLowerCase();
+
+    if (normalized === 'rocket') {
+        return ['Rocket', 'Admin', 'Family', 'Kids', 'Prepper'];
+    }
+    if (normalized === 'admin') {
+        return ['Admin', 'Prepper', 'Family', 'Kids'];
+    }
+
+    return ['Rocket', 'Family', 'Kids', 'Admin'];
+}
+
+function sortProfilesForSession(profiles, sessionName) {
+    const profileOrder =
+        profileOrderForSession(sessionName);
+    const profileRank = profile => {
+        if (!profileOrder.includes('Prepper') && profile === 'Prepper') {
+            return profileOrder.length + 1;
+        }
+
+        const rank =
+            profileOrder.indexOf(profile);
+
+        return rank === -1
+            ? profileOrder.length
+            : rank;
+    };
+
+    profiles.sort((first, second) => {
+        const rankCompare =
+            profileRank(first) - profileRank(second);
+
+        if (rankCompare !== 0) {
+            return rankCompare;
+        }
+        return first.localeCompare(second, undefined, { sensitivity: 'base' });
+    });
+}
+
 async function loadProfileLaunchPoints() {
     if (!launchPointsGrid) {
         return;
     }
 
     try {
-        const response =
-            await fetch('/dashboards-index.json?nocache=' + Date.now());
+        const [response, sessionsResponse] =
+            await Promise.all([
+                fetch('/dashboards-index.json?nocache=' + Date.now()),
+                fetch('/api/sessions?nocache=' + Date.now())
+            ]);
 
         if (!response.ok) {
             throw new Error('Could not load profile launch points');
@@ -76,6 +120,8 @@ async function loadProfileLaunchPoints() {
 
         const files =
             await response.json();
+        const sessions =
+            sessionsResponse.ok ? await sessionsResponse.json() : null;
         const profiles =
             Array.from(
                 new Set(
@@ -84,30 +130,8 @@ async function loadProfileLaunchPoints() {
                         .filter(Boolean)
                 )
             );
-        const profileOrder =
-            ['Rocket', 'Family', 'Kids', 'Admin'];
-        const profileRank = profile => {
-            if (profile === 'Prepper') {
-                return profileOrder.length + 1;
-            }
 
-            const rank =
-                profileOrder.indexOf(profile);
-
-            return rank === -1
-                ? profileOrder.length
-                : rank;
-        };
-
-        profiles.sort((first, second) => {
-            const rankCompare =
-                profileRank(first) - profileRank(second);
-
-            if (rankCompare !== 0) {
-                return rankCompare;
-            }
-            return first.localeCompare(second, undefined, { sensitivity: 'base' });
-        });
+        sortProfilesForSession(profiles, sessions?.active);
 
         launchPointsGrid.replaceChildren(...profiles.map(profileCard));
         if (launchPointsSection) {
