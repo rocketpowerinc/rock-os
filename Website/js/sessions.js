@@ -100,7 +100,9 @@ function sessionChangeNeedsReload() {
     const path =
         window.location.pathname.toLowerCase();
 
-    return path.endsWith('/dashboards.html') ||
+    return path === '/' ||
+        path.endsWith('/index.html') ||
+        path.endsWith('/dashboards.html') ||
         path.includes('/encrypted/dashboards/');
 }
 
