@@ -298,9 +298,8 @@ Dashboard/profile cards can link directly to their markdown tree by using
 
 `Website/Sessions/sessions.json` controls which dashboard sections are
 available on `dashboards.html`. Its `sessions` list controls which choices
-appear in the home-page and Dashboards-page session dropdowns beside the theme
-selector, and its `active` value is only the default session for a fresh
-checkout.
+appear in the home-page session dropdown beside the theme selector, and its
+`active` value is only the default session for a fresh checkout.
 
 When a user changes sessions, Rock-OS saves that local choice to ignored state
 at `Website/Sessions/active-session.json`. That keeps everyday session switching
