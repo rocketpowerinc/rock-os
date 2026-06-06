@@ -23,6 +23,15 @@ require_git() {
     fi
 }
 
+require_git_crypt() {
+    if ! command -v git-crypt >/dev/null 2>&1; then
+        yellow "git-crypt is required but was not found."
+        yellow "Install git-crypt with this command, then run this installer again:"
+        printf '\n%s\n\n' "  brew install git-crypt" >&2
+        exit 1
+    fi
+}
+
 ensure_repo() {
     if [ -d "$INSTALL_DIR/.git" ]; then
         green "Rock-OS repo found at $INSTALL_DIR"
@@ -175,6 +184,7 @@ EOF
 }
 
 require_git
+require_git_crypt
 ensure_repo
 ensure_path
 write_rock_command

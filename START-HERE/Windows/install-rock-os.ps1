@@ -26,6 +26,17 @@ function Ensure-Git {
     }
 }
 
+function Ensure-GitCrypt {
+    if (-not (Get-Command git-crypt -ErrorAction SilentlyContinue)) {
+        Write-Yellow 'git-crypt is required but was not found on your PATH.'
+        Write-Yellow 'Install git-crypt with this command, then run this installer again:'
+        Write-Host ''
+        Write-Host '  scoop install main/git-crypt'
+        Write-Host ''
+        throw 'git-crypt is required. Run the install command shown above, then re-run this installer.'
+    }
+}
+
 function Ensure-Repo {
     if (Test-Path (Join-Path $InstallDir '.git')) {
         Write-Green "Rock-OS repo found at $InstallDir"
@@ -105,6 +116,7 @@ function Create-DesktopShortcut {
 }
 
 Ensure-Git
+Ensure-GitCrypt
 Ensure-Repo
 Ensure-BinOnPath
 Write-RockCommand

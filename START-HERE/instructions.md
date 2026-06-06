@@ -35,7 +35,7 @@ Use this when you are setting up Rock-OS on a computer.
 
 What it does:
 
-- Checks that Git is installed.
+- Checks that Git and `git-crypt` are installed.
 - Clones the Rock-OS repo into your home folder if it is not already there.
 - If the repo already exists, updates it with a safe fast-forward pull.
 - Creates a `rock-os` terminal command.

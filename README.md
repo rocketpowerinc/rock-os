@@ -96,9 +96,12 @@ irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Win
 
 ```
 
-Same line but it install git first
+If Git or `git-crypt` is missing, install them first, then run the installer
+again:
+
 ```powershell
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) { winget install --id Git.Git -e --source winget; $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User') }; irm https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Windows/install-rock-os.ps1 | iex
+winget.exe install --id "Git.Git" --exact --source winget --accept-source-agreements --disable-interactivity --silent --accept-package-agreements --force
+scoop install git-crypt
 ```
 
 After install, open a new terminal and run:
@@ -113,6 +116,20 @@ rock-os
 curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Linux/install-rock-os.sh | sh
 ```
 
+If Git or `git-crypt` is missing, install them first, then run the installer
+again:
+
+```bash
+# Debian/Ubuntu
+sudo apt install git git-crypt
+
+# Fedora/RHEL
+sudo dnf install git git-crypt
+
+# Arch
+sudo pacman -S git git-crypt
+```
+
 After install, open a new terminal and run:
 
 ```bash
@@ -123,6 +140,13 @@ rock-os
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/rocketpowerinc/rock-os/main/START-HERE/Mac/install-rock-os.sh | sh
+```
+
+If Git or `git-crypt` is missing, install them first, then run the installer
+again:
+
+```bash
+brew install git git-crypt
 ```
 
 After install, open a new terminal and run:
@@ -377,7 +401,7 @@ scoop bucket add extras
 Install `git-crypt`:
 
 ```powershell
-scoop install main/git-crypt
+scoop install git-crypt
 ```
 
 ### macOS
