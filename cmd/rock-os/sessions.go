@@ -71,7 +71,7 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 		Notes: []string{
 			"Rock-OS uses active as the current dashboard session.",
 			"Public shows dashboards but hides Profiles.",
-			"Path sessions show only one dashboard folder, such as Profiles/Kids.",
+			"Path sessions show only one profile workspace, such as Profiles/Kids.",
 			"Add future sessions to the sessions list so they appear in the home-page dropdown.",
 		},
 		Sessions: []dashboardSession{
@@ -309,7 +309,7 @@ func dashboardSessionAllowsPath(siteRoot string, dashboard string) bool {
 	}
 
 	probe := []markdownIndexEntry{{
-		Path: dashboardsDir + "/" + dashboard + "/__access__.md",
+		Path: profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/__access__.md",
 	}}
 
 	return len(filterDashboardFilesForSession(probe, activeDashboardSession(siteRoot))) == 1
@@ -326,7 +326,7 @@ func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboar
 
 	if session.Public {
 		filtered := []markdownIndexEntry{}
-		profilesPrefix := dashboardsDir + "/Profiles/"
+		profilesPrefix := profilesDir + "/"
 		for _, file := range files {
 			if !strings.HasPrefix(file.Path, profilesPrefix) {
 				filtered = append(filtered, file)
@@ -339,7 +339,23 @@ func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboar
 		return []markdownIndexEntry{}
 	}
 
-	return filterDashboardFiles(files, session.AllowedPath)
+	return filterDashboardFilesInsideProfilePath(files, session.AllowedPath)
+}
+
+func filterDashboardFilesInsideProfilePath(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
+	dashboard = normalizeDashboardSessionPath(dashboard)
+	if dashboard == "" {
+		return []markdownIndexEntry{}
+	}
+
+	prefix := profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/"
+	filtered := []markdownIndexEntry{}
+	for _, file := range files {
+		if strings.HasPrefix(file.Path, prefix) {
+			filtered = append(filtered, file)
+		}
+	}
+	return filtered
 }
 
 func filterDashboardFilesOutsidePath(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
@@ -348,7 +364,7 @@ func filterDashboardFilesOutsidePath(files []markdownIndexEntry, dashboard strin
 		return files
 	}
 
-	prefix := dashboardsDir + "/" + dashboard + "/"
+	prefix := profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/"
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
 		if !strings.HasPrefix(file.Path, prefix) {

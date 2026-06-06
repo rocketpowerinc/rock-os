@@ -23,7 +23,7 @@ Never break these without an explicit, specific request from the user:
   the core website experience. Keep visual assets local in `Website/assets`.
 - **Never** turn the script dashboard into an arbitrary web command prompt. It
   may only expose allowlisted script files from
-  `Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/`.
+  `Website/ENCRYPTED/Profiles/<ProfileName>/scripts/`.
 - **Never** add a frontend build step unless the user explicitly asks.
 - **Never** track generated indexes, release binaries, caches, downloaded
   artifacts, or `Website/.rock-os-version` in Git.
@@ -90,7 +90,7 @@ Never break these without an explicit, specific request from the user:
 ## Scripts & Binaries
 
 - User-managed website scripts live in each profile workspace under
-  `Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/`, organized under
+  `Website/ENCRYPTED/Profiles/<ProfileName>/scripts/`, organized under
   platform folders (`Windows/`, `Linux/`, `Mac/`) and rendered as a collapsible
   tree. Keep the dashboard preview-before-run; on Run, launch in the OS terminal,
   not a browser pseudo-terminal. Supported types: `.cmd`, `.bat`, `.sh`, `.ps1`.
@@ -134,27 +134,28 @@ Never break these without an explicit, specific request from the user:
 - Never document local session marker files in README.md, public website
   content, or user-facing docs. Keep them ignored and local-only.
 
-## Dashboards (`Website/ENCRYPTED/dashboards/`)
+## Dashboards (`Website/ENCRYPTED/Profiles/<Profile>/dashboards/`)
 
-- Live under `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`. Group by category
-  folder; `dashboards.html` renders category sections dynamically — do not
-  hardcode ordinary dashboard categories. Do not render `Profiles` as a
-  dashboards landing category; profiles are launched from the home page Launch
-  Points section according to the active session. Order ordinary categories
-  with `OS` first, `Mobile` second, then the rest alphabetically. In `Homelab`, keep
+- Ordinary dashboards live inside the owning profile under
+  `Website/ENCRYPTED/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`.
+  Group by category folder; `dashboards.html?profile=<Profile>` renders that
+  profile's category sections dynamically — do not hardcode ordinary dashboard
+  categories. Profiles are launched from the home page Launch Points section
+  according to the active session. Order ordinary categories with `OS` first,
+  `Mobile` second, then the rest alphabetically. In `Homelab`, keep
   `SelfHosting` first and sort the rest alphabetically.
 - Dashboard names should preferably be one word. If the user proposes a
   multi-word name, warn them and ask for a one-word version before scaffolding.
   If they give exact casing or punctuation, preserve it and update all
   path-sensitive references.
-- Profiles stored under `Website/ENCRYPTED/dashboards/Profiles/` and Dashboards share
+- Profiles stored under `Website/ENCRYPTED/Profiles/` and Dashboards share
   the base folder conventions: each item folder uses
   `index.html` as the entry page, with `dashboard.json`, `widgets.txt`,
   `Overview.md`, optional local `assets/`, and other markdown beside it.
 - Treat Profiles as special workspaces, not ordinary dashboards. Keep each
-  profile's `bookmarks/`, `cheatsheets/`, `dotfiles/`, `bootstraps/`, `scripts/`,
-  and `wiki/` folders inside that profile folder. Call setup playbooks
-  **Bootstraps** everywhere.
+  profile's `dashboards/`, `bookmarks/`, `cheatsheets/`, `dotfiles/`,
+  `bootstraps/`, `scripts/`, and `wiki/` folders inside that profile folder.
+  Call setup playbooks **Bootstraps** everywhere.
 - Keep profile workspace APIs session-authorized server-side. Do not rely on
   hidden frontend links to protect a profile's markdown or scripts.
 - Item icons live inside that item's own `assets/` folder, not global

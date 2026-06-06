@@ -76,7 +76,6 @@ func siteRootLooksValid(siteRoot string) bool {
 	}
 
 	requiredDirs := []string{
-		dashboardsDir,
 		profilesDir,
 		"css",
 		"js",

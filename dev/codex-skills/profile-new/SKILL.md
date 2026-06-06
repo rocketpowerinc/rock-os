@@ -1,11 +1,11 @@
 ---
 name: profile-new
-description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile dashboard under Website/ENCRYPTED/dashboards/Profiles with its own Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
+description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile workspace under Website/ENCRYPTED/Profiles with its own Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
 ---
 
 # Profile New
 
-Create a Rock-OS profile workspace under `Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/`.
+Create a Rock-OS profile workspace under `Website/ENCRYPTED/Profiles/<ProfileName>/`.
 
 ## Required Inputs
 
@@ -18,7 +18,7 @@ Ask briefly for any missing values:
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/
+Website/ENCRYPTED/Profiles/<ProfileName>/
   index.html
   Overview.md
   dashboard.json
@@ -28,6 +28,8 @@ Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/
     <ProfileName>-Rugged.<ext>
     <ProfileName>-Cyberpunk.<ext>
     <ProfileName>-Blue-Grass.<ext>
+  dashboards/
+    .gitkeep
   bookmarks/
     .gitkeep
   cheatsheets/
@@ -47,7 +49,7 @@ Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/
 1. Read `AGENTS.md`, confirm `Website/ENCRYPTED/` is unlocked, and inspect a similar existing profile.
 2. Inspect `Website/Sessions/sessions.json`, `cmd/rock-os/sessions.go`, `Website/js/index.js`, and `Website/js/profiles.js` before changing visibility or ordering.
 3. Create the profile dashboard files by adapting the current profile page convention.
-4. Create all six workspace folders, even when empty. Use **Bootstraps** for setup playbooks.
+4. Create all seven workspace folders, even when empty: Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki. Use **Bootstraps** for setup playbooks.
 5. Keep the profile page on the shared dashboard module:
 
    ```html
@@ -67,7 +69,7 @@ Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/
 
 ## Conventions
 
-- Profiles are special dashboards, not ordinary dashboard categories.
+- Profiles are special workspaces, not ordinary dashboard categories. Each profile owns its own `dashboards/` folder.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.

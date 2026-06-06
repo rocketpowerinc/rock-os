@@ -30,6 +30,7 @@ var profileWorkspaceSections = map[string]bool{
 	"bookmarks":   true,
 	"bootstraps":  true,
 	"cheatsheets": true,
+	"dashboards":  true,
 	"dotfiles":    true,
 	"scripts":     true,
 	"wiki":        true,
@@ -126,6 +127,10 @@ func profileWorkspaceDir(profile string, section string) (string, error) {
 	}
 
 	return profilesDir + "/" + profile + "/" + section, nil
+}
+
+func profileDashboardsDir(profile string) (string, error) {
+	return profileWorkspaceDir(profile, dashboardsSection)
 }
 
 func profileWorkspaceRequestProfile(w http.ResponseWriter, r *http.Request, siteRoot string) (string, bool) {
@@ -512,11 +517,11 @@ func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, erro
 	if err != nil {
 		return "", "", err
 	}
-	if !strings.HasPrefix(normalized, dashboardsDir+"/") {
-		return "", "", fmt.Errorf("dashboard document path must start with %s/", dashboardsDir)
+	if !strings.HasPrefix(normalized, profilesDir+"/") || !strings.Contains(normalized, "/"+dashboardsSection+"/") {
+		return "", "", fmt.Errorf("dashboard document path must be inside a profile %s folder", dashboardsSection)
 	}
 
-	root, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(dashboardsDir)))
+	root, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(profilesDir)))
 	if err != nil {
 		return "", "", err
 	}
@@ -525,18 +530,18 @@ func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, erro
 		return "", "", err
 	}
 	if !pathInsideRoot(root, target) {
-		return "", "", fmt.Errorf("dashboard document must stay inside %s", dashboardsDir)
+		return "", "", fmt.Errorf("dashboard document must stay inside %s", profilesDir)
 	}
 	return normalized, target, nil
 }
 
 func dashboardPathFromDocument(path string) (string, bool) {
-	path = strings.TrimPrefix(filepath.ToSlash(path), dashboardsDir+"/")
+	path = strings.TrimPrefix(filepath.ToSlash(path), profilesDir+"/")
 	parts := strings.Split(path, "/")
-	if len(parts) < 3 || parts[0] == "" || parts[1] == "" {
+	if len(parts) < 5 || parts[0] == "" || parts[1] != dashboardsSection || parts[2] == "" || parts[3] == "" {
 		return "", false
 	}
-	return parts[0] + "/" + parts[1], true
+	return profileDashboardPath(parts[0]), true
 }
 
 func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSearchResult, error) {
@@ -563,7 +568,16 @@ func filterDashboardFiles(files []markdownIndexEntry, dashboard string) []markdo
 		}
 	}
 
-	prefix := dashboardsDir + "/" + dashboard + "/"
+	profile := dashboard
+	if strings.HasPrefix(profile, "Profiles/") {
+		profile = strings.TrimPrefix(profile, "Profiles/")
+	}
+	profileParts := strings.Split(profile, "/")
+	if len(profileParts) != 1 || profileParts[0] == "" {
+		return []markdownIndexEntry{}
+	}
+
+	prefix := profilesDir + "/" + profileParts[0] + "/" + dashboardsSection + "/"
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
 		if strings.HasPrefix(file.Path, prefix) {
@@ -597,7 +611,7 @@ func writeDashboardsIndex(siteRoot string) (bool, error) {
 }
 
 func collectDashboardsFiles(siteRoot string) ([]markdownIndexEntry, error) {
-	files, err := collectMarkdownFilesWithCache(siteRoot, dashboardsDir, defaultApp.Caches.Dashboards)
+	files, err := collectMarkdownFilesWithCache(siteRoot, profilesDir, defaultApp.Caches.Dashboards)
 	if err != nil {
 		return nil, err
 	}
@@ -614,5 +628,7 @@ func collectDashboardsFiles(siteRoot string) ([]markdownIndexEntry, error) {
 func isProfileWorkspaceMarkdownPath(path string) bool {
 	path = strings.TrimPrefix(filepath.ToSlash(path), profilesDir+"/")
 	parts := strings.Split(path, "/")
-	return len(parts) >= 3 && profileWorkspaceSections[strings.ToLower(parts[1])]
+	return len(parts) >= 3 &&
+		profileWorkspaceSections[strings.ToLower(parts[1])] &&
+		strings.ToLower(parts[1]) != dashboardsSection
 }

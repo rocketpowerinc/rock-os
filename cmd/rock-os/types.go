@@ -19,8 +19,8 @@ const (
 	rocketKeyFile       = "rocket.key"
 	sessionsFile        = "Sessions/sessions.json"
 	activeSessionFile   = "Sessions/active-session.json"
-	dashboardsDir       = encryptedDir + "/dashboards"
-	profilesDir         = dashboardsDir + "/Profiles"
+	profilesDir         = encryptedDir + "/Profiles"
+	dashboardsSection   = "dashboards"
 	dashboardsIndexFile = "dashboards-index.json"
 )
 

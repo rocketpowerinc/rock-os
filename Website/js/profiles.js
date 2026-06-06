@@ -3,7 +3,7 @@ import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
 import { renderProfileWorkspaceNav } from './profile-workspace.js';
 
 const appMode = {
-    rootDir: 'ENCRYPTED/dashboards',
+    rootDir: 'ENCRYPTED/Profiles',
     indexFile: 'dashboards-index.json',
     apiRoot: 'dashboards',
     mainPage: 'dashboards.html',
@@ -131,7 +131,12 @@ function renderDashboardError(message) {
 
 function currentProfileName() {
     const params = new URLSearchParams(window.location.search);
-    let profile = params.get('profile') || params.get('dashboard') || '';
+    const isDashboardsLanding =
+        window.location.pathname.toLowerCase().endsWith('/dashboards.html');
+    let profile =
+        isDashboardsLanding
+            ? params.get('dashboard') || ''
+            : params.get('dashboard') || '';
     if (!profile) {
         const parts =
             window.location.pathname
@@ -151,8 +156,13 @@ function currentProfileName() {
                     .slice(rootIndex + rootParts.length)
                     .filter(part => part && part !== 'index.html');
 
-            profile =
-                itemParts.slice(0, 2).join('/');
+            if (itemParts.length >= 4 && itemParts[1] === 'dashboards') {
+                profile =
+                    itemParts.slice(0, 4).join('/');
+            } else {
+                profile =
+                    itemParts.slice(0, 1).join('/');
+            }
         }
     }
     return profile;
@@ -179,15 +189,29 @@ function profileItemFromPath(path) {
         return null;
     }
 
-    if (parts[1] !== 'dashboards' || parts.length < 4) {
+    if (parts[1] !== 'Profiles' || parts.length < 4) {
         return null;
     }
 
+    if (parts.length >= 7 && parts[3] === 'dashboards') {
+        return {
+            category: decodeURIComponent(parts[4]),
+            name: decodeURIComponent(parts[5]),
+            profile: [
+                decodeURIComponent(parts[2]),
+                'dashboards',
+                decodeURIComponent(parts[4]),
+                decodeURIComponent(parts[5])
+            ].join('/'),
+            rootDir: 'ENCRYPTED/Profiles'
+        };
+    }
+
     return {
-        category: decodeURIComponent(parts[2]),
-        name: decodeURIComponent(parts[3]),
-        profile: `${decodeURIComponent(parts[2])}/${decodeURIComponent(parts[3])}`,
-        rootDir: 'ENCRYPTED/dashboards'
+        category: 'Profiles',
+        name: decodeURIComponent(parts[2]),
+        profile: decodeURIComponent(parts[2]),
+        rootDir: 'ENCRYPTED/Profiles'
     };
 }
 
@@ -381,8 +405,16 @@ function renderProfilesLanding(files) {
 async function loadProfilesLanding() {
 
     try {
+        const params =
+            new URLSearchParams(window.location.search);
+        const ownerProfile =
+            String(params.get('profile') || '').trim();
+        const indexUrl =
+            ownerProfile
+                ? `/${appMode.indexFile}?profile=${encodeURIComponent(ownerProfile)}&nocache=${Date.now()}`
+                : `/${appMode.indexFile}?nocache=${Date.now()}`;
         const response =
-            await fetch(`/${appMode.indexFile}?nocache=` + Date.now());
+            await fetch(indexUrl);
 
         if (!response.ok) {
             throw new Error(`${appMode.pageTitle} index failed with HTTP ${response.status}`);
@@ -403,8 +435,10 @@ async function loadProfilesLanding() {
 
 async function dashboardSessionAllows(profile) {
     try {
+        const owner =
+            String(profile || '').split('/').filter(Boolean)[0] || '';
         const response =
-            await fetch(`/${appMode.indexFile}?profile=${encodeURIComponent(profile)}&nocache=` + Date.now());
+            await fetch(`/${appMode.indexFile}?nocache=` + Date.now());
 
         if (!response.ok) {
             return false;
@@ -413,7 +447,8 @@ async function dashboardSessionAllows(profile) {
         const files =
             await response.json();
 
-        return Array.isArray(files) && files.length > 0;
+        return Array.isArray(files) &&
+            files.some(file => String(file?.path || file).startsWith(`ENCRYPTED/Profiles/${owner}/`));
     }
     catch {
         return false;
@@ -1036,8 +1071,10 @@ async function startProfiles() {
         return;
     }
 
-    if (profile.startsWith('Profiles/')) {
-        renderProfileWorkspaceNav(displayName);
+    const profileOwner =
+        profile.split('/').filter(Boolean)[0] || '';
+    if (profileOwner) {
+        renderProfileWorkspaceNav(profileOwner);
     }
 
     document.title = `${appMode.documentTitlePrefix} ${displayName}`;

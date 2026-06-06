@@ -1,17 +1,18 @@
 ---
 name: dashboard-new
-description: Use when the user invokes /dashboard-new or asks to create or scaffold an ordinary Rock-OS dashboard under Website/ENCRYPTED/dashboards outside the Profiles category. Follow Rock-OS dashboard conventions, gather the dashboard name, category, local icon plan, and session visibility requirements, then create the standard dashboard files. Use /profile-new instead for a profile workspace.
+description: Use when the user invokes /dashboard-new or asks to create or scaffold an ordinary Rock-OS dashboard inside a profile-owned dashboards folder. Follow Rock-OS dashboard conventions, gather the owning profile, dashboard name, category, local icon plan, and session visibility requirements, then create the standard dashboard files. Use /profile-new instead for a profile workspace.
 ---
 
 # Dashboard New
 
-Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`.
+Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/`.
 
 ## Required Inputs
 
 Ask briefly for any missing values:
 
 - Dashboard name. Prefer one word; ask before using a multi-word name.
+- Owning profile. Default to `Rocket` only when the user does not specify one.
 - Dashboard category. Do not use `Profiles`; hand profile requests to `/profile-new`.
 - Icon source or visual direction. Keep the final asset local inside the dashboard.
 - Sessions that should not see the dashboard. Accept `none`.
@@ -19,7 +20,7 @@ Ask briefly for any missing values:
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/
+Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
   index.html
   Overview.md
   dashboard.json
@@ -54,7 +55,7 @@ Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/
 - Use `index.html`, `Overview.md`, `dashboard.json`, and `widgets.txt`.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
-- The Dashboards landing kicker remains `ENCRYPTED DASHBOARDS`.
+- Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<ProfileName>`.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.
 - Do not update `README.md` for an ordinary dashboard addition unless it introduces a new project convention.
 

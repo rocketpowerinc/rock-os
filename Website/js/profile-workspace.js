@@ -1,6 +1,7 @@
 import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 
 const workspaceSections = [
+    { key: 'dashboards', label: 'Dashboards' },
     { key: 'bookmarks', label: 'Bookmarks' },
     { key: 'cheatsheets', label: 'Cheatsheets' },
     { key: 'dotfiles', label: 'Dotfiles' },
@@ -31,8 +32,7 @@ export function currentProfileWorkspaceName() {
     const profilesIndex =
         parts.findIndex((part, index) =>
             part === 'Profiles' &&
-            parts[index - 1] === 'dashboards' &&
-            parts[index - 2] === 'ENCRYPTED'
+            parts[index - 1] === 'ENCRYPTED'
         );
 
     return profilesIndex >= 0
@@ -65,9 +65,11 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
     }
 
     const profilePath =
-        `/ENCRYPTED/dashboards/Profiles/${encodePathSegment(profile)}/`;
+        `/ENCRYPTED/Profiles/${encodePathSegment(profile)}/`;
     const currentPath =
         window.location.pathname.toLowerCase();
+    const profileDashboardPath =
+        `/encrypted/profiles/${encodePathSegment(profile).toLowerCase()}/dashboards/`;
     const links = [
         {
             key: 'overview',
@@ -76,7 +78,9 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
         },
         ...workspaceSections.map(section => ({
             ...section,
-            href: `/${section.key}.html?profile=${encodeURIComponent(profile)}`
+            href: section.key === 'dashboards'
+                ? `/dashboards.html?profile=${encodeURIComponent(profile)}`
+                : `/${section.key}.html?profile=${encodeURIComponent(profile)}`
         }))
     ];
 
@@ -86,8 +90,10 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
                 document.createElement('a');
             const active =
                 link.key === 'overview'
-                    ? currentPath.includes('/encrypted/dashboards/profiles/')
-                    : currentPath.endsWith(`/${link.key}.html`);
+                    ? currentPath.includes('/encrypted/profiles/') && !currentPath.includes('/dashboards/')
+                    : link.key === 'dashboards'
+                        ? currentPath.endsWith('/dashboards.html') || currentPath.includes(profileDashboardPath)
+                        : currentPath.endsWith(`/${link.key}.html`);
 
             anchor.href =
                 link.href;
@@ -168,7 +174,7 @@ export function startProfileMarkdownSection(config) {
         indexUrl: `/${section}-index.json?profile=${encodedProfile}`,
         docApiUrl: `/api/${section}/doc?profile=${encodedProfile}`,
         searchApiUrl: `/api/${section}/search?profile=${encodedProfile}`,
-        pathPrefix: `ENCRYPTED/dashboards/Profiles/${profile}/${section}`,
+        pathPrefix: `ENCRYPTED/Profiles/${profile}/${section}`,
         directOpenPageName: `${section}.html`
     });
 }

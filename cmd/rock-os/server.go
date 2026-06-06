@@ -278,24 +278,45 @@ func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 
 func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
 	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
-	if len(parts) < 4 ||
+	if len(parts) < 3 ||
 		parts[0] != encryptedDir ||
-		parts[1] != "dashboards" ||
-		parts[2] == "" ||
-		parts[3] == "" {
+		parts[1] != "Profiles" ||
+		parts[2] == "" {
 		return "", "", false
 	}
 
-	return parts[2] + "/" + parts[3], strings.Join(parts[4:], "/"), true
+	profilePath := "Profiles/" + parts[2]
+	if len(parts) >= 6 && parts[3] == dashboardsSection && parts[4] != "" && parts[5] != "" {
+		return profilePath, strings.Join(parts[6:], "/"), true
+	}
+
+	if len(parts) == 3 {
+		return profilePath, "", true
+	}
+
+	return profilePath, strings.Join(parts[3:], "/"), true
 }
 
 func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
-	if len(parts) != 4 ||
+	if len(parts) < 3 ||
 		parts[0] != encryptedDir ||
-		parts[1] != "dashboards" ||
-		parts[2] == "" ||
-		parts[3] == "" {
+		parts[1] != "Profiles" ||
+		parts[2] == "" {
+		return false
+	}
+
+	if len(parts) == 3 {
+		info, err := os.Stat(filepath.Join(fsPath, "index.html"))
+		return err == nil && !info.IsDir()
+	}
+
+	if len(parts) != 6 ||
+		parts[0] != encryptedDir ||
+		parts[1] != "Profiles" ||
+		parts[3] != dashboardsSection ||
+		parts[4] == "" ||
+		parts[5] == "" {
 		return false
 	}
 

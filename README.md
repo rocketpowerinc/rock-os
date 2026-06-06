@@ -177,7 +177,7 @@ copy and prints a warning.
 - Per-profile script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?profile=Rocket&doc=ENCRYPTED/dashboards/Profiles/Rocket/wiki/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?profile=Rocket&doc=ENCRYPTED/Profiles/Rocket/wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -238,51 +238,52 @@ PowerShell window. The version prompt is the only interactive question.
 
 ## Dashboards
 
-The top navigation includes one **Dashboards** tab for ordinary dashboard
-sections. Profile command centers launch from the home page. All user content
+Profile command centers launch from the home page. Each profile has its own
+**Dashboards** workspace tab for ordinary dashboard sections. All user content
 is encrypted with `git-crypt` under `Website/ENCRYPTED/`. While it is locked,
 Rock-OS still starts and shows a locked-content panel instead of attempting to
 render ciphertext.
 
-Dashboard folders live under category folders in
-`Website/ENCRYPTED/dashboards/`. Profile command centers such as Rocket, Kids,
-and Prepper are stored under `Website/ENCRYPTED/dashboards/Profiles/`. They
-are not shown as a `Profiles` section on the Dashboards landing page. When
-allowed by the active session, they appear as Launch Points on the home page.
+Profile command centers such as Rocket, Kids, and Prepper are stored under
+`Website/ENCRYPTED/Profiles/`. When allowed by the active session, they appear
+as Launch Points on the home page. Opening a profile shows a horizontal
+workspace bar with Overview, Dashboards, Bookmarks, Cheatsheets, Dotfiles,
+Bootstraps, Scripts, and Wiki.
 
 ### Profiles Vs Dashboards
 
 A **Dashboard** is a focused landing page for a category such as an operating
-system, mobile platform, homelab area, or tool collection. Dashboards appear on
-`dashboards.html` as ordinary category cards.
+system, mobile platform, homelab area, or tool collection. Dashboards appear
+inside the owning profile's Dashboards tab.
 
 A **Profile** is a personal or role-based command center. It uses the same base
-folder shape as a dashboard, but it also owns its own Bookmarks, Cheatsheets,
-Dotfiles, Bootstraps, Scripts, and Wiki sections. Profiles do not appear on
-`dashboards.html`; they are launched from the home page Launch Points section
-when the active session allows them.
+folder shape as a dashboard, but it also owns its own Dashboards, Bookmarks,
+Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki sections. Profiles are
+launched from the home page Launch Points section when the active session
+allows them.
 
-Profiles are special dashboards. In addition to the normal dashboard files,
-each profile owns separate Bookmarks, Cheatsheets, Dotfiles, Bootstraps,
-Scripts, and Wiki folders. Opening a profile shows a horizontal workspace bar
-for moving between those sections without a global Menu button.
+Profiles are special workspaces. In addition to the normal dashboard files,
+each profile owns separate Dashboards, Bookmarks, Cheatsheets, Dotfiles,
+Bootstraps, Scripts, and Wiki folders. Opening a profile shows a horizontal
+workspace bar for moving between those sections without a global Menu button.
 
 Profiles and Dashboards use the same base item folder convention:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/Rocket/index.html
-Website/ENCRYPTED/dashboards/OS/Windows/index.html
+Website/ENCRYPTED/Profiles/Rocket/index.html
+Website/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/index.html
 ```
 
 The profile folder name is the profile name. A profile workspace looks like:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/Rocket/
+Website/ENCRYPTED/Profiles/Rocket/
   index.html
   dashboard.json
   widgets.txt
   Overview.md
   assets/
+  dashboards/
   bookmarks/
   cheatsheets/
   dotfiles/
@@ -292,16 +293,17 @@ Website/ENCRYPTED/dashboards/Profiles/Rocket/
 ```
 
 Dashboard paths use
-`Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`, where the category becomes a
-section heading on the Dashboards page. The `index.html` file is the entry page.
-Use `Overview.md` for the first note, with `dashboard.json`, `widgets.txt`, an
-optional local `assets/` folder, and additional markdown files beside it.
+`Website/ENCRYPTED/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`,
+where the category becomes a section heading on that profile's Dashboards page.
+The `index.html` file is the entry page. Use `Overview.md` for the first note,
+with `dashboard.json`, `widgets.txt`, an optional local `assets/` folder, and
+additional markdown files beside it.
 Profile and dashboard page icons should live inside that item's own folder, for
 example:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/Rocket/assets/Rocket-Steel.svg
-Website/ENCRYPTED/dashboards/OS/Windows/assets/windows.png
+Website/ENCRYPTED/Profiles/Rocket/assets/Rocket-Steel.svg
+Website/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png
 ```
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
@@ -312,11 +314,11 @@ file cards). For every widget type, its configuration fields, and copy-paste
 examples, see the widget guide: [`documentation/Widgets.md`](documentation/Widgets.md).
 
 Internal Rock OS links, such as `/scripts.html?profile=Rocket` or
-`/ENCRYPTED/dashboards/OS/Windows/`, open in the same browser tab. External web
+`/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/`, open in the same browser tab. External web
 links open in a new tab so the local dashboard stays available.
 Dashboard/profile cards can link directly to their markdown tree by using
 `?view=notes`, for example
-`/ENCRYPTED/dashboards/OS/Windows/?view=notes`.
+`/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/?view=notes`.
 
 ### Dashboard Sessions
 
@@ -351,7 +353,7 @@ lock/unlock workflows expect a clean repo.
 
 `Public` is the default and shows dashboard sections while hiding `Profiles`.
 Any session with a `path` shows only that dashboard folder, so `Kids` with
-`Profiles/Kids` shows only `Website/ENCRYPTED/dashboards/Profiles/Kids`. For
+`Profiles/Kids` shows only `Website/ENCRYPTED/Profiles/Kids`. For
 dashboards outside `Profiles`, use a path such as `Homelab/SelfHosting`.
 
 ## Dependencies
@@ -487,14 +489,14 @@ cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               Public HTML, CSS, JS, assets, and media shell
 Website/ENCRYPTED/     git-crypt protected user content
-Website/ENCRYPTED/dashboards/    Dashboards grouped by category
-Website/ENCRYPTED/dashboards/Profiles/      Profile workspaces
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/wiki/        Profile wiki markdown
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/bootstraps/  Setup playbooks
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/cheatsheets/ Quick-reference markdown
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/dotfiles/    Dotfile notes and configs
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/bookmarks/   Bookmark collections
-Website/ENCRYPTED/dashboards/Profiles/<Profile>/scripts/     User-managed runnable scripts
+Website/ENCRYPTED/Profiles/      Profile workspaces
+Website/ENCRYPTED/Profiles/<Profile>/dashboards/   Profile-owned dashboards
+Website/ENCRYPTED/Profiles/<Profile>/wiki/        Profile wiki markdown
+Website/ENCRYPTED/Profiles/<Profile>/bootstraps/  Setup playbooks
+Website/ENCRYPTED/Profiles/<Profile>/cheatsheets/ Quick-reference markdown
+Website/ENCRYPTED/Profiles/<Profile>/dotfiles/    Dotfile notes and configs
+Website/ENCRYPTED/Profiles/<Profile>/bookmarks/   Bookmark collections
+Website/ENCRYPTED/Profiles/<Profile>/scripts/     User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -595,7 +597,7 @@ Rock OS includes `Website/scripts.html`, a reusable local dashboard for scripts
 stored inside the active profile workspace:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/scripts/
+Website/ENCRYPTED/Profiles/<ProfileName>/scripts/
 ```
 
 Open Scripts from a profile's horizontal workspace bar. The dashboard lists
@@ -890,7 +892,7 @@ again.
 Each profile has its own Wiki folder:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/<ProfileName>/wiki/
+Website/ENCRYPTED/Profiles/<ProfileName>/wiki/
 ```
 
 The same profile-owned pattern is used for Bookmarks, Cheatsheets, Dotfiles,
@@ -921,7 +923,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/ENCRYPTED/dashboards/Profiles/Rocket/wiki/
+Website/ENCRYPTED/Profiles/Rocket/wiki/
   Linux/
     AnduinOS/
       Setup.md
@@ -967,7 +969,7 @@ remove the link instead of hiding it from the report.
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?profile=Rocket&doc=ENCRYPTED/dashboards/Profiles/Rocket/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?profile=Rocket&doc=ENCRYPTED/Profiles/Rocket/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

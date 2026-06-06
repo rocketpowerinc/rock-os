@@ -21,12 +21,11 @@ function profileFromDashboardPath(path) {
         String(path || '').split('/');
 
     if (
-        parts.length >= 5 &&
+        parts.length >= 4 &&
         parts[0] === 'ENCRYPTED' &&
-        parts[1] === 'dashboards' &&
-        parts[2] === 'Profiles'
+        parts[1] === 'Profiles'
     ) {
-        return parts[3];
+        return parts[2];
     }
 
     return '';
@@ -47,7 +46,7 @@ function profileCard(profile) {
     link.dataset.profile =
         profile;
     link.href =
-        `/ENCRYPTED/dashboards/Profiles/${encodeURIComponent(profile)}/`;
+        `/ENCRYPTED/Profiles/${encodeURIComponent(profile)}/`;
 
     icon.className =
         'profile-card-icon';

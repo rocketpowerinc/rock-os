@@ -84,7 +84,7 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 
 Write-Check "JSON validity"
 $jsonFiles = @()
-$jsonFiles += Get-ChildItem -LiteralPath (Join-Path $WebsiteDir 'ENCRYPTED\dashboards') -Recurse -File -Filter 'dashboard.json' -ErrorAction SilentlyContinue
+$jsonFiles += Get-ChildItem -LiteralPath (Join-Path $WebsiteDir 'ENCRYPTED\Profiles') -Recurse -File -Filter 'dashboard.json' -ErrorAction SilentlyContinue
 $jsonFiles += Get-Item -LiteralPath (Join-Path $WebsiteDir 'Sessions\sessions.json') -ErrorAction SilentlyContinue
 $jsonFiles += Get-Item -LiteralPath (Join-Path $WebsiteDir 'site.webmanifest') -ErrorAction SilentlyContinue
 

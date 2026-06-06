@@ -474,7 +474,7 @@ func TestLinkHealthSourceFilesRespectActiveSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 || files[0] != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Kids.md" {
+	if len(files) != 1 || files[0] != "ENCRYPTED/Profiles/Kids/wiki/Kids.md" {
 		t.Fatalf("expected only Kids link-health sources, got %#v", files)
 	}
 }
@@ -562,7 +562,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Profiles/Kids/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -576,7 +576,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Test.md" {
+	if response.Path != "ENCRYPTED/Profiles/Kids/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -601,7 +601,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Profiles/Kids/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -625,7 +625,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/dashboards/Profiles/Kids/wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Profiles/Kids/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -676,7 +676,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "ENCRYPTED/Profiles/Kids/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -812,7 +812,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Fresh.md" {
+	if files[0].Path != "ENCRYPTED/Profiles/Kids/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -899,7 +899,7 @@ func TestCollectMarkdownFilesPrunesDeletedCacheEntries(t *testing.T) {
 func createTestWebsiteRoot(t *testing.T, siteRoot string) {
 	t.Helper()
 
-	for _, dir := range []string{markdownDir, bootstrapsDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, dashboardsDir, "css", "js"} {
+	for _, dir := range []string{markdownDir, bootstrapsDir, cheatsheetsDir, dotfilesDir, bookmarksDir, scriptsDir, profilesDir, "css", "js"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, dir), 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -953,7 +953,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	}
 
 	// Case 2: unlocked (encrypted content folder exists with readable files)
-	privateDir := filepath.Join(siteRoot, dashboardsDir, "Profiles", "Rocket")
+	privateDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Rocket")
 	if err := os.MkdirAll(privateDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1087,25 +1087,25 @@ func TestResolveBootstrapDoc(t *testing.T) {
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md")
+	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "ENCRYPTED/Profiles/Kids/bootstraps/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md" {
-		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "ENCRYPTED/Profiles/Kids/bootstraps/Setup.md" {
+		t.Errorf("expected ENCRYPTED/Profiles/Kids/bootstraps/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/../secret.md")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Profiles/Kids/bootstraps/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Setup.txt")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Profiles/Kids/bootstraps/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
@@ -1140,8 +1140,8 @@ func TestBootstrapsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Install.md" {
-		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bootstraps/Install.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/bootstraps/Install.md" {
+		t.Errorf("expected ENCRYPTED/Profiles/Kids/bootstraps/Install.md, got %q", index[0].Path)
 	}
 }
 
@@ -1174,8 +1174,8 @@ func TestCheatsheetsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/cheatsheets/Commands.md" {
-		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/cheatsheets/Commands.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/cheatsheets/Commands.md" {
+		t.Errorf("expected ENCRYPTED/Profiles/Kids/cheatsheets/Commands.md, got %q", index[0].Path)
 	}
 }
 
@@ -1208,8 +1208,8 @@ func TestDotfilesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/dotfiles/Shell.md" {
-		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/dotfiles/Shell.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/dotfiles/Shell.md" {
+		t.Errorf("expected ENCRYPTED/Profiles/Kids/dotfiles/Shell.md, got %q", index[0].Path)
 	}
 }
 
@@ -1242,8 +1242,8 @@ func TestBookmarksIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/bookmarks/Links.md" {
-		t.Errorf("expected ENCRYPTED/dashboards/Profiles/Kids/bookmarks/Links.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/bookmarks/Links.md" {
+		t.Errorf("expected ENCRYPTED/Profiles/Kids/bookmarks/Links.md, got %q", index[0].Path)
 	}
 }
 
@@ -1278,7 +1278,7 @@ func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) 
 	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 || index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/wiki/Kids.md" {
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Profiles/Kids/wiki/Kids.md" {
 		t.Fatalf("expected only Kids wiki content, got %#v", index)
 	}
 }
@@ -1338,7 +1338,7 @@ func TestDashboardsIndexExcludesProfileWorkspaceMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json?profile=Profiles/Kids", nil)
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
 	rec := httptest.NewRecorder()
 	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
 
@@ -1346,14 +1346,14 @@ func TestDashboardsIndexExcludesProfileWorkspaceMarkdown(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 || index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
-		t.Fatalf("expected only profile dashboard notes, got %#v", index)
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Profiles/Kids/Overview.md" {
+		t.Fatalf("expected only Kids profile notes, got %#v", index)
 	}
 }
 
 func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	siteRoot := t.TempDir()
-	profileRoot := filepath.Join(siteRoot, dashboardsDir, "Profiles", "Kids")
+	profileRoot := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids")
 	if err := os.MkdirAll(profileRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1366,7 +1366,7 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json?profile=Profiles/Kids", nil)
+	req := httptest.NewRequest(http.MethodGet, "/dashboards-index.json", nil)
 	rec := httptest.NewRecorder()
 	dashboardsIndexHandler(siteRoot).ServeHTTP(rec, req)
 
@@ -1380,10 +1380,10 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	}
 
 	if len(index) != 1 {
-		t.Fatalf("expected 1 profile dashboard file, got %d", len(index))
+		t.Fatalf("expected 1 profile file, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
-		t.Errorf("expected Profiles/Kids dashboard file, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/Overview.md" {
+		t.Errorf("expected Profiles/Kids profile file, got %q", index[0].Path)
 	}
 }
 
@@ -1409,11 +1409,8 @@ func TestDashboardsIndexHandlerUsesPublicSessionByDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(index) != 1 {
-		t.Fatalf("expected only non-profile dashboard file, got %#v", index)
-	}
-	if index[0].Path != "ENCRYPTED/dashboards/OS/Windows/Overview.md" {
-		t.Fatalf("unexpected dashboard file: %#v", index[0])
+	if len(index) != 0 {
+		t.Fatalf("expected Public session to hide profile-owned files, got %#v", index)
 	}
 }
 
@@ -1441,7 +1438,7 @@ func TestDashboardsIndexHandlerUsesNamedProfileSession(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected only Kids profile file, got %#v", index)
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Profiles/Kids/Overview.md" {
+	if index[0].Path != "ENCRYPTED/Profiles/Kids/Overview.md" {
 		t.Fatalf("unexpected dashboard file: %#v", index[0])
 	}
 }
@@ -1476,12 +1473,12 @@ func TestDashboardsIndexHandlerUsesAdminSession(t *testing.T) {
 		paths[entry.Path] = true
 	}
 
-	if len(index) != 2 ||
-		!paths["ENCRYPTED/dashboards/Profiles/Kids/Overview.md"] ||
-		!paths["ENCRYPTED/dashboards/OS/Windows/Overview.md"] {
-		t.Fatalf("expected Admin session to hide only Rocket profile, got %#v", index)
+	if len(index) != 1 ||
+		!paths["ENCRYPTED/Profiles/Kids/Overview.md"] {
+		t.Fatalf("expected Admin session to hide Rocket profile and its dashboards, got %#v", index)
 	}
-	if paths["ENCRYPTED/dashboards/Profiles/Rocket/Overview.md"] {
+	if paths["ENCRYPTED/Profiles/Rocket/Overview.md"] ||
+		paths["ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/Overview.md"] {
 		t.Fatalf("expected Admin session to hide Rocket profile, got %#v", index)
 	}
 }
@@ -1517,9 +1514,9 @@ func TestDashboardsIndexHandlerUsesRocketSession(t *testing.T) {
 	}
 
 	if len(index) != 3 ||
-		!paths["ENCRYPTED/dashboards/Profiles/Kids/Overview.md"] ||
-		!paths["ENCRYPTED/dashboards/Profiles/Rocket/Overview.md"] ||
-		!paths["ENCRYPTED/dashboards/OS/Windows/Overview.md"] {
+		!paths["ENCRYPTED/Profiles/Kids/Overview.md"] ||
+		!paths["ENCRYPTED/Profiles/Rocket/Overview.md"] ||
+		!paths["ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/Overview.md"] {
 		t.Fatalf("expected Rocket session to include every dashboard file, got %#v", index)
 	}
 }
@@ -1536,8 +1533,8 @@ func TestDashboardsIndexHandlerUsesMappedSession(t *testing.T) {
 	config.Active = "SelfHosting"
 	config.Sessions = append(config.Sessions, dashboardSession{
 		Name:        "SelfHosting",
-		AllowedPath: "Homelab/SelfHosting",
-		Description: "Shows only SelfHosting.",
+		AllowedPath: "Rocket",
+		Description: "Shows only Rocket.",
 	})
 	if err := writeDashboardSessionsConfig(siteRoot, config); err != nil {
 		t.Fatal(err)
@@ -1552,16 +1549,26 @@ func TestDashboardsIndexHandlerUsesMappedSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(index) != 1 {
-		t.Fatalf("expected only mapped dashboard file, got %#v", index)
+	if len(index) != 2 {
+		t.Fatalf("expected only mapped profile files, got %#v", index)
 	}
-	if index[0].Path != "ENCRYPTED/dashboards/Homelab/SelfHosting/Overview.md" {
-		t.Fatalf("unexpected dashboard file: %#v", index[0])
+	paths := map[string]bool{}
+	for _, entry := range index {
+		paths[entry.Path] = true
+	}
+	if !paths["ENCRYPTED/Profiles/Rocket/dashboards/Homelab/SelfHosting/Overview.md"] ||
+		!paths["ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/Overview.md"] {
+		t.Fatalf("unexpected dashboard files: %#v", index)
 	}
 }
 
 func writeDashboardTestDoc(siteRoot string, category string, dashboard string, fileName string) error {
-	root := filepath.Join(siteRoot, dashboardsDir, category, dashboard)
+	var root string
+	if category == "Profiles" {
+		root = filepath.Join(siteRoot, filepath.FromSlash(profilesDir), dashboard)
+	} else {
+		root = filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Rocket", dashboardsSection, category, dashboard)
+	}
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		return err
 	}
@@ -1869,7 +1876,12 @@ func newEncryptedGuardServer(siteRoot string) http.Handler {
 
 func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 	siteRoot := t.TempDir()
-	assetDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "Foo", "Bar", "assets")
+	createRocketKey(t, siteRoot)
+	if err := writeActiveDashboardSessionState(siteRoot, "Rocket"); err != nil {
+		t.Fatal(err)
+	}
+
+	assetDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Rocket", dashboardsSection, "Foo", "Bar", "assets")
 	if err := os.MkdirAll(assetDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1882,7 +1894,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Directory requests must return 404 (no listing) rather than leaking the
 	// names of private folders/documents.
-	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/dashboards/Foo/Bar/assets/"} {
+	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/Profiles/Rocket/dashboards/Foo/Bar/assets/"} {
 		req := httptest.NewRequest(http.MethodGet, dirPath, nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
@@ -1893,7 +1905,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Individual asset files are still served while unlocked (dashboards need
 	// their local icons/images).
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Foo/Bar/assets/icon.txt", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Rocket/dashboards/Foo/Bar/assets/icon.txt", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -1918,7 +1930,7 @@ func TestGuardEncryptedStaticBlocksRawProfileMarkdown(t *testing.T) {
 	}
 	invalidatePrivateMarkdownStatus()
 
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Profiles/Kids/wiki/Secret.md", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Kids/wiki/Secret.md", nil)
 	rec := httptest.NewRecorder()
 	newEncryptedGuardServer(siteRoot).ServeHTTP(rec, req)
 
@@ -1929,7 +1941,12 @@ func TestGuardEncryptedStaticBlocksRawProfileMarkdown(t *testing.T) {
 
 func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 	siteRoot := t.TempDir()
-	dashboardDir := filepath.Join(siteRoot, encryptedDir, "dashboards", "OS", "Windows")
+	createRocketKey(t, siteRoot)
+	if err := writeActiveDashboardSessionState(siteRoot, "Rocket"); err != nil {
+		t.Fatal(err)
+	}
+
+	dashboardDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Rocket", dashboardsSection, "OS", "Windows")
 	if err := os.MkdirAll(dashboardDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1939,7 +1956,7 @@ func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/OS/Windows/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
@@ -1963,7 +1980,7 @@ func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/dashboards/Profiles/Kids/wiki/Secret.md", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Kids/wiki/Secret.md", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusLocked {

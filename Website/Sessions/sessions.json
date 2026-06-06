@@ -3,7 +3,7 @@
   "notes": [
     "Rock-OS uses active as the default dashboard session; local active changes are stored outside Git.",
     "Public shows dashboards but hides Profiles.",
-    "Path sessions show only one dashboard folder, such as Profiles/Kids.",
+    "Path sessions show only one profile workspace, such as Profiles/Kids.",
     "Add future sessions to the sessions list so they appear in the home-page dropdown."
   ],
   "sessions": [

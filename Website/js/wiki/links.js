@@ -38,13 +38,12 @@ function profileWorkspacePathInfo(path) {
     if (
         parts.length >= 6 &&
         parts[0] === 'ENCRYPTED' &&
-        parts[1] === 'dashboards' &&
-        parts[2] === 'Profiles' &&
-        workspaceSectionNames.has(parts[4])
+        parts[1] === 'Profiles' &&
+        workspaceSectionNames.has(parts[3])
     ) {
         return {
-            profile: parts[3],
-            section: parts[4]
+            profile: parts[2],
+            section: parts[3]
         };
     }
 
@@ -114,7 +113,7 @@ export function resolveMarkdownLink(href, currentDocPath) {
         return '';
     }
 
-    if (pathOnly.startsWith('/') || /^ENCRYPTED\/dashboards\//.test(pathOnly)) {
+    if (pathOnly.startsWith('/') || /^ENCRYPTED\/(dashboards|Profiles)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
@@ -125,7 +124,7 @@ export function resolveMarkdownLink(href, currentDocPath) {
 
     if (currentWorkspace && sectionMatch) {
         return normalizeDocPath(
-            `ENCRYPTED/dashboards/Profiles/${currentWorkspace.profile}/${sectionMatch[1]}/${sectionMatch[2]}`
+            `ENCRYPTED/Profiles/${currentWorkspace.profile}/${sectionMatch[1]}/${sectionMatch[2]}`
         );
     }
 
@@ -147,16 +146,20 @@ export function wikiDocHref(path) {
     if (workspace) {
         targetPage =
             `/${workspace.section}.html`;
-    } else if (path.startsWith('ENCRYPTED/dashboards/')) {
+    } else if (path.startsWith('ENCRYPTED/Profiles/')) {
         const parts =
             path.split('/');
+        const profile =
+            parts.length > 2 ? parts[2] : '';
         const dashboard =
-            parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
+            parts.length > 5 && parts[3] === 'dashboards'
+                ? `${parts[2]}/dashboards/${parts[4]}/${parts[5]}`
+                : '';
 
         targetPage =
             dashboard
-                ? `/ENCRYPTED/dashboards/${encodePathSegments(dashboard)}/`
-                : '/dashboards.html';
+                ? `/ENCRYPTED/Profiles/${encodePathSegments(dashboard)}/`
+                : `/ENCRYPTED/Profiles/${encodePathSegments(profile)}/`;
     }
 
     const url =
@@ -177,11 +180,13 @@ function getTabForPath(path) {
         return workspaceTab(workspace.profile, workspace.section);
     }
 
-    if (path.startsWith('ENCRYPTED/dashboards/')) {
+    if (path.startsWith('ENCRYPTED/Profiles/')) {
         const parts =
             path.split('/');
         const dashboard =
-            parts.length > 3 ? `${parts[2]}/${parts[3]}` : '';
+            parts.length > 5 && parts[3] === 'dashboards'
+                ? `${parts[2]}/dashboards/${parts[4]}/${parts[5]}`
+                : parts[2] || '';
         return dashboardTab(dashboard);
     }
 
@@ -210,22 +215,24 @@ function getCurrentTab() {
         return dashboardTab(dashboard);
     }
 
-    if (path.includes('/dashboards/')) {
+    if (path.includes('/profiles/')) {
         const parts =
             rawPath.split('/').filter(Boolean);
-        const rootIndex =
-            parts.findIndex(part => part.toLowerCase() === 'dashboards');
+        const profilesIndex =
+            parts.findIndex(part => part.toLowerCase() === 'profiles');
 
-        if (rootIndex >= 0) {
-            const dashboardParts =
+        if (profilesIndex >= 0) {
+            const profileParts =
                 parts
-                    .slice(rootIndex + 1)
+                    .slice(profilesIndex + 1)
                     .filter(part => part && part.toLowerCase() !== 'index.html')
-                    .slice(0, 2)
                     .map(part => decodeURIComponent(part));
 
-            if (dashboardParts.length === 2) {
-                return dashboardTab(dashboardParts.join('/'));
+            if (profileParts.length >= 4 && profileParts[1] === 'dashboards') {
+                return dashboardTab(profileParts.slice(0, 4).join('/'));
+            }
+            if (profileParts.length >= 1) {
+                return dashboardTab(profileParts[0]);
             }
         }
     }
