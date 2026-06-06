@@ -142,6 +142,7 @@ if (Test-EncryptedContentLocked) {
     Write-Host ""
 }
 
+Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 Write-Host "Building file list (tracked + uncommitted, the .git folder, and .key)..." -ForegroundColor Cyan
