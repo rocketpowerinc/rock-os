@@ -9,6 +9,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path     # dev/tests
 $RepoRoot  = Split-Path -Parent (Split-Path -Parent $ScriptDir)  # repo root
 $ServerDir = Join-Path $RepoRoot 'cmd/rock-os'
 $LogFile   = Join-Path $ScriptDir 'latest-go-test-results.txt'
+$GoCache   = Join-Path $RepoRoot '.gotest-cache'
 
 if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
     Write-Host '[ERROR] go command not found. Install Go and add it to your PATH.' -ForegroundColor Red
@@ -17,6 +18,9 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 
 Push-Location $ServerDir
 try {
+    New-Item -ItemType Directory -Path $GoCache -Force | Out-Null
+    $env:GOCACHE = $GoCache
+
     $lines = New-Object System.Collections.Generic.List[string]
     $lines.Add("Rock-OS Go server tests - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
     $lines.Add("$(go version)")

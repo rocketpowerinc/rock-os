@@ -1,6 +1,6 @@
 ---
 name: dashboard-new
-description: Use when the user invokes /dashboard-new or asks to create or scaffold an ordinary Rock-OS dashboard inside a profile-owned dashboards folder. Follow Rock-OS dashboard conventions, gather the owning profile, dashboard name, category, local icon plan, and session visibility requirements, then create the standard dashboard files. Use /profile-new instead for a profile workspace.
+description: Use when the user invokes /dashboard-new or asks to create or scaffold an ordinary Rock-OS dashboard inside a profile-owned dashboards folder. Follow Rock-OS dashboard conventions, gather the owning profile, dashboard name, category, and local icon plan, then create the standard dashboard files. Use /profile-new instead for a profile workspace.
 ---
 
 # Dashboard New
@@ -15,7 +15,6 @@ Ask briefly for any missing values:
 - Owning profile. Default to `Rocket` only when the user does not specify one.
 - Dashboard category. Do not use `Profiles`; hand profile requests to `/profile-new`.
 - Icon source or visual direction. Keep the final asset local inside the dashboard.
-- Sessions that should not see the dashboard. Accept `none`.
 
 ## Folder Convention
 
@@ -33,7 +32,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
 
 1. Read `AGENTS.md`, confirm `Website/ENCRYPTED/` is unlocked, and inspect a similar existing dashboard.
 2. Reject `Profiles` as a dashboard category and use `/profile-new` for that request.
-3. Inspect `Website/Sessions/sessions.json` and `cmd/rock-os/sessions.go` before changing visibility.
+3. Inspect `Website/Sessions/sessions.json` and `cmd/rock-os/sessions.go` only if the user explicitly asks for dashboard-specific visibility rules.
 4. Create the dashboard files by adapting the current dashboard convention.
 5. Keep root-relative website paths and the shared module:
 
@@ -43,7 +42,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
 
 6. Keep dashboard-specific assets under the dashboard's `assets/` folder. Do not use remote assets at runtime or place them in `Website/assets/`.
 7. Add the dashboard avatar and landing-card icon rules to `Website/css/style.css`.
-8. Apply requested session visibility server-side. If the current session model cannot express it, update the filtering code and focused tests instead of only hiding a frontend card.
+8. Dashboards inherit the owning profile's session visibility by default. If the user explicitly asks for dashboard-specific visibility rules, apply them server-side and add focused tests instead of only hiding a frontend card.
 9. Update `documentation/Widgets.md` only when a widget type or supported field changes.
 10. Run relevant checks:
     - `node --check Website\js\profiles.js` when JavaScript changes.

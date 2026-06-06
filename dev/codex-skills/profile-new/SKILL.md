@@ -12,7 +12,7 @@ Create a Rock-OS profile workspace under `Website/ENCRYPTED/Profiles/<ProfileNam
 Ask briefly for any missing values:
 
 - Profile name. Prefer one word; ask before using a multi-word name.
-- Visual direction or asset source for the profile's Steel, Rugged, Cyberpunk, and Blue-Grass icons.
+- Visual direction or asset source for the profile's Steel, Rugged, Cyberpunk, and Blue-Grass icons. Example: "make one in the same low-poly style" or "use this local image."
 - Sessions that should or should not see the profile. Accept the current default session behavior when the user has no special requirement.
 
 ## Folder Convention

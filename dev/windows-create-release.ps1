@@ -34,6 +34,9 @@ $shouldPublish = -not $SkipPublish
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Resolve-Path (Join-Path $scriptPath "..")
 Set-Location $repoRoot
+$goCache = Join-Path $repoRoot ".gotest-cache"
+New-Item -ItemType Directory -Path $goCache -Force | Out-Null
+$env:GOCACHE = $goCache
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "       Rock-OS Release Builder" -ForegroundColor Cyan
@@ -157,6 +160,7 @@ $forbiddenPatterns = @(
     '^Website/rock-os-',
     '^Website/.*\.download$',
     '(^|/)\.gocache/',
+    '(^|/)\.gotest-cache/',
     '^\.release/'
 )
 
