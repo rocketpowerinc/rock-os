@@ -57,25 +57,25 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 
 # 3. Run server checks before building release binaries
 Write-Host "Running Go server checks..." -ForegroundColor Gray
-Push-Location "cmd/rock-os"
-try {
-    go vet ./...
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] Go vet failed. Release build stopped." -ForegroundColor Red
-        Exit-Release 1
-    }
-
-    go test ./...
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] Go server tests failed. Release build stopped." -ForegroundColor Red
-        Exit-Release 1
-    }
-} finally {
-    Pop-Location
+$goTestScript = Join-Path $repoRoot "dev\tests\GO-tests.ps1"
+& powershell -NoProfile -ExecutionPolicy Bypass -File $goTestScript
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Go server checks failed. Release build stopped." -ForegroundColor Red
+    Exit-Release 1
 }
 Write-Host "[OK] Go server checks passed." -ForegroundColor Green
 
-# 4. Ask for next version interactively unless supplied by the caller
+# 4. Run website static checks before building release binaries
+Write-Host "Running website static checks..." -ForegroundColor Gray
+$websiteStaticTest = Join-Path $repoRoot "dev\tests\Website-static-tests.ps1"
+& powershell -NoProfile -ExecutionPolicy Bypass -File $websiteStaticTest
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Website static checks failed. Release build stopped." -ForegroundColor Red
+    Exit-Release 1
+}
+Write-Host "[OK] Website static checks passed." -ForegroundColor Green
+
+# 5. Ask for next version interactively unless supplied by the caller
 $currentVersion = "none"
 $suggestionPrompt = "e.g., 1.0 or 1.1"
 

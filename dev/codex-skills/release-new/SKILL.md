@@ -46,7 +46,7 @@ Start-Process `
 - Refuse pre-existing staged changes.
 - Stage pending source changes.
 - Reject secrets and generated artifacts.
-- Run whitespace checks and Go tests.
+- Run whitespace checks, Go tests, and website static checks.
 - Commit with `release: prepare vX.Y`.
 - Build six cross-platform binaries and checksums under ignored `.release/`.
 - Push the current branch and publish the GitHub release.
