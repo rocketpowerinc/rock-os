@@ -214,16 +214,17 @@ PowerShell window. The version prompt is the only interactive question.
 
 ## Dashboards
 
-The top navigation includes one **Dashboards** tab for dashboard and profile
-command centers. All user content is encrypted with `git-crypt` under
-`Website/ENCRYPTED/`. While it is locked, Rock-OS still starts and shows a
-locked-content panel instead of attempting to render ciphertext.
+The top navigation includes one **Dashboards** tab for ordinary dashboard
+sections. Profile command centers launch from the home page. All user content
+is encrypted with `git-crypt` under `Website/ENCRYPTED/`. While it is locked,
+Rock-OS still starts and shows a locked-content panel instead of attempting to
+render ciphertext.
 
 Dashboard folders live under category folders in
 `Website/ENCRYPTED/dashboards/`. Profile command centers such as Rocket, Kids,
 and Prepper are stored under `Website/ENCRYPTED/dashboards/Profiles/`. They
-appear in the `Profiles` section on the Dashboards landing page and, when
-allowed by the active session, as Launch Points on the home page.
+are not shown as a `Profiles` section on the Dashboards landing page. When
+allowed by the active session, they appear as Launch Points on the home page.
 
 Profiles are special dashboards. In addition to the normal dashboard files,
 each profile owns separate Bookmarks, Cheatsheets, Dotfiles, Bootstraps,

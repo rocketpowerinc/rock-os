@@ -138,8 +138,10 @@ Never break these without an explicit, specific request from the user:
 
 - Live under `Website/ENCRYPTED/dashboards/<Category>/<DashboardName>/`. Group by category
   folder; `dashboards.html` renders category sections dynamically — do not
-  hardcode categories. Order categories with `Profiles` first, `OS` second,
-  `Mobile` third, then the rest alphabetically. In `Homelab`, keep
+  hardcode ordinary dashboard categories. Do not render `Profiles` as a
+  dashboards landing category; profiles are launched from the home page Launch
+  Points section according to the active session. Order ordinary categories
+  with `OS` first, `Mobile` second, then the rest alphabetically. In `Homelab`, keep
   `SelfHosting` first and sort the rest alphabetically.
 - Dashboard names should preferably be one word. If the user proposes a
   multi-word name, warn them and ask for a one-word version before scaffolding.

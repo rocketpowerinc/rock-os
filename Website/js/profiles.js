@@ -295,6 +295,11 @@ function uniqueProfileItems(files) {
         });
 }
 
+function dashboardLandingItems(files) {
+    return uniqueProfileItems(files)
+        .filter(item => item.category.toLowerCase() !== 'profiles');
+}
+
 function renderProfileCard(item) {
     return `
         <a class="profiles-card" href="${escapeHtml(profileUrl(item.profile, item.rootDir))}" data-profile="${escapeHtml(item.name)}">
@@ -337,7 +342,7 @@ function renderProfilesLanding(files) {
     }
 
     const profileItems =
-        uniqueProfileItems(files);
+        dashboardLandingItems(files);
 
     const cardsHtml =
         Array.from(
