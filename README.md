@@ -226,6 +226,18 @@ and Prepper are stored under `Website/ENCRYPTED/dashboards/Profiles/`. They
 are not shown as a `Profiles` section on the Dashboards landing page. When
 allowed by the active session, they appear as Launch Points on the home page.
 
+### Profiles Vs Dashboards
+
+A **Dashboard** is a focused landing page for a category such as an operating
+system, mobile platform, homelab area, or tool collection. Dashboards appear on
+`dashboards.html` as ordinary category cards.
+
+A **Profile** is a personal or role-based command center. It uses the same base
+folder shape as a dashboard, but it also owns its own Bookmarks, Cheatsheets,
+Dotfiles, Bootstraps, Scripts, and Wiki sections. Profiles do not appear on
+`dashboards.html`; they are launched from the home page Launch Points section
+when the active session allows them.
+
 Profiles are special dashboards. In addition to the normal dashboard files,
 each profile owns separate Bookmarks, Cheatsheets, Dotfiles, Bootstraps,
 Scripts, and Wiki folders. Opening a profile shows a horizontal workspace bar
