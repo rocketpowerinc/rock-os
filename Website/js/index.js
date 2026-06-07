@@ -25,7 +25,23 @@ function profileFromDashboardPath(path) {
         parts[0] === 'ENCRYPTED' &&
         parts[1] === 'Profiles'
     ) {
-        return parts[2];
+        const workspaceSections =
+            new Set(['dashboards', 'bookmarks', 'cheatsheets', 'dotfiles', 'bootstraps', 'scripts', 'wiki']);
+        const profileParts = [];
+
+        for (let index = 2; index < parts.length; index++) {
+            if (workspaceSections.has(parts[index])) {
+                break;
+            }
+            const part =
+                decodeURIComponent(parts[index] || '').trim();
+            if (!part || part.endsWith('.md')) {
+                break;
+            }
+            profileParts.push(part);
+        }
+
+        return profileParts.join('/');
     }
 
     return '';
@@ -44,20 +60,31 @@ function profileCard(profile) {
     link.className =
         'profiles-card';
     link.dataset.profile =
-        profile;
+        displayNameFromProfile(profile);
     link.href =
-        `/ENCRYPTED/Profiles/${encodeURIComponent(profile)}/`;
+        `/ENCRYPTED/Profiles/${profile.split('/').filter(Boolean).map(part => encodeURIComponent(part)).join('/')}/`;
 
     icon.className =
         'profile-card-icon';
     info.className =
         'profiles-card-info';
     title.textContent =
-        profile;
+        displayNameFromProfile(profile);
 
     info.append(title);
     link.append(icon, info);
     return link;
+}
+
+function displayNameFromProfile(profile) {
+    const parts =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean);
+
+    return parts.length
+        ? parts[parts.length - 1]
+        : '';
 }
 
 function profileOrderForSession(sessionName) {
@@ -65,13 +92,16 @@ function profileOrderForSession(sessionName) {
         String(sessionName || '').trim().toLowerCase();
 
     if (normalized === 'rocket') {
-        return ['Rocket', 'Admin', 'Family', 'Kids', 'Prepper'];
+        return ['Rocket', 'Admin', 'Family', 'Kids/Boys', 'Kids/Girls', 'Prepper'];
     }
     if (normalized === 'admin') {
-        return ['Admin', 'Prepper', 'Family', 'Kids'];
+        return ['Admin', 'Prepper', 'Family', 'Kids/Boys', 'Kids/Girls'];
+    }
+    if (normalized === 'kids') {
+        return ['Kids/Boys', 'Kids/Girls'];
     }
 
-    return ['Rocket', 'Family', 'Kids', 'Admin'];
+    return ['Rocket', 'Family', 'Kids/Boys', 'Kids/Girls', 'Admin'];
 }
 
 function sortProfilesForSession(profiles, sessionName) {
@@ -121,7 +151,7 @@ async function loadProfileLaunchPoints() {
             await response.json();
         const sessions =
             sessionsResponse.ok ? await sessionsResponse.json() : null;
-        const profiles =
+        let profiles =
             Array.from(
                 new Set(
                     (Array.isArray(files) ? files : [])
@@ -129,6 +159,14 @@ async function loadProfileLaunchPoints() {
                         .filter(Boolean)
                 )
             );
+        if (String(sessions?.active || '').trim().toLowerCase() === 'kids') {
+            const nestedKidsProfiles =
+                profiles.filter(profile => profile.startsWith('Kids/'));
+            if (nestedKidsProfiles.length > 0) {
+                profiles =
+                    nestedKidsProfiles;
+            }
+        }
 
         sortProfilesForSession(profiles, sessions?.active);
 

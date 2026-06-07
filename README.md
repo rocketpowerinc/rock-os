@@ -352,9 +352,11 @@ lock/unlock workflows expect a clean repo.
 ```
 
 `Public` is the default and shows dashboard sections while hiding `Profiles`.
-Any session with a `path` shows only that dashboard folder, so `Kids` with
-`Profiles/Kids` shows only `Website/ENCRYPTED/Profiles/Kids`. For
-dashboards outside `Profiles`, use a path such as `Homelab/SelfHosting`.
+Any session with a `path` shows only that dashboard folder or profile subtree,
+so `Kids` with `Profiles/Kids` shows only content under
+`Website/ENCRYPTED/Profiles/Kids`, including nested child profiles such as
+`Boys` and `Girls`. For dashboards outside `Profiles`, use a path such as
+`Homelab/SelfHosting`.
 
 ## Dependencies
 

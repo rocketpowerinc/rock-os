@@ -1040,7 +1040,8 @@ color:#88ff88;
 :root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Rugged.svg'); }
 :root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Blue-Grass.svg'); }
 
-.kids-avatar-display {
+.boys-avatar-display,
+.girls-avatar-display {
 	width:80px;
 	height:80px;
 	background-size:contain;
@@ -1050,10 +1051,14 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .kids-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Cyberpunk.svg'); }
-:root[data-theme="steel"] .kids-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Steel.svg'); }
-:root[data-theme="rugged"] .kids-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Rugged.svg'); }
-:root[data-theme="blue-grass"] .kids-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .boys-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Cyberpunk.svg'); }
+:root[data-theme="steel"] .boys-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Steel.svg'); }
+:root[data-theme="rugged"] .boys-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Rugged.svg'); }
+:root[data-theme="blue-grass"] .boys-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .girls-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Cyberpunk.svg'); }
+:root[data-theme="steel"] .girls-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Steel.svg'); }
+:root[data-theme="rugged"] .girls-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Rugged.svg'); }
+:root[data-theme="blue-grass"] .girls-avatar-display { background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Blue-Grass.svg'); }
 
 .family-avatar-display {
 	width:80px;
@@ -1516,8 +1521,11 @@ color:#88ff88;
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Admin"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Admin/assets/Admin-Cyberpunk.svg');
 }
-:root[data-theme="cyberpunk"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Cyberpunk.svg');
+:root[data-theme="cyberpunk"] .profiles-card[data-profile="Boys"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Cyberpunk.svg');
+}
+:root[data-theme="cyberpunk"] .profiles-card[data-profile="Girls"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Cyberpunk.svg');
@@ -1533,8 +1541,11 @@ color:#88ff88;
 :root[data-theme="steel"] .profiles-card[data-profile="Admin"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Admin/assets/Admin-Steel.svg');
 }
-:root[data-theme="steel"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Steel.svg');
+:root[data-theme="steel"] .profiles-card[data-profile="Boys"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Steel.svg');
+}
+:root[data-theme="steel"] .profiles-card[data-profile="Girls"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Steel.svg');
@@ -1550,8 +1561,11 @@ color:#88ff88;
 :root[data-theme="rugged"] .profiles-card[data-profile="Admin"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Admin/assets/Admin-Rugged.svg');
 }
-:root[data-theme="rugged"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Rugged.svg');
+:root[data-theme="rugged"] .profiles-card[data-profile="Boys"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Rugged.svg');
+}
+:root[data-theme="rugged"] .profiles-card[data-profile="Girls"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Rugged.svg');
@@ -1567,8 +1581,11 @@ color:#88ff88;
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Admin"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Admin/assets/Admin-Blue-Grass.svg');
 }
-:root[data-theme="blue-grass"] .profiles-card[data-profile="Kids"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Profiles/Kids/assets/Kids-Blue-Grass.svg');
+:root[data-theme="blue-grass"] .profiles-card[data-profile="Boys"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Blue-Grass.svg');
+}
+:root[data-theme="blue-grass"] .profiles-card[data-profile="Girls"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Profiles/Kids/Girls/assets/Girls-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Profiles/Prepper/assets/Prepper-Blue-Grass.svg');

@@ -155,13 +155,15 @@ function currentProfileName() {
                 parts
                     .slice(rootIndex + rootParts.length)
                     .filter(part => part && part !== 'index.html');
+            const dashboardIndex =
+                itemParts.indexOf('dashboards');
 
-            if (itemParts.length >= 4 && itemParts[1] === 'dashboards') {
+            if (dashboardIndex > 0 && itemParts.length >= dashboardIndex + 3) {
                 profile =
-                    itemParts.slice(0, 4).join('/');
+                    itemParts.slice(0, dashboardIndex + 3).join('/');
             } else {
                 profile =
-                    itemParts.slice(0, 1).join('/');
+                    itemParts.join('/');
             }
         }
     }
@@ -193,15 +195,30 @@ function profileItemFromPath(path) {
         return null;
     }
 
-    if (parts.length >= 7 && parts[3] === 'dashboards') {
+    const workspaceSections =
+        new Set(['dashboards', 'bookmarks', 'cheatsheets', 'dotfiles', 'bootstraps', 'scripts', 'wiki']);
+    const profileParts = [];
+    let sectionIndex = -1;
+    for (let index = 2; index < parts.length; index++) {
+        if (workspaceSections.has(parts[index])) {
+            sectionIndex = index;
+            break;
+        }
+        if (String(parts[index] || '').endsWith('.md')) {
+            break;
+        }
+        profileParts.push(decodeURIComponent(parts[index]));
+    }
+
+    if (sectionIndex >= 0 && parts[sectionIndex] === 'dashboards' && parts.length >= sectionIndex + 4) {
         return {
-            category: decodeURIComponent(parts[4]),
-            name: decodeURIComponent(parts[5]),
+            category: decodeURIComponent(parts[sectionIndex + 1]),
+            name: decodeURIComponent(parts[sectionIndex + 2]),
             profile: [
-                decodeURIComponent(parts[2]),
+                ...profileParts,
                 'dashboards',
-                decodeURIComponent(parts[4]),
-                decodeURIComponent(parts[5])
+                decodeURIComponent(parts[sectionIndex + 1]),
+                decodeURIComponent(parts[sectionIndex + 2])
             ].join('/'),
             rootDir: 'ENCRYPTED/Profiles'
         };
@@ -209,8 +226,8 @@ function profileItemFromPath(path) {
 
     return {
         category: 'Profiles',
-        name: decodeURIComponent(parts[2]),
-        profile: decodeURIComponent(parts[2]),
+        name: profileParts[profileParts.length - 1] || '',
+        profile: profileParts.join('/'),
         rootDir: 'ENCRYPTED/Profiles'
     };
 }

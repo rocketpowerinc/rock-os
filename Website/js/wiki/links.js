@@ -36,15 +36,20 @@ function profileWorkspacePathInfo(path) {
         String(path || '').split('/');
 
     if (
-        parts.length >= 6 &&
+        parts.length >= 5 &&
         parts[0] === 'ENCRYPTED' &&
-        parts[1] === 'Profiles' &&
-        workspaceSectionNames.has(parts[3])
+        parts[1] === 'Profiles'
     ) {
-        return {
-            profile: parts[2],
-            section: parts[3]
-        };
+        const profileParts = [];
+        for (let index = 2; index < parts.length; index++) {
+            if (workspaceSectionNames.has(parts[index])) {
+                return {
+                    profile: profileParts.join('/'),
+                    section: parts[index]
+                };
+            }
+            profileParts.push(parts[index]);
+        }
     }
 
     return null;
@@ -149,11 +154,22 @@ export function wikiDocHref(path) {
     } else if (path.startsWith('ENCRYPTED/Profiles/')) {
         const parts =
             path.split('/');
+        const dashboardsIndex =
+            parts.indexOf('dashboards');
+        const profileParts = [];
+        for (let index = 2; index < parts.length; index++) {
+            if (workspaceSectionNames.has(parts[index]) || parts[index].endsWith('.md')) {
+                break;
+            }
+            profileParts.push(parts[index]);
+        }
         const profile =
-            parts.length > 2 ? parts[2] : '';
+            dashboardsIndex > 2
+                ? parts.slice(2, dashboardsIndex).join('/')
+                : profileParts.join('/');
         const dashboard =
-            parts.length > 5 && parts[3] === 'dashboards'
-                ? `${parts[2]}/dashboards/${parts[4]}/${parts[5]}`
+            dashboardsIndex > 2 && parts.length > dashboardsIndex + 2
+                ? `${parts.slice(2, dashboardsIndex).join('/')}/dashboards/${parts[dashboardsIndex + 1]}/${parts[dashboardsIndex + 2]}`
                 : '';
 
         targetPage =
@@ -183,9 +199,11 @@ function getTabForPath(path) {
     if (path.startsWith('ENCRYPTED/Profiles/')) {
         const parts =
             path.split('/');
+        const dashboardsIndex =
+            parts.indexOf('dashboards');
         const dashboard =
-            parts.length > 5 && parts[3] === 'dashboards'
-                ? `${parts[2]}/dashboards/${parts[4]}/${parts[5]}`
+            dashboardsIndex > 2 && parts.length > dashboardsIndex + 2
+                ? `${parts.slice(2, dashboardsIndex).join('/')}/dashboards/${parts[dashboardsIndex + 1]}/${parts[dashboardsIndex + 2]}`
                 : parts[2] || '';
         return dashboardTab(dashboard);
     }
@@ -228,8 +246,10 @@ function getCurrentTab() {
                     .filter(part => part && part.toLowerCase() !== 'index.html')
                     .map(part => decodeURIComponent(part));
 
-            if (profileParts.length >= 4 && profileParts[1] === 'dashboards') {
-                return dashboardTab(profileParts.slice(0, 4).join('/'));
+            const dashboardsIndex =
+                profileParts.indexOf('dashboards');
+            if (dashboardsIndex > 0 && profileParts.length >= dashboardsIndex + 3) {
+                return dashboardTab(profileParts.slice(0, dashboardsIndex + 3).join('/'));
             }
             if (profileParts.length >= 1) {
                 return dashboardTab(profileParts[0]);

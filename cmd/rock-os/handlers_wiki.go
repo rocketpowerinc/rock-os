@@ -101,14 +101,24 @@ func cleanSearchSnippetLine(line string) string {
 }
 
 func normalizeProfileName(value string) (string, error) {
-	value = strings.TrimSpace(value)
-	if value == "" {
+	value = strings.Trim(strings.ReplaceAll(value, "\\", "/"), "/")
+	if value == "" || strings.Contains(value, "\x00") {
 		return "", fmt.Errorf("profile is required")
 	}
-	if !profileNamePattern.MatchString(value) {
-		return "", fmt.Errorf("profile contains unsupported characters")
+
+	parts := []string{}
+	for _, part := range strings.Split(value, "/") {
+		part = strings.TrimSpace(part)
+		if part == "" || part == "." || part == ".." || !profileNamePattern.MatchString(part) {
+			return "", fmt.Errorf("profile contains unsupported characters")
+		}
+		if isProfileStaticSection(part) {
+			return "", fmt.Errorf("profile cannot use reserved workspace section names")
+		}
+		parts = append(parts, part)
 	}
-	return value, nil
+
+	return strings.Join(parts, "/"), nil
 }
 
 func profileDashboardPath(profile string) string {
@@ -377,7 +387,7 @@ func collectAllowedProfileMarkdownFiles(siteRoot string, section string) ([]mark
 
 func allowedProfileNames(siteRoot string) ([]string, error) {
 	root := filepath.Join(siteRoot, filepath.FromSlash(profilesDir))
-	entries, err := os.ReadDir(root)
+	_, err := os.Stat(root)
 	if os.IsNotExist(err) {
 		return []string{}, nil
 	}
@@ -386,16 +396,58 @@ func allowedProfileNames(siteRoot string) ([]string, error) {
 	}
 
 	profiles := []string{}
-	for _, entry := range entries {
-		if !entry.IsDir() || !dashboardSessionAllowsPath(siteRoot, profileDashboardPath(entry.Name())) {
-			continue
+	err = filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-		profiles = append(profiles, entry.Name())
+		if !entry.IsDir() || path == root {
+			return nil
+		}
+
+		if profileWorkspaceSections[strings.ToLower(entry.Name())] {
+			return filepath.SkipDir
+		}
+
+		if !profileDirectoryLooksLikeWorkspace(path) {
+			return nil
+		}
+
+		rel, relErr := filepath.Rel(root, path)
+		if relErr != nil {
+			return relErr
+		}
+		profile := filepath.ToSlash(rel)
+		if dashboardSessionAllowsPath(siteRoot, profileDashboardPath(profile)) {
+			profiles = append(profiles, profile)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
+
 	sort.Slice(profiles, func(i, j int) bool {
 		return strings.ToLower(profiles[i]) < strings.ToLower(profiles[j])
 	})
 	return profiles, nil
+}
+
+func profileDirectoryLooksLikeWorkspace(path string) bool {
+	indexPath := filepath.Join(path, "index.html")
+	if info, err := os.Stat(indexPath); err == nil && !info.IsDir() {
+		return true
+	}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return false
+	}
+	for _, entry := range entries {
+		if entry.IsDir() && profileWorkspaceSections[strings.ToLower(entry.Name())] {
+			return true
+		}
+	}
+	return false
 }
 
 func collectMarkdownFilesWithCache(siteRoot string, subDir string, cache *markdownIndexCache) ([]markdownIndexEntry, error) {

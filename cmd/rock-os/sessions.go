@@ -71,7 +71,7 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 		Notes: []string{
 			"Rock-OS uses active as the current dashboard session.",
 			"Public shows dashboards but hides Profiles.",
-			"Path sessions show only one profile workspace, such as Profiles/Kids.",
+			"Path sessions show one profile workspace subtree, such as Profiles/Kids.",
 			"Add future sessions to the sessions list so they appear in the home-page dropdown.",
 		},
 		Sessions: []dashboardSession{
@@ -83,7 +83,7 @@ func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 			{
 				Name:        "Kids",
 				AllowedPath: "Profiles/Kids",
-				Description: "Shows only the Kids profile dashboard.",
+				Description: "Shows only the Kids child profile workspace.",
 			},
 		},
 	})

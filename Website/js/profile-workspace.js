@@ -14,6 +14,14 @@ function encodePathSegment(value) {
     return encodeURIComponent(String(value || '').trim());
 }
 
+function encodeProfilePath(profile) {
+    return String(profile || '')
+        .split('/')
+        .filter(Boolean)
+        .map(encodePathSegment)
+        .join('/');
+}
+
 export function currentProfileWorkspaceName() {
     const params =
         new URLSearchParams(window.location.search);
@@ -35,9 +43,21 @@ export function currentProfileWorkspaceName() {
             parts[index - 1] === 'ENCRYPTED'
         );
 
-    return profilesIndex >= 0
-        ? String(parts[profilesIndex + 1] || '').trim()
-        : '';
+    if (profilesIndex < 0) {
+        return '';
+    }
+
+    const workspaceSectionKeys =
+        new Set(workspaceSections.map(section => section.key));
+    const profileParts = [];
+    for (const part of parts.slice(profilesIndex + 1)) {
+        if (workspaceSectionKeys.has(part) || part === 'index.html') {
+            break;
+        }
+        profileParts.push(part);
+    }
+
+    return profileParts.join('/');
 }
 
 export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName()) {
@@ -65,11 +85,11 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
     }
 
     const profilePath =
-        `/ENCRYPTED/Profiles/${encodePathSegment(profile)}/`;
+        `/ENCRYPTED/Profiles/${encodeProfilePath(profile)}/`;
     const currentPath =
         window.location.pathname.toLowerCase();
     const profileDashboardPath =
-        `/encrypted/profiles/${encodePathSegment(profile).toLowerCase()}/dashboards/`;
+        `/encrypted/profiles/${encodeProfilePath(profile).toLowerCase()}/dashboards/`;
     const links = [
         {
             key: 'overview',

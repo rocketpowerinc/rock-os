@@ -285,16 +285,26 @@ func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
 		return "", "", false
 	}
 
-	profilePath := "Profiles/" + parts[2]
-	if len(parts) >= 6 && parts[3] == dashboardsSection && parts[4] != "" && parts[5] != "" {
-		return profilePath, strings.Join(parts[6:], "/"), true
+	profileEnd := 2
+	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
+		profileEnd++
 	}
 
-	if len(parts) == 3 {
+	if profileEnd == 2 {
+		return "", "", false
+	}
+
+	profilePath := "Profiles/" + strings.Join(parts[2:profileEnd], "/")
+	if profileEnd == len(parts) {
 		return profilePath, "", true
 	}
 
-	return profilePath, strings.Join(parts[3:], "/"), true
+	section := parts[profileEnd]
+	if section == dashboardsSection && len(parts) >= profileEnd+3 && parts[profileEnd+1] != "" && parts[profileEnd+2] != "" {
+		return profilePath, strings.Join(parts[profileEnd+3:], "/"), true
+	}
+
+	return profilePath, strings.Join(parts[profileEnd:], "/"), true
 }
 
 func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
@@ -306,22 +316,30 @@ func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 		return false
 	}
 
-	if len(parts) == 3 {
+	profileEnd := 2
+	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
+		profileEnd++
+	}
+
+	if profileEnd == len(parts) {
 		info, err := os.Stat(filepath.Join(fsPath, "index.html"))
 		return err == nil && !info.IsDir()
 	}
 
-	if len(parts) != 6 ||
-		parts[0] != encryptedDir ||
-		parts[1] != "Profiles" ||
-		parts[3] != dashboardsSection ||
-		parts[4] == "" ||
-		parts[5] == "" {
+	if len(parts) != profileEnd+3 ||
+		parts[profileEnd] != dashboardsSection ||
+		parts[profileEnd+1] == "" ||
+		parts[profileEnd+2] == "" {
 		return false
 	}
 
 	info, err := os.Stat(filepath.Join(fsPath, "index.html"))
 	return err == nil && !info.IsDir()
+}
+
+func isProfileStaticSection(value string) bool {
+	section := strings.ToLower(value)
+	return section == "assets" || profileWorkspaceSections[section]
 }
 
 func requireUnlockedContent(siteRoot string, next http.HandlerFunc) http.HandlerFunc {

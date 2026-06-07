@@ -1283,6 +1283,76 @@ func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) 
 	}
 }
 
+func TestAllowedProfileNamesIncludesNestedKidsProfiles(t *testing.T) {
+	siteRoot := t.TempDir()
+	for _, profile := range []string{"Kids/Boys", "Kids/Girls", "Rocket"} {
+		profileRoot := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), filepath.FromSlash(profile))
+		if err := os.MkdirAll(profileRoot, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(profileRoot, "index.html"), []byte(profile), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	profiles, err := allowedProfileNames(siteRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[string]bool{
+		"Kids/Boys":  true,
+		"Kids/Girls": true,
+	}
+	if len(profiles) != len(expected) {
+		t.Fatalf("expected nested Kids profiles only, got %#v", profiles)
+	}
+	for _, profile := range profiles {
+		if !expected[profile] {
+			t.Fatalf("unexpected profile %q in %#v", profile, profiles)
+		}
+	}
+}
+
+func TestNestedProfileMarkdownIndexScopesToRequestedChildProfile(t *testing.T) {
+	siteRoot := t.TempDir()
+	boysWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "Boys", "wiki")
+	girlsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "Girls", "wiki")
+	for _, dir := range []string{boysWiki, girlsWiki} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(boysWiki, "Boys.md"), []byte("# Boys"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(girlsWiki, "Girls.md"), []byte("# Girls"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Kids%2FBoys", nil)
+	rec := httptest.NewRecorder()
+	profileMarkdownIndexHandler(siteRoot, "wiki").ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var index []markdownIndexEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Profiles/Kids/Boys/wiki/Boys.md" {
+		t.Fatalf("expected only Boys wiki content, got %#v", index)
+	}
+}
+
 func TestProfileContentHandlersRejectProfilesOutsideActiveSession(t *testing.T) {
 	siteRoot := t.TempDir()
 	for _, profile := range []string{"Kids", "Rocket"} {
@@ -1965,6 +2035,62 @@ func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "dashboard-index") {
 		t.Fatalf("expected dashboard index body, got %q", rec.Body.String())
+	}
+}
+
+func TestGuardEncryptedStaticAllowsNestedProfileIndexDirectory(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	profileDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "Boys")
+	if err := os.MkdirAll(profileDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(profileDir, "index.html"), []byte("boys-index"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Kids/Boys/", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for nested profile index directory, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "boys-index") {
+		t.Fatalf("expected nested profile index body, got %q", rec.Body.String())
+	}
+}
+
+func TestGuardEncryptedStaticAllowsNestedProfileAssets(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeActiveDashboardSessionState(siteRoot, "Kids"); err != nil {
+		t.Fatal(err)
+	}
+
+	assetPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Kids", "Boys", "assets", "Boys-Steel.svg")
+	if err := os.MkdirAll(filepath.Dir(assetPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(assetPath, []byte("boys-svg"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	invalidatePrivateMarkdownStatus()
+
+	handler := newEncryptedGuardServer(siteRoot)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Profiles/Kids/Boys/assets/Boys-Steel.svg", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for nested profile asset, got %d", rec.Code)
+	}
+	if rec.Body.String() != "boys-svg" {
+		t.Fatalf("expected nested profile asset body, got %q", rec.Body.String())
 	}
 }
 
