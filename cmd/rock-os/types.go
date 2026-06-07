@@ -15,11 +15,12 @@ var startupTime = time.Now()
 
 const (
 	encryptedDir        = "ENCRYPTED"
-	adminKeyFile        = "admin.key"
 	rocketKeyFile       = "rocket.key"
-	sessionsFile        = "Sessions/sessions.json"
-	activeSessionFile   = "Sessions/active-session.json"
-	profilesDir         = encryptedDir + "/Profiles"
+	sessionsStateDir    = "Sessions-State"
+	sessionKeysDir      = sessionsStateDir + "/Keys"
+	sessionsFile        = sessionsStateDir + "/sessions.json"
+	activeSessionFile   = sessionsStateDir + "/active-session.json"
+	profilesDir         = encryptedDir + "/Sessions"
 	dashboardsSection   = "dashboards"
 	dashboardsIndexFile = "dashboards-index.json"
 )

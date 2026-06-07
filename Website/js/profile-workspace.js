@@ -39,7 +39,7 @@ export function currentProfileWorkspaceName() {
             .map(part => decodeURIComponent(part));
     const profilesIndex =
         parts.findIndex((part, index) =>
-            part === 'Profiles' &&
+            part === 'Sessions' &&
             parts[index - 1] === 'ENCRYPTED'
         );
 
@@ -85,11 +85,11 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
     }
 
     const profilePath =
-        `/ENCRYPTED/Profiles/${encodeProfilePath(profile)}/`;
+        `/ENCRYPTED/Sessions/${encodeProfilePath(profile)}/`;
     const currentPath =
         window.location.pathname.toLowerCase();
     const profileDashboardPath =
-        `/encrypted/profiles/${encodeProfilePath(profile).toLowerCase()}/dashboards/`;
+        `/encrypted/sessions/${encodeProfilePath(profile).toLowerCase()}/dashboards/`;
     const links = [
         {
             key: 'overview',
@@ -110,7 +110,7 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
                 document.createElement('a');
             const active =
                 link.key === 'overview'
-                    ? currentPath.includes('/encrypted/profiles/') && !currentPath.includes('/dashboards/')
+                    ? currentPath.includes('/encrypted/sessions/') && !currentPath.includes('/dashboards/')
                     : link.key === 'dashboards'
                         ? currentPath.endsWith('/dashboards.html') || currentPath.includes(profileDashboardPath)
                         : currentPath.endsWith(`/${link.key}.html`);
@@ -148,7 +148,7 @@ export function renderMissingProfileContext(label) {
                 <div class="profiles-lock-badge">Profile Required</div>
                 <h1>${label}</h1>
                 <p>Open this section from a profile workspace.</p>
-                <a class="command-button primary" href="/dashboards.html">Open Dashboards</a>
+                <a class="command-button primary" href="/index.html">Open Home</a>
             </section>
         `;
     }
@@ -194,7 +194,7 @@ export function startProfileMarkdownSection(config) {
         indexUrl: `/${section}-index.json?profile=${encodedProfile}`,
         docApiUrl: `/api/${section}/doc?profile=${encodedProfile}`,
         searchApiUrl: `/api/${section}/search?profile=${encodedProfile}`,
-        pathPrefix: `ENCRYPTED/Profiles/${profile}/${section}`,
+        pathPrefix: `ENCRYPTED/Sessions/${profile}/${section}`,
         directOpenPageName: `${section}.html`
     });
 }

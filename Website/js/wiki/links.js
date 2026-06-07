@@ -36,9 +36,10 @@ function profileWorkspacePathInfo(path) {
         String(path || '').split('/');
 
     if (
-        parts.length >= 5 &&
+        parts.length >= 6 &&
         parts[0] === 'ENCRYPTED' &&
-        parts[1] === 'Profiles'
+        parts[1] === 'Sessions' &&
+        parts[3] === 'Profiles'
     ) {
         const profileParts = [];
         for (let index = 2; index < parts.length; index++) {
@@ -118,7 +119,7 @@ export function resolveMarkdownLink(href, currentDocPath) {
         return '';
     }
 
-    if (pathOnly.startsWith('/') || /^ENCRYPTED\/(dashboards|Profiles)\//.test(pathOnly)) {
+    if (pathOnly.startsWith('/') || /^ENCRYPTED\/(dashboards|Sessions)\//.test(pathOnly)) {
         return normalizeDocPath(pathOnly);
     }
 
@@ -129,7 +130,7 @@ export function resolveMarkdownLink(href, currentDocPath) {
 
     if (currentWorkspace && sectionMatch) {
         return normalizeDocPath(
-            `ENCRYPTED/Profiles/${currentWorkspace.profile}/${sectionMatch[1]}/${sectionMatch[2]}`
+            `ENCRYPTED/Sessions/${currentWorkspace.profile}/${sectionMatch[1]}/${sectionMatch[2]}`
         );
     }
 
@@ -151,7 +152,7 @@ export function wikiDocHref(path) {
     if (workspace) {
         targetPage =
             `/${workspace.section}.html`;
-    } else if (path.startsWith('ENCRYPTED/Profiles/')) {
+    } else if (path.startsWith('ENCRYPTED/Sessions/')) {
         const parts =
             path.split('/');
         const dashboardsIndex =
@@ -174,8 +175,8 @@ export function wikiDocHref(path) {
 
         targetPage =
             dashboard
-                ? `/ENCRYPTED/Profiles/${encodePathSegments(dashboard)}/`
-                : `/ENCRYPTED/Profiles/${encodePathSegments(profile)}/`;
+                ? `/ENCRYPTED/Sessions/${encodePathSegments(dashboard)}/`
+                : `/ENCRYPTED/Sessions/${encodePathSegments(profile)}/`;
     }
 
     const url =
@@ -196,7 +197,7 @@ function getTabForPath(path) {
         return workspaceTab(workspace.profile, workspace.section);
     }
 
-    if (path.startsWith('ENCRYPTED/Profiles/')) {
+    if (path.startsWith('ENCRYPTED/Sessions/')) {
         const parts =
             path.split('/');
         const dashboardsIndex =
@@ -233,16 +234,16 @@ function getCurrentTab() {
         return dashboardTab(dashboard);
     }
 
-    if (path.includes('/profiles/')) {
+    if (path.includes('/sessions/')) {
         const parts =
             rawPath.split('/').filter(Boolean);
-        const profilesIndex =
-            parts.findIndex(part => part.toLowerCase() === 'profiles');
+        const sessionsIndex =
+            parts.findIndex(part => part.toLowerCase() === 'sessions');
 
-        if (profilesIndex >= 0) {
+        if (sessionsIndex >= 0) {
             const profileParts =
                 parts
-                    .slice(profilesIndex + 1)
+                    .slice(sessionsIndex + 1)
                     .filter(part => part && part.toLowerCase() !== 'index.html')
                     .map(part => decodeURIComponent(part));
 
@@ -252,7 +253,7 @@ function getCurrentTab() {
                 return dashboardTab(profileParts.slice(0, dashboardsIndex + 3).join('/'));
             }
             if (profileParts.length >= 1) {
-                return dashboardTab(profileParts[0]);
+                return dashboardTab(profileParts.join('/'));
             }
         }
     }

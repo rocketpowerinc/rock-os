@@ -177,7 +177,7 @@ copy and prints a warning.
 - Per-profile script dashboard with search, personal pins, preview, guarded run buttons, and OS terminal launch
 - Sidebar controls for refresh, expand all, fold all, and collapse
 - Instant search across file names and markdown contents, with highlights in results and opened documents
-- URL-based pages, such as `wiki.html?profile=Rocket&doc=ENCRYPTED/Profiles/Rocket/wiki/Linux/Setup.md`
+- URL-based pages, such as `wiki.html?profile=SysAdmin/Profiles/Rocket&doc=ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/wiki/Linux/Setup.md`
 - Last edited note shown above rendered markdown files
 - Breadcrumbs show the current markdown folder path without changing pages
 - Personal wiki and script pins appear at the top of each sidebar
@@ -244,11 +244,11 @@ is encrypted with `git-crypt` under `Website/ENCRYPTED/`. While it is locked,
 Rock-OS still starts and shows a locked-content panel instead of attempting to
 render ciphertext.
 
-Profile command centers such as Rocket, Kids, and Prepper are stored under
-`Website/ENCRYPTED/Profiles/`. When allowed by the active session, they appear
-as Launch Points on the home page. Opening a profile shows a horizontal
-workspace bar with Overview, Dashboards, Bookmarks, Cheatsheets, Dotfiles,
-Bootstraps, Scripts, and Wiki.
+Profile command centers are stored under
+`Website/ENCRYPTED/Sessions/<Session>/Profiles/`. When allowed by the active
+session, they appear as Launch Points on the home page. Opening a profile shows
+a horizontal workspace bar with Overview, Dashboards, Bookmarks, Cheatsheets,
+Dotfiles, Bootstraps, Scripts, and Wiki.
 
 ### Profiles Vs Dashboards
 
@@ -270,14 +270,14 @@ workspace bar for moving between those sections without a global Menu button.
 Profiles and Dashboards use the same base item folder convention:
 
 ```text
-Website/ENCRYPTED/Profiles/Rocket/index.html
-Website/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/index.html
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/index.html
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/index.html
 ```
 
-The profile folder name is the profile name. A profile workspace looks like:
+The profile folder is owned by a session. A profile workspace looks like:
 
 ```text
-Website/ENCRYPTED/Profiles/Rocket/
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/
   index.html
   dashboard.json
   widgets.txt
@@ -293,7 +293,7 @@ Website/ENCRYPTED/Profiles/Rocket/
 ```
 
 Dashboard paths use
-`Website/ENCRYPTED/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`,
+`Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`,
 where the category becomes a section heading on that profile's Dashboards page.
 The `index.html` file is the entry page. Use `Overview.md` for the first note,
 with `dashboard.json`, `widgets.txt`, an optional local `assets/` folder, and
@@ -302,8 +302,8 @@ Profile and dashboard page icons should live inside that item's own folder, for
 example:
 
 ```text
-Website/ENCRYPTED/Profiles/Rocket/assets/Rocket-Steel.svg
-Website/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Steel.svg
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png
 ```
 
 Shared widget/feed fallback icons live under `Website/assets/widget-icons/`.
@@ -313,50 +313,49 @@ Reddit, podcasts, news feeds, bookmarks, featured spotlights, and clickable
 file cards). For every widget type, its configuration fields, and copy-paste
 examples, see the widget guide: [`documentation/Widgets.md`](documentation/Widgets.md).
 
-Internal Rock OS links, such as `/scripts.html?profile=Rocket` or
-`/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/`, open in the same browser tab. External web
-links open in a new tab so the local dashboard stays available.
+Internal Rock OS links, such as `/scripts.html?profile=SysAdmin/Profiles/Rocket` or
+`/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/`, open in
+the same browser tab. External web links open in a new tab so the local
+dashboard stays available.
 Dashboard/profile cards can link directly to their markdown tree by using
 `?view=notes`, for example
-`/ENCRYPTED/Profiles/Rocket/dashboards/OS/Windows/?view=notes`.
+`/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/?view=notes`.
 
 ### Dashboard Sessions
 
-`Website/Sessions/sessions.json` controls which dashboard sections are
-available on `dashboards.html`. Its `sessions` list controls which choices
+`Website/Sessions-State/sessions.json` controls which profiles are available
+on the home page and profile-owned dashboard pages. Its `sessions` list controls which choices
 appear in the home-page session dropdown beside the theme selector, and its
 `active` value is only the default session for a fresh checkout.
 
 When a user changes sessions, Rock-OS saves that local choice to ignored state
-at `Website/Sessions/active-session.json`. That keeps everyday session switching
+at `Website/Sessions-State/active-session.json`. That keeps everyday session switching
 from dirtying the Git working tree, which matters because `git-crypt`
 lock/unlock workflows expect a clean repo.
 
 ```json
 {
-  "active": "Public",
+  "active": "SysAdmin",
   "notes": [
     "Add future sessions to the sessions list so they appear in the home-page dropdown."
   ],
   "sessions": [
     {
-      "name": "Public",
-      "mode": "public"
+      "name": "SysAdmin",
+      "path": "SysAdmin"
     },
     {
-      "name": "Kids",
-      "path": "Profiles/Kids"
+      "name": "Family",
+      "path": "Family"
     }
   ]
 }
 ```
 
-`Public` is the default and shows dashboard sections while hiding `Profiles`.
-Any session with a `path` shows only that dashboard folder or profile subtree,
-so `Kids` with `Profiles/Kids` shows only content under
-`Website/ENCRYPTED/Profiles/Kids`, including nested child profiles such as
-`Boys` and `Girls`. For dashboards outside `Profiles`, use a path such as
-`Homelab/SelfHosting`.
+Each session `path` maps to
+`Website/ENCRYPTED/Sessions/<Session>/Profiles/`. A session such as `Family`
+shows only profiles and profile-owned dashboards under
+`Website/ENCRYPTED/Sessions/Family/Profiles/`.
 
 ## Dependencies
 
@@ -491,14 +490,14 @@ cmd/rock-os/      Go server source and tests
 START-HERE/            Human-friendly launcher folders for Windows, Linux, and macOS
 Website/               Public HTML, CSS, JS, assets, and media shell
 Website/ENCRYPTED/     git-crypt protected user content
-Website/ENCRYPTED/Profiles/      Profile workspaces
-Website/ENCRYPTED/Profiles/<Profile>/dashboards/   Profile-owned dashboards
-Website/ENCRYPTED/Profiles/<Profile>/wiki/        Profile wiki markdown
-Website/ENCRYPTED/Profiles/<Profile>/bootstraps/  Setup playbooks
-Website/ENCRYPTED/Profiles/<Profile>/cheatsheets/ Quick-reference markdown
-Website/ENCRYPTED/Profiles/<Profile>/dotfiles/    Dotfile notes and configs
-Website/ENCRYPTED/Profiles/<Profile>/bookmarks/   Bookmark collections
-Website/ENCRYPTED/Profiles/<Profile>/scripts/     User-managed runnable scripts
+Website/ENCRYPTED/Sessions/<Session>/Profiles/      Session-owned profile workspaces
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/dashboards/   Profile-owned dashboards
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/wiki/        Profile wiki markdown
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/bootstraps/  Setup playbooks
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/cheatsheets/ Quick-reference markdown
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/dotfiles/    Dotfile notes and configs
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/bookmarks/   Bookmark collections
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/scripts/     User-managed runnable scripts
 ```
 
 For a plain-language guide to the launcher scripts, read
@@ -599,7 +598,7 @@ Rock OS includes `Website/scripts.html`, a reusable local dashboard for scripts
 stored inside the active profile workspace:
 
 ```text
-Website/ENCRYPTED/Profiles/<ProfileName>/scripts/
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<ProfileName>/scripts/
 ```
 
 Open Scripts from a profile's horizontal workspace bar. The dashboard lists
@@ -790,7 +789,7 @@ runtime choices stay out of Git.
 | Path or pattern | Why it is ignored |
 | --- | --- |
 | `*.key` | Keeps exported `git-crypt` keys private while allowing unlock helpers to restore the key to the repo root. |
-| `Website/Sessions/active-session.json` | Stores the current dashboard session chosen from the session dropdown without changing tracked session definitions. |
+| `Website/Sessions-State/active-session.json` | Stores the current dashboard session chosen from the session dropdown without changing tracked session definitions. |
 | `Website/*-index.json` | Stores generated wiki, bootstrap, cheatsheet, dotfile, bookmark, and dashboard indexes. |
 | `Website/.rock-os-version` | Records the downloaded release tag used by launchers to decide whether a binary is current. |
 | `Website/rock-os-*`, `Website/*.download`, `.release/` | Keeps downloaded release binaries, in-progress downloads, and local release output out of commits. |
@@ -894,7 +893,7 @@ again.
 Each profile has its own Wiki folder:
 
 ```text
-Website/ENCRYPTED/Profiles/<ProfileName>/wiki/
+Website/ENCRYPTED/Sessions/<Session>/Profiles/<ProfileName>/wiki/
 ```
 
 The same profile-owned pattern is used for Bookmarks, Cheatsheets, Dotfiles,
@@ -902,11 +901,11 @@ Bootstraps, and Scripts. The browser includes the profile name when it requests
 the matching index endpoint:
 
 ```text
-/wiki-index.json?profile=Rocket
-/bootstraps-index.json?profile=Rocket
-/cheatsheets-index.json?profile=Rocket
-/dotfiles-index.json?profile=Rocket
-/bookmarks-index.json?profile=Rocket
+/wiki-index.json?profile=SysAdmin/Profiles/Rocket
+/bootstraps-index.json?profile=SysAdmin/Profiles/Rocket
+/cheatsheets-index.json?profile=SysAdmin/Profiles/Rocket
+/dotfiles-index.json?profile=SysAdmin/Profiles/Rocket
+/bookmarks-index.json?profile=SysAdmin/Profiles/Rocket
 /dashboards-index.json
 ```
 
@@ -925,7 +924,7 @@ dashboard and other same-origin APIs from malicious markdown files.
 Example:
 
 ```text
-Website/ENCRYPTED/Profiles/Rocket/wiki/
+Website/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/wiki/
   Linux/
     AnduinOS/
       Setup.md
@@ -971,7 +970,7 @@ remove the link instead of hiding it from the report.
 Direct wiki URLs look like this:
 
 ```text
-wiki.html?profile=Rocket&doc=ENCRYPTED/Profiles/Rocket/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
+wiki.html?profile=SysAdmin/Profiles/Rocket&doc=ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/wiki/Linux/Cheat%20Sheets/Gnome-CheatSheet.md
 ```
 
 ## Personal Pins

@@ -1,0 +1,24 @@
+{
+  "active": "SysAdmin",
+  "notes": [
+    "Rock-OS uses active as the current session.",
+    "Each session renders profiles from ENCRYPTED/Sessions/<SessionName>/Profiles/."
+  ],
+  "sessions": [
+    {
+      "name": "SysAdmin",
+      "path": "SysAdmin",
+      "description": "Shows SysAdmin profiles."
+    },
+    {
+      "name": "Family",
+      "path": "Family",
+      "description": "Shows Family profiles."
+    },
+    {
+      "name": "Doomsday",
+      "path": "Doomsday",
+      "description": "Shows Doomsday profiles."
+    }
+  ]
+}

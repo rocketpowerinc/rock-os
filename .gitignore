@@ -22,8 +22,6 @@ $RECYCLE.BIN/
 !.env.example
 *.local
 *.key
-admin.key
-rocket.key
 
 # Logs and runtime output
 *.log
@@ -75,7 +73,9 @@ Website/dashboards-index.json
 Website/markdown-index.json
 Website/.rock-os-version
 Website/.rock-os-wiki-version
-Website/Sessions/active-session.json
+Website/Sessions-State/active-session.json
+Website/Sessions-State/Keys/*
+!Website/Sessions-State/Keys/.gitkeep
 Website/*.download
 Website/rock-os-*
 Website/.gocache/

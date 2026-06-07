@@ -122,7 +122,7 @@ func normalizeProfileName(value string) (string, error) {
 }
 
 func profileDashboardPath(profile string) string {
-	return "Profiles/" + profile
+	return profile
 }
 
 func profileWorkspaceDir(profile string, section string) (string, error) {
@@ -590,10 +590,17 @@ func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, erro
 func dashboardPathFromDocument(path string) (string, bool) {
 	path = strings.TrimPrefix(filepath.ToSlash(path), profilesDir+"/")
 	parts := strings.Split(path, "/")
-	if len(parts) < 5 || parts[0] == "" || parts[1] != dashboardsSection || parts[2] == "" || parts[3] == "" {
+	dashboardsIndex := -1
+	for index, part := range parts {
+		if part == dashboardsSection {
+			dashboardsIndex = index
+			break
+		}
+	}
+	if dashboardsIndex <= 0 || len(parts) < dashboardsIndex+3 {
 		return "", false
 	}
-	return profileDashboardPath(parts[0]), true
+	return strings.Join(parts[:dashboardsIndex], "/"), true
 }
 
 func searchDashboards(siteRoot string, query string, dashboard string) ([]wikiSearchResult, error) {
@@ -620,16 +627,17 @@ func filterDashboardFiles(files []markdownIndexEntry, dashboard string) []markdo
 		}
 	}
 
-	profile := dashboard
-	if strings.HasPrefix(profile, "Profiles/") {
-		profile = strings.TrimPrefix(profile, "Profiles/")
-	}
-	profileParts := strings.Split(profile, "/")
-	if len(profileParts) != 1 || profileParts[0] == "" {
+	dashboard = normalizeDashboardSessionPath(dashboard)
+	if dashboard == "" {
 		return []markdownIndexEntry{}
 	}
 
-	prefix := profilesDir + "/" + profileParts[0] + "/" + dashboardsSection + "/"
+	prefix := profilesDir + "/" + dashboard
+	if !strings.Contains(prefix, "/"+dashboardsSection+"/") {
+		prefix += "/" + dashboardsSection + "/"
+	} else if !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
 		if strings.HasPrefix(file.Path, prefix) {
@@ -680,7 +688,11 @@ func collectDashboardsFiles(siteRoot string) ([]markdownIndexEntry, error) {
 func isProfileWorkspaceMarkdownPath(path string) bool {
 	path = strings.TrimPrefix(filepath.ToSlash(path), profilesDir+"/")
 	parts := strings.Split(path, "/")
-	return len(parts) >= 3 &&
-		profileWorkspaceSections[strings.ToLower(parts[1])] &&
-		strings.ToLower(parts[1]) != dashboardsSection
+	for _, part := range parts {
+		section := strings.ToLower(part)
+		if profileWorkspaceSections[section] {
+			return section != dashboardsSection
+		}
+	}
+	return false
 }

@@ -3,7 +3,7 @@ import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
 import { renderProfileWorkspaceNav } from './profile-workspace.js';
 
 const appMode = {
-    rootDir: 'ENCRYPTED/Profiles',
+    rootDir: 'ENCRYPTED/Sessions',
     indexFile: 'dashboards-index.json',
     apiRoot: 'dashboards',
     mainPage: 'dashboards.html',
@@ -170,6 +170,19 @@ function currentProfileName() {
     return profile;
 }
 
+function ownerProfileFromPath(profile) {
+    const parts =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean);
+    const dashboardIndex =
+        parts.indexOf('dashboards');
+
+    return dashboardIndex > 0
+        ? parts.slice(0, dashboardIndex).join('/')
+        : parts.join('/');
+}
+
 function displayNameFromProfile(profile) {
     const parts =
         String(profile || '')
@@ -191,7 +204,7 @@ function profileItemFromPath(path) {
         return null;
     }
 
-    if (parts[1] !== 'Profiles' || parts.length < 4) {
+    if (parts[1] !== 'Sessions' || parts[3] !== 'Profiles' || parts.length < 5) {
         return null;
     }
 
@@ -220,7 +233,7 @@ function profileItemFromPath(path) {
                 decodeURIComponent(parts[sectionIndex + 1]),
                 decodeURIComponent(parts[sectionIndex + 2])
             ].join('/'),
-            rootDir: 'ENCRYPTED/Profiles'
+            rootDir: 'ENCRYPTED/Sessions'
         };
     }
 
@@ -228,7 +241,7 @@ function profileItemFromPath(path) {
         category: 'Profiles',
         name: profileParts[profileParts.length - 1] || '',
         profile: profileParts.join('/'),
-        rootDir: 'ENCRYPTED/Profiles'
+        rootDir: 'ENCRYPTED/Sessions'
     };
 }
 
@@ -306,12 +319,17 @@ function uniqueProfileItems(files) {
             }
 
             if (a.category.toLowerCase() === 'profiles') {
-                const profileOrder = ['rocket', 'family', 'kids', 'admin'];
+                const profileOrder = [
+                    'rocket',
+                    'admin',
+                    'parents',
+                    'boys',
+                    'girls',
+                    'education',
+                    'prepper',
+                    'offline-vault'
+                ];
                 const profileRank = name => {
-                    if (name === 'prepper') {
-                        return profileOrder.length + 1;
-                    }
-
                     const index = profileOrder.indexOf(name);
                     return index === -1 ? profileOrder.length : index;
                 };
@@ -426,6 +444,9 @@ async function loadProfilesLanding() {
             new URLSearchParams(window.location.search);
         const ownerProfile =
             String(params.get('profile') || '').trim();
+        if (ownerProfile) {
+            renderProfileWorkspaceNav(ownerProfile);
+        }
         const indexUrl =
             ownerProfile
                 ? `/${appMode.indexFile}?profile=${encodeURIComponent(ownerProfile)}&nocache=${Date.now()}`
@@ -465,7 +486,7 @@ async function dashboardSessionAllows(profile) {
             await response.json();
 
         return Array.isArray(files) &&
-            files.some(file => String(file?.path || file).startsWith(`ENCRYPTED/Profiles/${owner}/`));
+            files.some(file => String(file?.path || file).startsWith(`ENCRYPTED/Sessions/${owner}/`));
     }
     catch {
         return false;
@@ -1089,7 +1110,7 @@ async function startProfiles() {
     }
 
     const profileOwner =
-        profile.split('/').filter(Boolean)[0] || '';
+        ownerProfileFromPath(profile);
     if (profileOwner) {
         renderProfileWorkspaceNav(profileOwner);
     }

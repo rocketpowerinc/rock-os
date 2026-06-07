@@ -23,7 +23,7 @@ Never break these without an explicit, specific request from the user:
   the core website experience. Keep visual assets local in `Website/assets`.
 - **Never** turn the script dashboard into an arbitrary web command prompt. It
   may only expose allowlisted script files from
-  `Website/ENCRYPTED/Profiles/<ProfileName>/scripts/`.
+  `Website/ENCRYPTED/Sessions/<Session>/Profiles/<ProfileName>/scripts/`.
 - **Never** add a frontend build step unless the user explicitly asks.
 - **Never** track generated indexes, release binaries, caches, downloaded
   artifacts, or `Website/.rock-os-version` in Git.
@@ -57,8 +57,9 @@ Never break these without an explicit, specific request from the user:
   links open in a new tab with `rel="noopener noreferrer"`.
 - Hide the home-page Launch Points section while encrypted content is locked.
   While unlocked, render only profile cards allowed by the active session.
-- Keep dashboard session definitions in `Website/Sessions/sessions.json` and
-  mutable active-session state in ignored `Website/Sessions/active-session.json`.
+- Keep dashboard session definitions in `Website/Sessions-State/sessions.json`
+  and mutable active-session state in ignored
+  `Website/Sessions-State/active-session.json`.
   Treat both as public routing state only; never put private content in that
   public folder.
 - UI changes stay professional and theme-aware. Support the existing presets:
@@ -90,10 +91,11 @@ Never break these without an explicit, specific request from the user:
 ## Scripts & Binaries
 
 - User-managed website scripts live in each profile workspace under
-  `Website/ENCRYPTED/Profiles/<ProfileName>/scripts/`, organized under
-  platform folders (`Windows/`, `Linux/`, `Mac/`) and rendered as a collapsible
-  tree. Keep the dashboard preview-before-run; on Run, launch in the OS terminal,
-  not a browser pseudo-terminal. Supported types: `.cmd`, `.bat`, `.sh`, `.ps1`.
+  `Website/ENCRYPTED/Sessions/<Session>/Profiles/<ProfileName>/scripts/`,
+  organized under platform folders (`Windows/`, `Linux/`, `Mac/`) and rendered
+  as a collapsible tree. Keep the dashboard preview-before-run; on Run, launch
+  in the OS terminal, not a browser pseudo-terminal. Supported types: `.cmd`,
+  `.bat`, `.sh`, `.ps1`.
 - Do not update `README.md` for ordinary additions under
   a profile's `scripts/` folder. Put self-explaining comments inside each
   script instead.
@@ -134,22 +136,23 @@ Never break these without an explicit, specific request from the user:
 - Never document local session marker files in README.md, public website
   content, or user-facing docs. Keep them ignored and local-only.
 
-## Dashboards (`Website/ENCRYPTED/Profiles/<Profile>/dashboards/`)
+## Dashboards (`Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/dashboards/`)
 
 - Ordinary dashboards live inside the owning profile under
-  `Website/ENCRYPTED/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`.
-  Group by category folder; `dashboards.html?profile=<Profile>` renders that
-  profile's category sections dynamically — do not hardcode ordinary dashboard
-  categories. Profiles are launched from the home page Launch Points section
-  according to the active session. Order ordinary categories with `OS` first,
-  `Mobile` second, then the rest alphabetically. In `Homelab`, keep
+  `Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/dashboards/<Category>/<DashboardName>/`.
+  Group by category folder; `dashboards.html?profile=<Session>/Profiles/<Profile>`
+  renders that profile's category sections dynamically — do not hardcode
+  ordinary dashboard categories. Profiles are launched from the home page Launch
+  Points section according to the active session. Order ordinary categories with
+  `OS` first, `Mobile` second, then the rest alphabetically. In `Homelab`, keep
   `SelfHosting` first and sort the rest alphabetically.
 - Dashboard names should preferably be one word. If the user proposes a
   multi-word name, warn them and ask for a one-word version before scaffolding.
   If they give exact casing or punctuation, preserve it and update all
   path-sensitive references.
-- Profiles stored under `Website/ENCRYPTED/Profiles/` and Dashboards share
-  the base folder conventions: each item folder uses
+- Profiles stored under
+  `Website/ENCRYPTED/Sessions/<Session>/Profiles/<Profile>/` and Dashboards
+  share the base folder conventions: each item folder uses
   `index.html` as the entry page, with `dashboard.json`, `widgets.txt`,
   `Overview.md`, optional local `assets/`, and other markdown beside it.
 - Treat Profiles as special workspaces, not ordinary dashboards. Keep each
@@ -178,5 +181,5 @@ Never break these without an explicit, specific request from the user:
   the user's personal skills folder and keep an archival backup copy under
   `dev/codex-skills/<skill-name>/`. The repo copy is archival only, not the
   active loaded skill.
-- Use `/dashboard-new` only for ordinary dashboards outside `Profiles/`. Use
-  `/profile-new` for profile workspace scaffolding.
+- Use `/dashboard-new` only for ordinary dashboards inside a profile's
+  `dashboards/` folder. Use `/profile-new` for profile workspace scaffolding.

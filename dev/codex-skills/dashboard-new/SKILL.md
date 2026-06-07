@@ -5,21 +5,21 @@ description: Use when the user invokes /dashboard-new or asks to create or scaff
 
 # Dashboard New
 
-Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/`.
+Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/`.
 
 ## Required Inputs
 
 Ask briefly for any missing values:
 
 - Dashboard name. Prefer one word; ask before using a multi-word name.
-- Owning profile. Default to `Rocket` only when the user does not specify one.
+- Owning session and profile. Default to `SysAdmin` / `Rocket` only when the user does not specify one.
 - Dashboard category. Do not use `Profiles`; hand profile requests to `/profile-new`.
 - Icon source or visual direction. Keep the final asset local inside the dashboard.
 
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
+Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
   index.html
   Overview.md
   dashboard.json
@@ -32,7 +32,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
 
 1. Read `AGENTS.md`, confirm `Website/ENCRYPTED/` is unlocked, and inspect a similar existing dashboard.
 2. Reject `Profiles` as a dashboard category and use `/profile-new` for that request.
-3. Inspect `Website/Sessions/sessions.json` and `cmd/rock-os/sessions.go` only if the user explicitly asks for dashboard-specific visibility rules.
+3. Inspect `Website/Sessions-State/sessions.json` and `cmd/rock-os/sessions.go` only if the user explicitly asks for dashboard-specific visibility rules.
 4. Create the dashboard files by adapting the current dashboard convention.
 5. Keep root-relative website paths and the shared module:
 
@@ -54,7 +54,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
 - Use `index.html`, `Overview.md`, `dashboard.json`, and `widgets.txt`.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
-- Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<ProfileName>`.
+- Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<SessionName>/Profiles/<ProfileName>`.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.
 - Do not update `README.md` for an ordinary dashboard addition unless it introduces a new project convention.
 

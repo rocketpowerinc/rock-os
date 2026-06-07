@@ -21,17 +21,15 @@ if errorlevel 1 (
 set "KEY_FILE="
 set "KEY_NAME="
 for %%F in (*.key) do (
-    if /I not "%%~nxF"=="admin.key" if /I not "%%~nxF"=="rocket.key" (
-        if not defined KEY_FILE (
-            set "KEY_FILE=%%~fF"
-            set "KEY_NAME=%%~nxF"
-        ) else (
-            echo More than one git-crypt .key file was found in the repo root:
-            echo "%ROCK_OS_ROOT%"
-            echo Keep only one git-crypt key in that folder, then run this script again.
-            call :wait
-            exit /b 1
-        )
+    if not defined KEY_FILE (
+        set "KEY_FILE=%%~fF"
+        set "KEY_NAME=%%~nxF"
+    ) else (
+        echo More than one git-crypt .key file was found in the repo root:
+        echo "%ROCK_OS_ROOT%"
+        echo Keep only one git-crypt key in that folder, then run this script again.
+        call :wait
+        exit /b 1
     )
 )
 

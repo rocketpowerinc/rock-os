@@ -97,7 +97,7 @@ call :check_private
 
 set "KEY_FOUND="
 for %%K in (*.key) do (
-    if /I not "%%~nxK"=="admin.key" if /I not "%%~nxK"=="rocket.key" set "KEY_FOUND=1"
+    set "KEY_FOUND=1"
 )
 if defined KEY_FOUND (
     call :warn "git-crypt .key file present in repo root. Keep it private and never commit it."

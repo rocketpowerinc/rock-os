@@ -155,7 +155,7 @@ $forbiddenPatterns = @(
     '(^|/).*\.key$',
     '^Website/\.rock-os-version$',
     '^Website/\.rock-os-wiki-version$',
-    '^Website/Sessions/active-session\.json$',
+    '^Website/Sessions-State/active-session\.json$',
     '^Website/(markdown|wiki|bootstraps|cheatsheets|dotfiles|bookmarks|profiles|dashboards)-index\.json$',
     '^Website/rock-os-',
     '^Website/.*\.download$',

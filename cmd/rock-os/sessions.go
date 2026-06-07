@@ -14,9 +14,6 @@ type dashboardSession struct {
 	AllowedPath string `json:"path,omitempty"`
 	Mode        string `json:"mode,omitempty"`
 	Description string `json:"description,omitempty"`
-	Admin       bool   `json:"-"`
-	Public      bool   `json:"-"`
-	Rocket      bool   `json:"-"`
 }
 
 type dashboardSessionsConfig struct {
@@ -43,112 +40,52 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 	config := defaultDashboardSessionsConfig()
 	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(sessionsFile)))
 	if err != nil {
-		config = applyLocalKeySessionAvailability(siteRoot, config)
 		return applyActiveDashboardSessionState(siteRoot, config)
 	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
-		config = applyLocalKeySessionAvailability(siteRoot, defaultDashboardSessionsConfig())
+		config = defaultDashboardSessionsConfig()
 		return applyActiveDashboardSessionState(siteRoot, config)
 	}
 
-	if localKeySessionUnlocked(siteRoot, adminKeyFile) &&
-		localKeySessionRequested(config, "Admin") {
-		config.Sessions = append(config.Sessions, adminDashboardSession())
-	}
-	if localKeySessionUnlocked(siteRoot, rocketKeyFile) &&
-		localKeySessionRequested(config, "Rocket") {
-		config.Sessions = append(config.Sessions, rocketDashboardSession())
-	}
-
-	config = applyLocalKeySessionAvailability(siteRoot, sanitizeDashboardSessionsConfig(config))
+	config = sanitizeDashboardSessionsConfig(config)
 	return applyActiveDashboardSessionState(siteRoot, config)
 }
 
 func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 	return sanitizeDashboardSessionsConfig(dashboardSessionsConfig{
-		Active: "Public",
+		Active: "SysAdmin",
 		Notes: []string{
-			"Rock-OS uses active as the current dashboard session.",
-			"Public shows dashboards but hides Profiles.",
-			"Path sessions show one profile workspace subtree, such as Profiles/Kids.",
-			"Add future sessions to the sessions list so they appear in the home-page dropdown.",
+			"Rock-OS uses active as the current session.",
+			"Each session renders profiles from ENCRYPTED/Sessions/<SessionName>/Profiles/.",
 		},
 		Sessions: []dashboardSession{
 			{
-				Name:        "Public",
-				Mode:        "public",
-				Description: "Shows normal dashboard sections, but hides Profiles.",
+				Name:        "SysAdmin",
+				AllowedPath: "SysAdmin",
+				Description: "Shows SysAdmin profiles.",
 			},
 			{
-				Name:        "Kids",
-				AllowedPath: "Profiles/Kids",
-				Description: "Shows only the Kids child profile workspace.",
+				Name:        "Family",
+				AllowedPath: "Family",
+				Description: "Shows Family profiles.",
+			},
+			{
+				Name:        "Doomsday",
+				AllowedPath: "Doomsday",
+				Description: "Shows Doomsday profiles.",
 			},
 		},
 	})
 }
 
-func applyLocalKeySessionAvailability(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
-	sessions := []dashboardSession{}
-	for _, session := range config.Sessions {
-		if isLocalKeySession(session) {
-			continue
-		}
-		sessions = append(sessions, session)
-	}
-
-	if localKeySessionUnlocked(siteRoot, adminKeyFile) {
-		insertAt := min(1, len(sessions))
-		sessions = append(sessions[:insertAt], append([]dashboardSession{adminDashboardSession()}, sessions[insertAt:]...)...)
-	} else if strings.EqualFold(config.Active, "Admin") {
-		config.Active = "Public"
-	}
-
-	if localKeySessionUnlocked(siteRoot, rocketKeyFile) {
-		insertAt := min(2, len(sessions))
-		sessions = append(sessions[:insertAt], append([]dashboardSession{rocketDashboardSession()}, sessions[insertAt:]...)...)
-	} else if strings.EqualFold(config.Active, "Rocket") {
-		config.Active = "Public"
-	}
-
-	config.Sessions = sessions
-	if !dashboardSessionExists(config.Sessions, config.Active) {
-		config.Active = "Public"
-	}
-	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
-		config.Active = config.Sessions[0].Name
-	}
-
-	return config
-}
-
-func adminDashboardSession() dashboardSession {
-	return dashboardSession{
-		Name:        "Admin",
-		Mode:        "admin",
-		Description: "Shows dashboard sections except the Rocket profile.",
-		Admin:       true,
-	}
-}
-
-func rocketDashboardSession() dashboardSession {
-	return dashboardSession{
-		Name:        "Rocket",
-		Mode:        "rocket",
-		Description: "Shows every dashboard section.",
-		Rocket:      true,
-	}
-}
-
-func localKeySessionUnlocked(siteRoot string, keyFile string) bool {
-	info, err := os.Stat(filepath.Join(filepath.Dir(siteRoot), keyFile))
+func sessionKeyUnlocked(siteRoot string, keyFile string) bool {
+	info, err := os.Stat(filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), keyFile))
 	return err == nil && !info.IsDir()
 }
 
-func localKeySessionRequested(config dashboardSessionsConfig, name string) bool {
-	return strings.EqualFold(strings.TrimSpace(config.Active), name) &&
-		!dashboardSessionExists(config.Sessions, name)
+func rocketProfileUnlocked(siteRoot string) bool {
+	return sessionKeyUnlocked(siteRoot, rocketKeyFile)
 }
 
 func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
@@ -157,7 +94,7 @@ func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsC
 		config.Active = active
 	}
 	if !dashboardSessionExists(config.Sessions, config.Active) {
-		config.Active = "Public"
+		config.Active = "SysAdmin"
 	}
 	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
 		config.Active = config.Sessions[0].Name
@@ -225,44 +162,15 @@ func resolveDashboardSession(config dashboardSessionsConfig) dashboardSession {
 	}
 
 	return dashboardSession{
-		Name:   "Public",
-		Mode:   "public",
-		Public: true,
+		Name:        "SysAdmin",
+		AllowedPath: "SysAdmin",
 	}
 }
 
 func normalizeDashboardSession(session dashboardSession) dashboardSession {
 	session.Mode = strings.ToLower(strings.TrimSpace(session.Mode))
-	if strings.EqualFold(session.Name, "Public") || session.Mode == "public" {
-		session.Mode = "public"
-		session.Public = true
-		session.Admin = false
-		session.Rocket = false
-		session.AllowedPath = ""
-		return session
-	}
-	if strings.EqualFold(session.Name, "Admin") || session.Mode == "admin" {
-		session.Mode = "admin"
-		session.Admin = true
-		session.Public = false
-		session.Rocket = false
-		session.AllowedPath = ""
-		return session
-	}
-	if strings.EqualFold(session.Name, "Rocket") || session.Mode == "rocket" {
-		session.Mode = "rocket"
-		session.Rocket = true
-		session.Admin = false
-		session.Public = false
-		session.AllowedPath = ""
-		return session
-	}
-
-	session.Public = false
-	session.Admin = false
-	session.Rocket = false
 	if session.AllowedPath == "" {
-		session.AllowedPath = "Profiles/" + session.Name
+		session.AllowedPath = session.Name
 	}
 	session.AllowedPath = normalizeDashboardSessionPath(session.AllowedPath)
 	return session
@@ -283,23 +191,11 @@ func normalizeDashboardSessionPath(value string) string {
 		parts = append(parts, part)
 	}
 
-	if len(parts) == 1 {
-		parts = append([]string{"Profiles"}, parts...)
-	}
-
 	return strings.Join(parts, "/")
 }
 
-func isLocalKeySession(session dashboardSession) bool {
-	return session.Admin || session.Rocket ||
-		strings.EqualFold(session.Name, "Admin") ||
-		strings.EqualFold(session.Name, "Rocket") ||
-		strings.EqualFold(session.Mode, "admin") ||
-		strings.EqualFold(session.Mode, "rocket")
-}
-
 func filterDashboardFilesForActiveSession(siteRoot string, files []markdownIndexEntry) []markdownIndexEntry {
-	return filterDashboardFilesForSession(files, activeDashboardSession(siteRoot))
+	return filterDashboardFilesForSession(siteRoot, files, activeDashboardSession(siteRoot))
 }
 
 func dashboardSessionAllowsPath(siteRoot string, dashboard string) bool {
@@ -309,37 +205,22 @@ func dashboardSessionAllowsPath(siteRoot string, dashboard string) bool {
 	}
 
 	probe := []markdownIndexEntry{{
-		Path: profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/__access__.md",
+		Path: profilesDir + "/" + dashboard + "/__access__.md",
 	}}
 
-	return len(filterDashboardFilesForSession(probe, activeDashboardSession(siteRoot))) == 1
+	return len(filterDashboardFilesForSession(siteRoot, probe, activeDashboardSession(siteRoot))) == 1
 }
 
-func filterDashboardFilesForSession(files []markdownIndexEntry, session dashboardSession) []markdownIndexEntry {
-	if session.Admin {
-		return filterDashboardFilesOutsidePath(files, "Profiles/Rocket")
-	}
-
-	if session.Rocket {
-		return files
-	}
-
-	if session.Public {
-		filtered := []markdownIndexEntry{}
-		profilesPrefix := profilesDir + "/"
-		for _, file := range files {
-			if !strings.HasPrefix(file.Path, profilesPrefix) {
-				filtered = append(filtered, file)
-			}
-		}
-		return filtered
-	}
-
+func filterDashboardFilesForSession(siteRoot string, files []markdownIndexEntry, session dashboardSession) []markdownIndexEntry {
 	if session.AllowedPath == "" {
 		return []markdownIndexEntry{}
 	}
 
-	return filterDashboardFilesInsideProfilePath(files, session.AllowedPath)
+	filtered := filterDashboardFilesInsideProfilePath(files, session.AllowedPath)
+	if !rocketProfileUnlocked(siteRoot) {
+		filtered = filterDashboardFilesOutsidePath(filtered, "SysAdmin/Profiles/Rocket")
+	}
+	return filtered
 }
 
 func filterDashboardFilesInsideProfilePath(files []markdownIndexEntry, dashboard string) []markdownIndexEntry {
@@ -348,7 +229,7 @@ func filterDashboardFilesInsideProfilePath(files []markdownIndexEntry, dashboard
 		return []markdownIndexEntry{}
 	}
 
-	prefix := profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/"
+	prefix := profilesDir + "/" + dashboard + "/"
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
 		if strings.HasPrefix(file.Path, prefix) {
@@ -364,7 +245,7 @@ func filterDashboardFilesOutsidePath(files []markdownIndexEntry, dashboard strin
 		return files
 	}
 
-	prefix := profilesDir + "/" + strings.TrimPrefix(dashboard, "Profiles/") + "/"
+	prefix := profilesDir + "/" + dashboard + "/"
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
 		if !strings.HasPrefix(file.Path, prefix) {
@@ -429,16 +310,7 @@ func writeActiveDashboardSessionState(siteRoot string, active string) error {
 }
 
 func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfig) error {
-	if localKeySessionUnlocked(siteRoot, adminKeyFile) &&
-		localKeySessionRequested(config, "Admin") {
-		config.Sessions = append(config.Sessions, adminDashboardSession())
-	}
-	if localKeySessionUnlocked(siteRoot, rocketKeyFile) &&
-		localKeySessionRequested(config, "Rocket") {
-		config.Sessions = append(config.Sessions, rocketDashboardSession())
-	}
 	config = sanitizeDashboardSessionsConfig(config)
-	config.Sessions = stripLocalKeySessions(config.Sessions)
 	content, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
@@ -450,15 +322,4 @@ func writeDashboardSessionsConfig(siteRoot string, config dashboardSessionsConfi
 		return err
 	}
 	return os.WriteFile(path, content, 0o644)
-}
-
-func stripLocalKeySessions(sessions []dashboardSession) []dashboardSession {
-	filtered := []dashboardSession{}
-	for _, session := range sessions {
-		if isLocalKeySession(session) {
-			continue
-		}
-		filtered = append(filtered, session)
-	}
-	return filtered
 }

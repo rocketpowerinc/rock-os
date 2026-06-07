@@ -21,9 +21,11 @@ function profileFromDashboardPath(path) {
         String(path || '').split('/');
 
     if (
-        parts.length >= 4 &&
+        parts.length >= 5 &&
         parts[0] === 'ENCRYPTED' &&
-        parts[1] === 'Profiles'
+        parts[1] === 'Sessions' &&
+        parts[2] &&
+        parts[3] === 'Profiles'
     ) {
         const workspaceSections =
             new Set(['dashboards', 'bookmarks', 'cheatsheets', 'dotfiles', 'bootstraps', 'scripts', 'wiki']);
@@ -62,7 +64,7 @@ function profileCard(profile) {
     link.dataset.profile =
         displayNameFromProfile(profile);
     link.href =
-        `/ENCRYPTED/Profiles/${profile.split('/').filter(Boolean).map(part => encodeURIComponent(part)).join('/')}/`;
+        `/ENCRYPTED/Sessions/${profile.split('/').filter(Boolean).map(part => encodeURIComponent(part)).join('/')}/`;
 
     icon.className =
         'profile-card-icon';
@@ -91,27 +93,23 @@ function profileOrderForSession(sessionName) {
     const normalized =
         String(sessionName || '').trim().toLowerCase();
 
-    if (normalized === 'rocket') {
-        return ['Rocket', 'Admin', 'Family', 'Kids/Boys', 'Kids/Girls', 'Prepper'];
+    if (normalized === 'sysadmin') {
+        return ['SysAdmin/Profiles/Rocket', 'SysAdmin/Profiles/Admin'];
     }
-    if (normalized === 'admin') {
-        return ['Admin', 'Prepper', 'Family', 'Kids/Boys', 'Kids/Girls'];
+    if (normalized === 'family') {
+        return ['Family/Profiles/Parents', 'Family/Profiles/Boys', 'Family/Profiles/Girls', 'Family/Profiles/Education'];
     }
-    if (normalized === 'kids') {
-        return ['Kids/Boys', 'Kids/Girls'];
+    if (normalized === 'doomsday') {
+        return ['Doomsday/Profiles/Prepper', 'Doomsday/Profiles/Offline-Vault'];
     }
 
-    return ['Rocket', 'Family', 'Kids/Boys', 'Kids/Girls', 'Admin'];
+    return ['SysAdmin/Profiles/Rocket', 'SysAdmin/Profiles/Admin'];
 }
 
 function sortProfilesForSession(profiles, sessionName) {
     const profileOrder =
         profileOrderForSession(sessionName);
     const profileRank = profile => {
-        if (!profileOrder.includes('Prepper') && profile === 'Prepper') {
-            return profileOrder.length + 1;
-        }
-
         const rank =
             profileOrder.indexOf(profile);
 
@@ -159,15 +157,6 @@ async function loadProfileLaunchPoints() {
                         .filter(Boolean)
                 )
             );
-        if (String(sessions?.active || '').trim().toLowerCase() === 'kids') {
-            const nestedKidsProfiles =
-                profiles.filter(profile => profile.startsWith('Kids/'));
-            if (nestedKidsProfiles.length > 0) {
-                profiles =
-                    nestedKidsProfiles;
-            }
-        }
-
         sortProfilesForSession(profiles, sessions?.active);
 
         launchPointsGrid.replaceChildren(...profiles.map(profileCard));

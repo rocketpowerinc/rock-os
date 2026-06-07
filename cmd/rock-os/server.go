@@ -234,9 +234,14 @@ func noCache(next http.Handler) http.Handler {
 // and assets. Markdown and scripts must always pass through their gated APIs.
 func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 	prefix := "/" + encryptedDir
+	keyPrefix := "/" + sessionKeysDir
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cleaned := path.Clean(r.URL.Path)
+		if cleaned == keyPrefix || strings.HasPrefix(cleaned, keyPrefix+"/") {
+			http.NotFound(w, r)
+			return
+		}
 		if cleaned != prefix && !strings.HasPrefix(cleaned, prefix+"/") {
 			next.ServeHTTP(w, r)
 			return
@@ -278,23 +283,25 @@ func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {
 
 func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
 	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
-	if len(parts) < 3 ||
+	if len(parts) < 5 ||
 		parts[0] != encryptedDir ||
-		parts[1] != "Profiles" ||
-		parts[2] == "" {
+		parts[1] != "Sessions" ||
+		parts[2] == "" ||
+		parts[3] != "Profiles" ||
+		parts[4] == "" {
 		return "", "", false
 	}
 
-	profileEnd := 2
+	profileEnd := 4
 	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
 		profileEnd++
 	}
 
-	if profileEnd == 2 {
+	if profileEnd == 4 {
 		return "", "", false
 	}
 
-	profilePath := "Profiles/" + strings.Join(parts[2:profileEnd], "/")
+	profilePath := strings.Join(parts[2:profileEnd], "/")
 	if profileEnd == len(parts) {
 		return profilePath, "", true
 	}
@@ -309,14 +316,16 @@ func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
 
 func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 	parts := strings.Split(strings.Trim(cleanedPath, "/"), "/")
-	if len(parts) < 3 ||
+	if len(parts) < 5 ||
 		parts[0] != encryptedDir ||
-		parts[1] != "Profiles" ||
-		parts[2] == "" {
+		parts[1] != "Sessions" ||
+		parts[2] == "" ||
+		parts[3] != "Profiles" ||
+		parts[4] == "" {
 		return false
 	}
 
-	profileEnd := 2
+	profileEnd := 4
 	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
 		profileEnd++
 	}

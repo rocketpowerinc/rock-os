@@ -1,24 +1,25 @@
 ---
 name: profile-new
-description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile workspace under Website/ENCRYPTED/Profiles with its own Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
+description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile workspace under Website/ENCRYPTED/Sessions/<SessionName>/Profiles with its own Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
 ---
 
 # Profile New
 
-Create a Rock-OS profile workspace under `Website/ENCRYPTED/Profiles/<ProfileName>/`.
+Create a Rock-OS profile workspace under `Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/`.
 
 ## Required Inputs
 
 Ask briefly for any missing values:
 
 - Profile name. Prefer one word; ask before using a multi-word name.
+- Owning session. Use one of the configured sessions unless the user is also adding a new session.
 - Visual direction or asset source for the profile's Steel, Rugged, Cyberpunk, and Blue-Grass icons. Example: "make one in the same low-poly style" or "use this local image."
 - Sessions that should or should not see the profile. Accept the current default session behavior when the user has no special requirement.
 
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/Profiles/<ProfileName>/
+Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/
   index.html
   Overview.md
   dashboard.json
@@ -47,7 +48,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/
 ## Workflow
 
 1. Read `AGENTS.md`, confirm `Website/ENCRYPTED/` is unlocked, and inspect a similar existing profile.
-2. Inspect `Website/Sessions/sessions.json`, `cmd/rock-os/sessions.go`, `Website/js/index.js`, and `Website/js/profiles.js` before changing visibility or ordering.
+2. Inspect `Website/Sessions-State/sessions.json`, `cmd/rock-os/sessions.go`, `Website/js/index.js`, and `Website/js/profiles.js` before changing visibility or ordering.
 3. Create the profile dashboard files by adapting the current profile page convention.
 4. Create all seven workspace folders, even when empty: Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki. Use **Bootstraps** for setup playbooks.
 5. Keep the profile page on the shared dashboard module:
@@ -70,6 +71,7 @@ Website/ENCRYPTED/Profiles/<ProfileName>/
 ## Conventions
 
 - Profiles are special workspaces, not ordinary dashboard categories. Each profile owns its own `dashboards/` folder.
+- Profiles are session-owned. Do not create compatibility folders under old profile roots.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.
