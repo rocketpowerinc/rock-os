@@ -219,6 +219,37 @@ function viewOverviewButtonText(profile) {
         : appMode.viewHubOverviewText;
 }
 
+function kidProfileTheme(profile) {
+    const normalized =
+        String(profile || '').toLowerCase();
+
+    if (normalized === 'family/profiles/boys') {
+        return 'boys';
+    }
+    if (normalized === 'family/profiles/girls') {
+        return 'girls';
+    }
+    return '';
+}
+
+function applyKidProfileTheme(profile) {
+    const body =
+        document.body;
+    if (!body) {
+        return;
+    }
+
+    body.classList.remove('kid-profile-page', 'kid-profile-boys', 'kid-profile-girls');
+
+    const theme =
+        kidProfileTheme(profile);
+    if (!theme) {
+        return;
+    }
+
+    body.classList.add('kid-profile-page', `kid-profile-${theme}`);
+}
+
 function profileItemFromPath(path) {
     const parts =
         String(path || '')
@@ -1154,9 +1185,12 @@ async function startProfiles() {
 
     const profile = currentProfileName();
     if (!profile) {
+        applyKidProfileTheme('');
         await loadProfilesLanding();
         return;
     }
+
+    applyKidProfileTheme(profile);
 
     const displayName =
         displayNameFromProfile(profile);

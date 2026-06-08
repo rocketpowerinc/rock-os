@@ -22,6 +22,37 @@ function encodeProfilePath(profile) {
         .join('/');
 }
 
+function kidProfileTheme(profile) {
+    const normalized =
+        String(profile || '').toLowerCase();
+
+    if (normalized === 'family/profiles/boys') {
+        return 'boys';
+    }
+    if (normalized === 'family/profiles/girls') {
+        return 'girls';
+    }
+    return '';
+}
+
+function applyKidProfileTheme(profile) {
+    const body =
+        document.body;
+    if (!body) {
+        return;
+    }
+
+    body.classList.remove('kid-profile-page', 'kid-profile-boys', 'kid-profile-girls');
+
+    const theme =
+        kidProfileTheme(profile);
+    if (!theme) {
+        return;
+    }
+
+    body.classList.add('kid-profile-page', `kid-profile-${theme}`);
+}
+
 export function currentProfileWorkspaceName() {
     const params =
         new URLSearchParams(window.location.search);
@@ -64,6 +95,8 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
     if (!profile) {
         return;
     }
+
+    applyKidProfileTheme(profile);
 
     let nav =
         document.getElementById('profileWorkspaceNav');
