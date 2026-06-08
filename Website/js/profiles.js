@@ -1,4 +1,3 @@
-import { createMarkdownTabApp } from './wiki/markdown-tab.js';
 import { pullLatestRockOS, warnLiveUpdateFailed } from './server-refresh.js';
 import { renderProfileWorkspaceNav } from './profile-workspace.js';
 
@@ -13,7 +12,8 @@ const appMode = {
     cardDescription: '',
     emptyLabel: 'dashboard files',
     defaultSelectText: 'Select a dashboard document.',
-    viewNotesText: 'View Dashboard Notes',
+    viewDashboardOverviewText: 'View Dashboard Overview',
+    viewHubOverviewText: 'View Hub Overview',
     searchPlaceholder: 'Search dashboards',
     documentTitlePrefix: 'Rock-OS'
 };
@@ -192,6 +192,31 @@ function displayNameFromProfile(profile) {
     return parts.length
         ? parts[parts.length - 1]
         : '';
+}
+
+function isDashboardProfilePath(profile) {
+    return String(profile || '')
+        .split('/')
+        .filter(Boolean)
+        .includes('dashboards');
+}
+
+function overviewDocumentName(profile) {
+    return isDashboardProfilePath(profile)
+        ? 'Dashboard-Overview.md'
+        : 'Hub-Overview.md';
+}
+
+function overviewDisplayLabel(profile) {
+    return isDashboardProfilePath(profile)
+        ? 'Dashboard Overview'
+        : 'Hub Overview';
+}
+
+function viewOverviewButtonText(profile) {
+    return isDashboardProfilePath(profile)
+        ? appMode.viewDashboardOverviewText
+        : appMode.viewHubOverviewText;
 }
 
 function profileItemFromPath(path) {
@@ -678,8 +703,8 @@ function renderDashboard(profile, config, feeds) {
                 </div>
                 <div class="glance-header-actions">
                     <button id="refreshDashboardBtn" class="glance-btn">Refresh</button>
-                    <button id="viewNotesBtn" class="glance-btn">
-                        <span>📄</span> ${escapeHtml(appMode.viewNotesText)}
+                    <button id="viewOverviewBtn" class="glance-btn">
+                        <span>📄</span> ${escapeHtml(viewOverviewButtonText(profile))}
                     </button>
                 </div>
             </div>
@@ -955,17 +980,17 @@ function renderDashboard(profile, config, feeds) {
     }
 
     // Toggle button handler
-    const viewNotesBtn = document.getElementById('viewNotesBtn');
+    const viewOverviewBtn = document.getElementById('viewOverviewBtn');
     bindReloadRefresh('refreshDashboardBtn');
 
-    if (viewNotesBtn) {
-        viewNotesBtn.addEventListener('click', () => {
-            renderNotesViewer(profile);
+    if (viewOverviewBtn) {
+        viewOverviewBtn.addEventListener('click', () => {
+            renderDashboardOverview(profile, config);
         });
     }
 }
 
-function renderNotesViewer(profile) {
+async function renderDashboardOverview(profile, config) {
     const displayName =
         displayNameFromProfile(profile);
 
@@ -975,42 +1000,74 @@ function renderNotesViewer(profile) {
     const toc = document.getElementById('wikiToc');
     const content = document.getElementById('content');
 
-    if (sidebar) sidebar.style.display = '';
-    if (resizer) resizer.style.display = '';
+    if (sidebar) sidebar.style.display = 'none';
+    if (resizer) resizer.style.display = 'none';
     if (expandButton) expandButton.style.display = 'none';
-    if (toc) toc.style.display = '';
+    if (toc) toc.style.display = 'none';
 
-    const heading = document.querySelector('.sidebar-header h3');
-    const search = document.getElementById('profilesSearchInput');
-
-    if (heading) {
-        heading.textContent = displayName;
-    }
-    if (search) {
-        search.placeholder = `Search ${displayName}`;
-        search.setAttribute('aria-label', `Search ${displayName}`);
-    }
     if (content) {
-        content.classList.remove('fullwidth');
+        content.classList.add('fullwidth');
         content.innerHTML = `
-            <h1>${escapeHtml(displayName)}</h1>
-            <p>${escapeHtml(appMode.defaultSelectText)}</p>
+            <div class="glance-header-card">
+                <div class="glance-header-left">
+                    <div class="${escapeHtml(config.avatarClass || '')}"></div>
+                    <div class="glance-header-text">
+                        <h1>${escapeHtml(config.title || displayName)}</h1>
+                        <p>${escapeHtml(config.subtitle || 'Dashboard overview')}</p>
+                    </div>
+                </div>
+                <div class="glance-header-actions">
+                    <button id="backToDashboardBtn" class="glance-btn">Back to Dashboard</button>
+                    <button id="refreshDashboardBtn" class="glance-btn">Refresh</button>
+                </div>
+            </div>
+            <article class="dashboard-overview-card">
+                <div class="dashboard-overview-kicker">${escapeHtml(overviewDisplayLabel(profile))}</div>
+                <div id="dashboardOverviewContent" class="dashboard-overview-content">
+                    <p>Loading overview...</p>
+                </div>
+            </article>
         `;
     }
 
-    createMarkdownTabApp({
-        key: `${appMode.apiRoot}-${profile.replace(/[^\w-]+/g, '-')}`,
-        label: displayName,
-        emptyLabel: appMode.emptyLabel,
-        searchStatusId: 'profilesSearchStatus',
-        searchInputId: 'profilesSearchInput',
-        refreshButtonId: 'refreshProfilesBtn',
-        indexUrl: `/${appMode.indexFile}?profile=${encodeURIComponent(profile)}`,
-        docApiUrl: `/api/${appMode.apiRoot}/doc`,
-        searchApiUrl: `/api/${appMode.apiRoot}/search?profile=${encodeURIComponent(profile)}`,
-        pathPrefix: `${appMode.rootDir}/${profile}`,
-        directOpenPageName: appMode.mainPage
-    });
+    bindReloadRefresh('refreshDashboardBtn');
+
+    const backButton =
+        document.getElementById('backToDashboardBtn');
+    if (backButton) {
+        backButton.addEventListener('click', () => {
+            renderDashboard(profile, config);
+        });
+    }
+
+    const overviewContent =
+        document.getElementById('dashboardOverviewContent');
+    if (!overviewContent) {
+        return;
+    }
+
+    const overviewPath =
+        `${appMode.rootDir}/${profile}/${overviewDocumentName(profile)}`;
+    const docUrl =
+        `/api/${appMode.apiRoot}/doc?path=${encodeURIComponent(overviewPath)}&nocache=${Date.now()}`;
+
+    try {
+        const res =
+            await fetch(docUrl);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+        const doc =
+            await res.json();
+        overviewContent.innerHTML =
+            doc.html || '<p>No overview content found.</p>';
+    } catch (e) {
+        console.warn(`Could not load dashboard overview for "${profile}".`, e);
+        overviewContent.innerHTML = `
+            <p class="wiki-error-kicker">Overview unavailable</p>
+            <p>Rock-OS could not load <code>${escapeHtml(overviewPath)}</code>.</p>
+        `;
+    }
 }
 
 async function loadWidgetsConfig(profile) {
@@ -1118,10 +1175,6 @@ async function startProfiles() {
     document.title = `${appMode.documentTitlePrefix} ${displayName}`;
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get('view') === 'notes') {
-        renderNotesViewer(profile);
-        return;
-    }
 
     // Try loading item-specific dashboard config dynamically
     try {
@@ -1258,15 +1311,21 @@ async function startProfiles() {
                 config.widgets = dynamicWidgets;
             }
 
+            const requestedView =
+                params.get('view');
+            if (requestedView === 'overview' || requestedView === 'notes') {
+                await renderDashboardOverview(profile, config);
+                return;
+            }
+
             renderDashboard(profile, config);
             return;
         }
     } catch (e) {
-        console.warn(`No dashboard configuration found for "${profile}". Falling back to notes viewer.`, e);
+        console.warn(`No dashboard configuration found for "${profile}".`, e);
     }
 
-    // Default: notes viewer
-    renderNotesViewer(profile);
+    renderDashboardError(`${displayName} does not have a dashboard configuration.`);
 }
 
 startProfiles();

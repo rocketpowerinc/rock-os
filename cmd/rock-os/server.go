@@ -348,7 +348,11 @@ func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 
 func isProfileStaticSection(value string) bool {
 	section := strings.ToLower(value)
-	return section == "assets" || profileWorkspaceSections[section]
+	return section == "assets" ||
+		section == "index.html" ||
+		section == "dashboard.json" ||
+		section == "widgets.txt" ||
+		profileWorkspaceSections[section]
 }
 
 func requireUnlockedContent(siteRoot string, next http.HandlerFunc) http.HandlerFunc {

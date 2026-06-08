@@ -93,7 +93,7 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
     const links = [
         {
             key: 'overview',
-            label: 'Overview',
+            label: 'Hub',
             href: profilePath
         },
         ...workspaceSections.map(section => ({

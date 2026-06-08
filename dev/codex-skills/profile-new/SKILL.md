@@ -21,7 +21,7 @@ Ask briefly for any missing values:
 ```text
 Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/
   index.html
-  Overview.md
+  Hub-Overview.md
   dashboard.json
   widgets.txt
   assets/

@@ -21,7 +21,7 @@ Ask briefly for any missing values:
 ```text
 Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
   index.html
-  Overview.md
+  Dashboard-Overview.md
   dashboard.json
   widgets.txt
   assets/
@@ -51,7 +51,7 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
 
 ## Conventions
 
-- Use `index.html`, `Overview.md`, `dashboard.json`, and `widgets.txt`.
+- Use `index.html`, `Dashboard-Overview.md`, `dashboard.json`, and `widgets.txt`.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
 - Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<SessionName>/Profiles/<ProfileName>`.

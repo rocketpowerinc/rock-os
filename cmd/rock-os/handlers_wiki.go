@@ -532,7 +532,7 @@ func dashboardsDocHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		dashboard, ok := dashboardPathFromDocument(docPath)
+		dashboard, ok := profilePathFromOverviewDocument(docPath)
 		if !ok || !dashboardSessionAllowsPath(siteRoot, dashboard) {
 			http.Error(w, "dashboard is not available in the active Rock-OS session", http.StatusForbidden)
 			return
@@ -569,8 +569,11 @@ func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, erro
 	if err != nil {
 		return "", "", err
 	}
-	if !strings.HasPrefix(normalized, profilesDir+"/") || !strings.Contains(normalized, "/"+dashboardsSection+"/") {
-		return "", "", fmt.Errorf("dashboard document path must be inside a profile %s folder", dashboardsSection)
+	if !strings.HasPrefix(normalized, profilesDir+"/") {
+		return "", "", fmt.Errorf("dashboard document path must stay inside %s", profilesDir)
+	}
+	if !strings.Contains(normalized, "/"+dashboardsSection+"/") && !strings.HasSuffix(normalized, "/Hub-Overview.md") {
+		return "", "", fmt.Errorf("dashboard document path must be a Dashboard-Overview.md or Hub-Overview.md document")
 	}
 
 	root, err := filepath.Abs(filepath.Join(siteRoot, filepath.FromSlash(profilesDir)))
@@ -585,6 +588,20 @@ func resolveDashboardsDoc(siteRoot string, docPath string) (string, string, erro
 		return "", "", fmt.Errorf("dashboard document must stay inside %s", profilesDir)
 	}
 	return normalized, target, nil
+}
+
+func profilePathFromOverviewDocument(path string) (string, bool) {
+	path = strings.TrimPrefix(filepath.ToSlash(path), profilesDir+"/")
+	parts := strings.Split(path, "/")
+	if len(parts) < 4 || parts[len(parts)-1] == "" {
+		return "", false
+	}
+
+	if parts[len(parts)-1] == "Hub-Overview.md" {
+		return strings.Join(parts[:len(parts)-1], "/"), true
+	}
+
+	return dashboardPathFromDocument(profilesDir + "/" + path)
 }
 
 func dashboardPathFromDocument(path string) (string, bool) {
