@@ -70,8 +70,53 @@
             .join('|');
     }
 
+    function renderKidProfileSwitch(theme) {
+        const navLinks =
+            document.querySelector('.nav-links');
+        if (!navLinks || !theme) {
+            return;
+        }
+
+        const target =
+            theme === 'boys'
+                ? {
+                    label: 'Girls',
+                    href: '/ENCRYPTED/Sessions/Family/Profiles/Girls/'
+                }
+                : {
+                    label: 'Boys',
+                    href: '/ENCRYPTED/Sessions/Family/Profiles/Boys/'
+                };
+
+        let link =
+            navLinks.querySelector('.kid-profile-switch');
+        if (!link) {
+            link =
+                document.createElement('a');
+            link.className =
+                'kid-profile-switch';
+            const homeLink =
+                navLinks.querySelector('a[href$="index.html"]');
+            navLinks.insertBefore(link, homeLink || navLinks.firstChild);
+        }
+
+        link.href =
+            target.href;
+        link.textContent =
+            target.label;
+        link.setAttribute('aria-label', `Open ${target.label} profile`);
+    }
+
     const profile =
         currentProfile();
+    const currentPath =
+        window.location.pathname.toLowerCase();
+    const isProfileDashboardSurface =
+        Boolean(profile) &&
+        (
+            currentPath.endsWith('/dashboards.html') ||
+            currentPath.includes('/encrypted/sessions/')
+        );
     const theme =
         kidTheme(profile);
 
@@ -79,17 +124,24 @@
         return;
     }
 
+    document.documentElement.classList.add('profile-workspace-page');
+    document.body?.classList.add('profile-workspace-page');
+
+    if (isProfileDashboardSurface) {
+        document.documentElement.classList.add('profile-dashboard-page');
+        document.body?.classList.add('profile-dashboard-page');
+    }
+
     if (theme) {
         document.documentElement.classList.add('kid-profile-page', `kid-profile-${theme}`);
         document.body?.classList.add('kid-profile-page', `kid-profile-${theme}`);
+        renderKidProfileSwitch(theme);
     }
 
     const encodedProfile =
         encodeProfile(profile);
     const profilePath =
         `/ENCRYPTED/Sessions/${encodedProfile}/`;
-    const currentPath =
-        window.location.pathname.toLowerCase();
     const profileDashboardPath =
         `/encrypted/sessions/${encodedProfile.toLowerCase()}/dashboards/`;
     const links = [

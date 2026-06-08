@@ -213,13 +213,15 @@ export function startProfileMarkdownSection(config) {
         document.querySelector('.sidebar-header h3');
     const contentHeading =
         document.querySelector('#content h1');
+    const tabLabel =
+        `Profile-based ${config.label}`;
     if (heading) {
         heading.textContent =
-            `${profile} ${config.label}`;
+            tabLabel;
     }
     if (contentHeading) {
         contentHeading.textContent =
-            `${profile} ${config.label}`;
+            tabLabel;
     }
     document.title =
         `Rock-OS ${profile} ${config.label}`;

@@ -46,17 +46,19 @@ if (activeProfile) {
     renderProfileWorkspaceNav(activeProfile);
     document.title =
         `Rock-OS ${activeProfile} Scripts`;
+    const tabLabel =
+        'Profile-based Scripts';
     const sidebarHeading =
         document.querySelector('.sidebar-header h3');
     const pageHeading =
         document.querySelector('.script-workbench-header h1');
     if (sidebarHeading) {
         sidebarHeading.textContent =
-            `${activeProfile} Scripts`;
+            tabLabel;
     }
     if (pageHeading) {
         pageHeading.textContent =
-            `${activeProfile} Scripts`;
+            tabLabel;
     }
 }
 

@@ -356,7 +356,9 @@ html.kid-profile-page body {
 	align-items:center;
 	background:rgba(255,255,255,.78);
 	border-color:rgba(var(--kid-pop-rgb), .42);
+	box-sizing:border-box;
 	box-shadow:0 12px 28px rgba(var(--kid-stamp-rgb), .10);
+	height:72px;
 	left:0;
 	min-height:72px;
 	padding:21px 190px 3px 46px;
@@ -370,6 +372,7 @@ html.kid-profile-page body {
 	backdrop-filter:none;
 	background:transparent;
 	border-bottom:0;
+	box-sizing:border-box;
 	box-shadow:none;
 	height:72px;
 	justify-content:flex-end;
@@ -394,7 +397,8 @@ html.kid-profile-page body {
 	text-shadow:none;
 }
 
-:is(body, html).kid-profile-page .nav-links a[href$="index.html"] {
+:is(body, html).kid-profile-page .nav-links a[href$="index.html"],
+:is(body, html).kid-profile-page .nav-links .kid-profile-switch {
 	background:rgba(var(--kid-pop-rgb), .16);
 	border:1px solid rgba(var(--kid-pop-rgb), .34);
 	border-radius:999px;
@@ -405,7 +409,8 @@ html.kid-profile-page body {
 	padding:9px 15px;
 }
 
-:is(body, html).kid-profile-page .nav-links a[href$="index.html"]:hover {
+:is(body, html).kid-profile-page .nav-links a[href$="index.html"]:hover,
+:is(body, html).kid-profile-page .nav-links .kid-profile-switch:hover {
 	background:rgba(var(--kid-pop-rgb), .24);
 	border-color:rgba(var(--kid-pop-rgb), .48);
 	box-shadow:0 9px 20px rgba(var(--kid-stamp-rgb), .13), inset 0 1px 0 rgba(255,255,255,.75);
@@ -426,16 +431,50 @@ html.kid-profile-page body {
 	border-color:rgba(var(--kid-pop-rgb), .42);
 }
 
-:is(body, html).kid-profile-page .command-center,
-:is(body, html).kid-profile-page .layout,
-:is(body, html).kid-profile-page .scripts-layout {
+:is(body, html).kid-profile-page .command-center {
 	padding-top:72px;
 }
 
 :is(body, html).kid-profile-page .layout,
 :is(body, html).kid-profile-page .scripts-layout {
 	box-sizing:border-box;
-	height:100vh;
+	height:calc(100vh - 72px);
+	margin-top:72px;
+}
+
+:is(body, html).profile-workspace-page .sidebar {
+	padding:28px 18px 20px;
+}
+
+:is(body, html).profile-workspace-page .sidebar-header {
+	align-items:center;
+	flex-direction:column;
+	gap:12px;
+	justify-content:center;
+	text-align:center;
+}
+
+:is(body, html).profile-workspace-page .sidebar-header h3 {
+	line-height:1.2;
+	margin:0;
+	max-width:100%;
+	overflow-wrap:anywhere;
+	text-align:center;
+}
+
+:is(body, html).profile-workspace-page .sidebar-actions {
+	justify-content:center;
+	width:100%;
+}
+
+:is(body, html).profile-dashboard-page .sidebar,
+:is(body, html).profile-dashboard-page .sidebar-resizer,
+:is(body, html).profile-dashboard-page .expand-sidebar-btn {
+	display:none;
+}
+
+:is(body, html).profile-dashboard-page .content {
+	width:100%;
 }
 
 .github-link {
@@ -549,6 +588,14 @@ position:absolute;
 }
 .expand-sidebar-btn:hover {
 	background: rgba(208,255,0,0.08);
+}
+
+:is(body, html).kid-profile-page .expand-sidebar-btn {
+	border-radius:999px;
+	left:24px;
+	position:fixed;
+	top:92px;
+	z-index:61;
 }
 
 .content.fullwidth {
