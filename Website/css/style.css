@@ -226,11 +226,11 @@ html:not([data-encrypted-nav="unlocked"]) #sessionSelect {
 	display:none;
 }
 
-body.kid-profile-page .theme-select {
+:is(body, html).kid-profile-page .theme-select {
 	display:none;
 }
 
-body.kid-profile-page .logo-group {
+:is(body, html).kid-profile-page .logo-group {
 	display:none;
 }
 
@@ -278,7 +278,8 @@ text-shadow:0 0 10px rgba(var(--accent-rgb), .72);
 }
 
 /* Kid profile skins: local, lightweight, and scoped to Boys/Girls profile pages. */
-body.kid-profile-page {
+:is(body, html).kid-profile-page,
+html.kid-profile-page body {
 	background:
 		radial-gradient(circle at 12% 10%, rgba(var(--kid-pop-rgb), .20), transparent 24%),
 		radial-gradient(circle at 86% 12%, rgba(var(--kid-soft-rgb), .22), transparent 24%),
@@ -287,7 +288,7 @@ body.kid-profile-page {
 	color:var(--kid-text);
 }
 
-body.kid-profile-page::before {
+:is(body, html).kid-profile-page::before {
 	border:clamp(10px, 1.8vw, 22px) solid var(--kid-border);
 	box-shadow:
 		inset 0 0 0 4px rgba(255,255,255,.42),
@@ -300,7 +301,7 @@ body.kid-profile-page::before {
 	z-index:60;
 }
 
-body.kid-profile-boys {
+:is(body, html).kid-profile-boys {
 	--kid-page-bg:#f6eddc;
 	--kid-border:#f5a524;
 	--kid-text:#273445;
@@ -317,7 +318,7 @@ body.kid-profile-boys {
 	--kid-button-text:#2d2110;
 }
 
-body.kid-profile-girls {
+:is(body, html).kid-profile-girls {
 	--kid-page-bg:#fff0f8;
 	--kid-border:#f08abf;
 	--kid-text:#3c2741;
@@ -334,42 +335,45 @@ body.kid-profile-girls {
 	--kid-button-text:#3d1230;
 }
 
-body.kid-profile-page .grid-overlay {
+:is(body, html).kid-profile-page .grid-overlay {
 	background-image:var(--kid-wallpaper);
 	background-repeat:repeat;
 	background-size:var(--kid-wallpaper-size);
 	opacity:.46;
 }
 
-body.kid-profile-boys .grid-overlay {
+:is(body, html).kid-profile-boys .grid-overlay {
 	--kid-wallpaper-size:260px 180px;
 	--kid-wallpaper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='180' viewBox='0 0 260 180'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round' opacity='.64'%3E%3Cpath d='M24 54h66l12 18h28v24H18V72h16z' fill='%23f59e0b' stroke='%23a16207' stroke-width='3'/%3E%3Cpath d='M42 54h34l9 18H32z' fill='%23c7e7f3' stroke='%231f7a9b' stroke-width='3'/%3E%3Cpath d='M108 78h24v12h-24z' fill='%23dbeafe' stroke='%231f7a9b' stroke-width='2'/%3E%3Ccircle cx='42' cy='101' r='9' stroke='%234b5563' stroke-width='5'/%3E%3Ccircle cx='104' cy='101' r='9' stroke='%234b5563' stroke-width='5'/%3E%3Cpath d='M168 18l30 52h17l-5 12h-24l-32-56z' fill='%23dbeafe' stroke='%231f7a9b' stroke-width='4'/%3E%3Cpath d='M220 19l-28 50h-17l5 12h24l30-54z' fill='%23fff7db' stroke='%23a16207' stroke-width='4'/%3E%3Cpath d='M158 124c3-17 16-27 34-27s31 10 34 27l-10 18h-48z' fill='%231f7a9b' stroke='%230f5670' stroke-width='3'/%3E%3Ccircle cx='176' cy='121' r='6' fill='%23f59e0b' stroke='%23a16207' stroke-width='2'/%3E%3Ccircle cx='208' cy='121' r='6' fill='%23f59e0b' stroke='%23a16207' stroke-width='2'/%3E%3Cpath d='M176 139h32m-15-31v10m-5-5h10' stroke='%23dbeafe' stroke-width='4'/%3E%3Cpath d='M40 142c21-24 49-12 53 12-15 5-30 3-45-5l-11 10z' fill='%2370a64b' stroke='%234b7b31' stroke-width='3'/%3E%3Cpath d='M52 133l-8-12m26 12l7-13m-25 34l-4 14m28-12l8 12' stroke='%234b7b31' stroke-width='3'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-body.kid-profile-girls .grid-overlay {
+:is(body, html).kid-profile-girls .grid-overlay {
 	--kid-wallpaper-size:250px 180px;
 	--kid-wallpaper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='180' viewBox='0 0 250 180'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round' opacity='.58'%3E%3Cpath d='M35 42c-18-18-32 15-8 24 13 5 21-8 8-24zM51 42c18-18 32 15 8 24-13 5-21-8-8-24z' fill='%23f08abf' stroke='%23d94690' stroke-width='3'/%3E%3Cpath d='M43 43v35m-10 8c7-7 13-7 20 0' stroke='%237c5cff' stroke-width='3'/%3E%3Cpath d='M116 20l7 15 16 2-12 11 3 16-14-8-14 8 3-16-12-11 16-2z' fill='%23facc15' stroke='%23d97706' stroke-width='2'/%3E%3Cpath d='M186 45l12-18 12 18 13-9-3 30h-44l-3-30z' fill='%23f9a8d4' stroke='%23d94690' stroke-width='3'/%3E%3Ccircle cx='198' cy='52' r='3' fill='%23fff'/%3E%3Cpath d='M44 126c12-18 38-18 50 0-12 18-38 18-50 0z' fill='%23c4b5fd' stroke='%237c5cff' stroke-width='3'/%3E%3Ccircle cx='59' cy='126' r='5' fill='%23fff'/%3E%3Ccircle cx='79' cy='126' r='5' fill='%23fff'/%3E%3Cpath d='M156 124c16-18 43-8 46 16-20 7-36 3-46-16z' fill='%23f0abfc' stroke='%23c026d3' stroke-width='3'/%3E%3Cpath d='M158 103l-8-14m21 12l7-17m17 25l16-11' stroke='%23f0abfc' stroke-width='4'/%3E%3Cpath d='M104 106l4 8 9 1-7 6 2 9-8-4-8 4 2-9-7-6 9-1z' fill='%23fb7185' stroke='%23e11d48' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-body.kid-profile-page .profile-workspace-nav {
+:is(body, html).kid-profile-page .profile-workspace-nav {
 	align-items:center;
 	background:rgba(255,255,255,.78);
 	border-color:rgba(var(--kid-pop-rgb), .42);
 	box-shadow:0 12px 28px rgba(var(--kid-stamp-rgb), .10);
+	left:0;
 	min-height:72px;
-	padding:18px 190px 6px 46px;
+	padding:21px 190px 3px 46px;
+	position:fixed;
+	right:0;
 	top:0;
 	z-index:10;
 }
 
-body.kid-profile-page .navbar {
+:is(body, html).kid-profile-page .navbar {
 	backdrop-filter:none;
 	background:transparent;
 	border-bottom:0;
 	box-shadow:none;
 	height:72px;
 	justify-content:flex-end;
-	padding:18px 66px 6px 0;
+	padding:21px 66px 3px 0;
 	pointer-events:none;
 	position:fixed;
 	right:0;
@@ -378,19 +382,19 @@ body.kid-profile-page .navbar {
 	z-index:11;
 }
 
-body.kid-profile-page .nav-links {
+:is(body, html).kid-profile-page .nav-links {
 	pointer-events:auto;
 }
 
-body.kid-profile-page .brand,
-body.kid-profile-page .nav-links a,
-body.kid-profile-page .profile-workspace-nav a.is-active,
-body.kid-profile-page .profile-workspace-nav a:hover {
+:is(body, html).kid-profile-page .brand,
+:is(body, html).kid-profile-page .nav-links a,
+:is(body, html).kid-profile-page .profile-workspace-nav a.is-active,
+:is(body, html).kid-profile-page .profile-workspace-nav a:hover {
 	color:var(--kid-accent);
 	text-shadow:none;
 }
 
-body.kid-profile-page .nav-links a[href="/index.html"] {
+:is(body, html).kid-profile-page .nav-links a[href$="index.html"] {
 	background:rgba(var(--kid-pop-rgb), .16);
 	border:1px solid rgba(var(--kid-pop-rgb), .34);
 	border-radius:999px;
@@ -401,14 +405,14 @@ body.kid-profile-page .nav-links a[href="/index.html"] {
 	padding:9px 15px;
 }
 
-body.kid-profile-page .nav-links a[href="/index.html"]:hover {
+:is(body, html).kid-profile-page .nav-links a[href$="index.html"]:hover {
 	background:rgba(var(--kid-pop-rgb), .24);
 	border-color:rgba(var(--kid-pop-rgb), .48);
 	box-shadow:0 9px 20px rgba(var(--kid-stamp-rgb), .13), inset 0 1px 0 rgba(255,255,255,.75);
 	transform:translateY(-1px);
 }
 
-body.kid-profile-page .profile-workspace-nav a {
+:is(body, html).kid-profile-page .profile-workspace-nav a {
 	border-radius:999px;
 	color:rgba(var(--kid-stamp-rgb), .78);
 	font-size:.82rem;
@@ -416,10 +420,22 @@ body.kid-profile-page .profile-workspace-nav a {
 	padding:9px 10px;
 }
 
-body.kid-profile-page .profile-workspace-nav a.is-active,
-body.kid-profile-page .profile-workspace-nav a:hover {
+:is(body, html).kid-profile-page .profile-workspace-nav a.is-active,
+:is(body, html).kid-profile-page .profile-workspace-nav a:hover {
 	background:rgba(var(--kid-pop-rgb), .16);
 	border-color:rgba(var(--kid-pop-rgb), .42);
+}
+
+:is(body, html).kid-profile-page .command-center,
+:is(body, html).kid-profile-page .layout,
+:is(body, html).kid-profile-page .scripts-layout {
+	padding-top:72px;
+}
+
+:is(body, html).kid-profile-page .layout,
+:is(body, html).kid-profile-page .scripts-layout {
+	box-sizing:border-box;
+	height:100vh;
 }
 
 .github-link {
@@ -1466,10 +1482,10 @@ color:#88ff88;
 	border-color:rgba(var(--accent-rgb), .6);
 }
 
-body.kid-profile-page .glance-btn,
-body.kid-profile-page .command-button,
-body.kid-profile-page .icon-sidebar-btn,
-body.kid-profile-page .expand-sidebar-btn {
+:is(body, html).kid-profile-page .glance-btn,
+:is(body, html).kid-profile-page .command-button,
+:is(body, html).kid-profile-page .icon-sidebar-btn,
+:is(body, html).kid-profile-page .expand-sidebar-btn {
 	background:
 		linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0)),
 		var(--kid-button);
@@ -1480,10 +1496,10 @@ body.kid-profile-page .expand-sidebar-btn {
 	text-shadow:none;
 }
 
-body.kid-profile-page .glance-btn:hover,
-body.kid-profile-page .command-button:hover,
-body.kid-profile-page .icon-sidebar-btn:hover,
-body.kid-profile-page .expand-sidebar-btn:hover {
+:is(body, html).kid-profile-page .glance-btn:hover,
+:is(body, html).kid-profile-page .command-button:hover,
+:is(body, html).kid-profile-page .icon-sidebar-btn:hover,
+:is(body, html).kid-profile-page .expand-sidebar-btn:hover {
 	background:
 		linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.06)),
 		var(--kid-button);
@@ -1511,11 +1527,11 @@ body.kid-profile-page .expand-sidebar-btn:hover {
 	transform:translateY(-2px);
 }
 
-body.kid-profile-page .glance-header-card,
-body.kid-profile-page .glance-card,
-body.kid-profile-page .dashboard-overview-card,
-body.kid-profile-page .sidebar,
-body.kid-profile-page .wiki-toc {
+:is(body, html).kid-profile-page .glance-header-card,
+:is(body, html).kid-profile-page .glance-card,
+:is(body, html).kid-profile-page .dashboard-overview-card,
+:is(body, html).kid-profile-page .sidebar,
+:is(body, html).kid-profile-page .wiki-toc {
 	background:
 		linear-gradient(135deg, rgba(255,255,255,.50), rgba(255,255,255,.08)),
 		var(--kid-card-bg);
@@ -1525,68 +1541,68 @@ body.kid-profile-page .wiki-toc {
 	color:var(--kid-text);
 }
 
-body.kid-profile-page .glance-header-text h1,
-body.kid-profile-page .glance-card-header h2,
-body.kid-profile-page .dashboard-overview-content h1,
-body.kid-profile-page .dashboard-overview-content h2,
-body.kid-profile-page .sidebar-header h3,
-body.kid-profile-page #content h1 {
+:is(body, html).kid-profile-page .glance-header-text h1,
+:is(body, html).kid-profile-page .glance-card-header h2,
+:is(body, html).kid-profile-page .dashboard-overview-content h1,
+:is(body, html).kid-profile-page .dashboard-overview-content h2,
+:is(body, html).kid-profile-page .sidebar-header h3,
+:is(body, html).kid-profile-page #content h1 {
 	color:var(--kid-accent);
 	text-shadow:0 2px 0 rgba(255,255,255,.52);
 }
 
-body.kid-profile-page .glance-header-text p,
-body.kid-profile-page .glance-bookmark-desc,
-body.kid-profile-page .bookmark-banner-desc,
-body.kid-profile-page .featuring-banner-description,
-body.kid-profile-page .glance-feed-meta,
-body.kid-profile-page .glance-file-hint,
-body.kid-profile-page .dashboard-overview-content p,
-body.kid-profile-page .dashboard-overview-content li,
-body.kid-profile-page .content p,
-body.kid-profile-page .search-result-meta,
-body.kid-profile-page .doc-link .search-result-meta {
+:is(body, html).kid-profile-page .glance-header-text p,
+:is(body, html).kid-profile-page .glance-bookmark-desc,
+:is(body, html).kid-profile-page .bookmark-banner-desc,
+:is(body, html).kid-profile-page .featuring-banner-description,
+:is(body, html).kid-profile-page .glance-feed-meta,
+:is(body, html).kid-profile-page .glance-file-hint,
+:is(body, html).kid-profile-page .dashboard-overview-content p,
+:is(body, html).kid-profile-page .dashboard-overview-content li,
+:is(body, html).kid-profile-page .content p,
+:is(body, html).kid-profile-page .search-result-meta,
+:is(body, html).kid-profile-page .doc-link .search-result-meta {
 	color:rgba(var(--kid-stamp-rgb), .88);
 	opacity:1;
 }
 
-body.kid-profile-page .content,
-body.kid-profile-page .sidebar,
-body.kid-profile-page .wiki-toc,
-body.kid-profile-page .glance-card,
-body.kid-profile-page .dashboard-overview-card {
+:is(body, html).kid-profile-page .content,
+:is(body, html).kid-profile-page .sidebar,
+:is(body, html).kid-profile-page .wiki-toc,
+:is(body, html).kid-profile-page .glance-card,
+:is(body, html).kid-profile-page .dashboard-overview-card {
 	color:var(--kid-text);
 }
 
-body.kid-profile-page .content a,
-body.kid-profile-page .doc-link,
-body.kid-profile-page .glance-feed-title,
-body.kid-profile-page .glance-bookmark-name,
-body.kid-profile-page .bookmark-banner-name,
-body.kid-profile-page .featuring-banner-title,
-body.kid-profile-page .glance-file-name,
-body.kid-profile-page .wiki-toc-link {
+:is(body, html).kid-profile-page .content a,
+:is(body, html).kid-profile-page .doc-link,
+:is(body, html).kid-profile-page .glance-feed-title,
+:is(body, html).kid-profile-page .glance-bookmark-name,
+:is(body, html).kid-profile-page .bookmark-banner-name,
+:is(body, html).kid-profile-page .featuring-banner-title,
+:is(body, html).kid-profile-page .glance-file-name,
+:is(body, html).kid-profile-page .wiki-toc-link {
 	color:var(--kid-text);
 	opacity:1;
 }
 
-body.kid-profile-page .content a:hover,
-body.kid-profile-page .doc-link:hover,
-body.kid-profile-page .glance-feed-title:hover,
-body.kid-profile-page .bookmark-banner-name:hover,
-body.kid-profile-page .featuring-banner-title:hover,
-body.kid-profile-page .wiki-toc-link:hover {
+:is(body, html).kid-profile-page .content a:hover,
+:is(body, html).kid-profile-page .doc-link:hover,
+:is(body, html).kid-profile-page .glance-feed-title:hover,
+:is(body, html).kid-profile-page .bookmark-banner-name:hover,
+:is(body, html).kid-profile-page .featuring-banner-title:hover,
+:is(body, html).kid-profile-page .wiki-toc-link:hover {
 	color:var(--kid-accent);
 }
 
-body.kid-profile-page .glance-card-header,
-body.kid-profile-page .glance-bookmark-title {
+:is(body, html).kid-profile-page .glance-card-header,
+:is(body, html).kid-profile-page .glance-bookmark-title {
 	border-color:rgba(var(--kid-pop-rgb), .24);
 	color:var(--kid-accent-2);
 }
 
-body.kid-profile-page .glance-badge,
-body.kid-profile-page .dashboard-overview-kicker {
+:is(body, html).kid-profile-page .glance-badge,
+:is(body, html).kid-profile-page .dashboard-overview-kicker {
 	background:rgba(var(--kid-soft-rgb), .14);
 	border:1px solid rgba(var(--kid-soft-rgb), .28);
 	border-radius:999px;
@@ -1594,34 +1610,34 @@ body.kid-profile-page .dashboard-overview-kicker {
 	padding:5px 9px;
 }
 
-body.kid-profile-page .glance-bookmark-item,
-body.kid-profile-page .glance-bookmark-banner,
-body.kid-profile-page .glance-file-card,
-body.kid-profile-page .glance-feed-item {
+:is(body, html).kid-profile-page .glance-bookmark-item,
+:is(body, html).kid-profile-page .glance-bookmark-banner,
+:is(body, html).kid-profile-page .glance-file-card,
+:is(body, html).kid-profile-page .glance-feed-item {
 	background:rgba(255,255,255,.82);
 	border:1px solid rgba(var(--kid-pop-rgb), .22);
 	border-radius:18px;
 	color:var(--kid-text);
 }
 
-body.kid-profile-page .bookmark-banner-arrow,
-body.kid-profile-page .featuring-banner-arrow,
-body.kid-profile-page .glance-bookmark-arrow {
+:is(body, html).kid-profile-page .bookmark-banner-arrow,
+:is(body, html).kid-profile-page .featuring-banner-arrow,
+:is(body, html).kid-profile-page .glance-bookmark-arrow {
 	color:var(--kid-accent-2);
 	opacity:1;
 }
 
-body.kid-profile-page .glance-bookmark-item:hover,
-body.kid-profile-page .glance-bookmark-banner:hover,
-body.kid-profile-page .glance-file-card:hover,
-body.kid-profile-page .glance-feed-item:hover {
+:is(body, html).kid-profile-page .glance-bookmark-item:hover,
+:is(body, html).kid-profile-page .glance-bookmark-banner:hover,
+:is(body, html).kid-profile-page .glance-file-card:hover,
+:is(body, html).kid-profile-page .glance-feed-item:hover {
 	border-color:rgba(var(--kid-pop-rgb), .48);
 	box-shadow:0 10px 18px rgba(var(--kid-stamp-rgb), .12);
 	transform:translateY(-2px);
 }
 
-body.kid-profile-page .bookmark-banner-accent,
-body.kid-profile-page .featuring-banner-visual {
+:is(body, html).kid-profile-page .bookmark-banner-accent,
+:is(body, html).kid-profile-page .featuring-banner-visual {
 	background:
 		radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), transparent 34%),
 		linear-gradient(135deg, var(--kid-button), var(--kid-accent-2));
@@ -1629,40 +1645,40 @@ body.kid-profile-page .featuring-banner-visual {
 	color:#fff;
 }
 
-body.kid-profile-boys .glance-card:nth-child(3n+1) {
+:is(body, html).kid-profile-boys .glance-card:nth-child(3n+1) {
 	border-style:dashed;
 }
 
-body.kid-profile-boys .glance-card:nth-child(3n+2) {
+:is(body, html).kid-profile-boys .glance-card:nth-child(3n+2) {
 	background:
 		linear-gradient(135deg, rgba(143,95,47,.14), rgba(245,165,36,.09)),
 		var(--kid-card-bg);
 }
 
-body.kid-profile-boys .glance-card-header h2::before {
+:is(body, html).kid-profile-boys .glance-card-header h2::before {
 	content:"▰ ";
 	color:var(--kid-accent-2);
 }
 
-body.kid-profile-girls .glance-card:nth-child(3n+1) {
+:is(body, html).kid-profile-girls .glance-card:nth-child(3n+1) {
 	background:
 		radial-gradient(circle at 12% 12%, rgba(255,255,255,.72), transparent 18%),
 		linear-gradient(135deg, rgba(240,138,191,.16), rgba(135,111,245,.09)),
 		var(--kid-card-bg);
 }
 
-body.kid-profile-girls .glance-card-header h2::before {
+:is(body, html).kid-profile-girls .glance-card-header h2::before {
 	content:"✦ ";
 	color:var(--kid-accent-2);
 }
 
-body.kid-profile-girls .glance-card,
-body.kid-profile-girls .glance-header-card,
-body.kid-profile-girls .dashboard-overview-card {
+:is(body, html).kid-profile-girls .glance-card,
+:is(body, html).kid-profile-girls .glance-header-card,
+:is(body, html).kid-profile-girls .dashboard-overview-card {
 	border-radius:30px;
 }
 
-body.kid-profile-page .dashboard-overview-content code {
+:is(body, html).kid-profile-page .dashboard-overview-content code {
 	background:rgba(255,255,255,.62);
 	border-color:rgba(var(--kid-pop-rgb), .28);
 	border-radius:8px;
@@ -1670,7 +1686,7 @@ body.kid-profile-page .dashboard-overview-content code {
 }
 
 @media (max-width: 760px) {
-	body.kid-profile-page::before {
+	:is(body, html).kid-profile-page::before {
 		border-width:8px;
 	}
 

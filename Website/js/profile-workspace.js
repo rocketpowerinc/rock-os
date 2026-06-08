@@ -53,6 +53,12 @@ function applyKidProfileTheme(profile) {
     body.classList.add('kid-profile-page', `kid-profile-${theme}`);
 }
 
+function profileWorkspaceNavSignature(links) {
+    return links
+        .map(link => `${link.key}:${link.href}:${link.active ? '1' : '0'}`)
+        .join('|');
+}
+
 export function currentProfileWorkspaceName() {
     const params =
         new URLSearchParams(window.location.search);
@@ -127,33 +133,39 @@ export function renderProfileWorkspaceNav(profile = currentProfileWorkspaceName(
         {
             key: 'overview',
             label: 'Hub',
-            href: profilePath
+            href: profilePath,
+            active: currentPath.includes('/encrypted/sessions/') && !currentPath.includes('/dashboards/')
         },
         ...workspaceSections.map(section => ({
             ...section,
             href: section.key === 'dashboards'
                 ? `/dashboards.html?profile=${encodeURIComponent(profile)}`
-                : `/${section.key}.html?profile=${encodeURIComponent(profile)}`
+                : `/${section.key}.html?profile=${encodeURIComponent(profile)}`,
+            active: section.key === 'dashboards'
+                ? currentPath.endsWith('/dashboards.html') || currentPath.includes(profileDashboardPath)
+                : currentPath.endsWith(`/${section.key}.html`)
         }))
     ];
+    const signature =
+        profileWorkspaceNavSignature(links);
+
+    if (nav.dataset.navSignature === signature) {
+        return;
+    }
+    nav.dataset.navSignature =
+        signature;
 
     nav.replaceChildren(
         ...links.map(link => {
             const anchor =
                 document.createElement('a');
-            const active =
-                link.key === 'overview'
-                    ? currentPath.includes('/encrypted/sessions/') && !currentPath.includes('/dashboards/')
-                    : link.key === 'dashboards'
-                        ? currentPath.endsWith('/dashboards.html') || currentPath.includes(profileDashboardPath)
-                        : currentPath.endsWith(`/${link.key}.html`);
 
             anchor.href =
                 link.href;
             anchor.textContent =
                 link.label;
-            anchor.classList.toggle('is-active', active);
-            if (active) {
+            anchor.classList.toggle('is-active', link.active);
+            if (link.active) {
                 anchor.setAttribute('aria-current', 'page');
             }
             return anchor;
