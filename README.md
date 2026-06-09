@@ -357,6 +357,24 @@ Each session `path` maps to
 shows only profiles and profile-owned dashboards under
 `Website/ENCRYPTED/Sessions/Family/Profiles/`.
 
+#### Kids Lock
+
+The Boys and Girls profile pages include a small lock button beside the Home
+button. Pressing it creates `Website/Sessions-State/Keys/kids.key`, switches
+Rock-OS to a kids-locked Family view, and hides the other session choices until
+that file is removed. While the lock is active, only the Boys and Girls profiles
+are available from the Family session, and the main home page redirects to the
+Boys profile instead of showing the normal Launch Points.
+
+To return Rock-OS to normal session switching, delete:
+
+```text
+Website/Sessions-State/Keys/kids.key
+```
+
+The `Website/Sessions-State/Keys/` folder is ignored by Git, so this local lock
+state does not dirty the repo or get committed.
+
 ## Dependencies
 
 You can run Rock OS from a release binary without Go installed. Go is only

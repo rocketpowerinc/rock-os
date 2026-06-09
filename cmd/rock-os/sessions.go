@@ -88,6 +88,10 @@ func rocketProfileUnlocked(siteRoot string) bool {
 	return sessionKeyUnlocked(siteRoot, rocketKeyFile)
 }
 
+func kidsSessionLocked(siteRoot string) bool {
+	return sessionKeyUnlocked(siteRoot, kidsKeyFile)
+}
+
 func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
 	active, ok := readActiveDashboardSessionState(siteRoot)
 	if ok && dashboardSessionExists(config.Sessions, active) {
@@ -99,6 +103,26 @@ func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsC
 	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
 		config.Active = config.Sessions[0].Name
 	}
+	if kidsSessionLocked(siteRoot) {
+		return applyKidsSessionLock(config)
+	}
+	return config
+}
+
+func applyKidsSessionLock(config dashboardSessionsConfig) dashboardSessionsConfig {
+	family := dashboardSession{
+		Name:        "Family",
+		AllowedPath: "Family",
+		Description: "Kids lock is active. Delete kids.key to restore normal session switching.",
+	}
+	for _, session := range config.Sessions {
+		if strings.EqualFold(session.Name, "Family") {
+			family = normalizeDashboardSession(session)
+			break
+		}
+	}
+	config.Active = "Family"
+	config.Sessions = []dashboardSession{family}
 	return config
 }
 
@@ -217,8 +241,22 @@ func filterDashboardFilesForSession(siteRoot string, files []markdownIndexEntry,
 	}
 
 	filtered := filterDashboardFilesInsideProfilePath(files, session.AllowedPath)
+	if kidsSessionLocked(siteRoot) {
+		filtered = filterDashboardFilesForKidsLock(filtered)
+	}
 	if !rocketProfileUnlocked(siteRoot) {
 		filtered = filterDashboardFilesOutsidePath(filtered, "SysAdmin/Profiles/Rocket")
+	}
+	return filtered
+}
+
+func filterDashboardFilesForKidsLock(files []markdownIndexEntry) []markdownIndexEntry {
+	filtered := []markdownIndexEntry{}
+	for _, file := range files {
+		if strings.HasPrefix(file.Path, profilesDir+"/Family/Profiles/Boys/") ||
+			strings.HasPrefix(file.Path, profilesDir+"/Family/Profiles/Girls/") {
+			filtered = append(filtered, file)
+		}
 	}
 	return filtered
 }
@@ -274,6 +312,10 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 
 			config := readDashboardSessionsConfig(siteRoot)
 			request.Active = strings.TrimSpace(request.Active)
+			if kidsSessionLocked(siteRoot) && !strings.EqualFold(request.Active, "Family") {
+				http.Error(w, "kids lock is active; delete kids.key to restore normal session switching", http.StatusForbidden)
+				return
+			}
 			if !dashboardSessionExists(config.Sessions, request.Active) {
 				http.Error(w, fmt.Sprintf("unknown dashboard session: %s", request.Active), http.StatusBadRequest)
 				return
@@ -289,6 +331,43 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
+	}
+}
+
+func kidsLockHandler(siteRoot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			writeJSON(w, map[string]bool{"locked": kidsSessionLocked(siteRoot)})
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if !serverRefreshRequestAllowed(r) {
+			http.Error(w, "unauthorized kids lock request", http.StatusForbidden)
+			return
+		}
+
+		keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
+		if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		content := []byte("Kids lock is active. Delete this file to restore normal Rock-OS session switching.\n")
+		if err := os.WriteFile(keyPath, content, 0o600); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, readDashboardSessionsConfig(siteRoot))
 	}
 }
 

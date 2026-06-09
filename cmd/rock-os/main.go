@@ -51,7 +51,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fileServer := noCache(guardEncryptedStatic(siteRoot, http.FileServer(http.Dir(siteRoot))))
+	fileServer := noCache(kidsLockHomeRedirect(siteRoot, guardEncryptedStatic(siteRoot, http.FileServer(http.Dir(siteRoot)))))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/scripts", requireUnlockedContent(siteRoot, scriptsListHandler(siteRoot)))
 	mux.HandleFunc("/api/scripts/content", requireUnlockedContent(siteRoot, scriptContentHandler(siteRoot)))
@@ -60,6 +60,7 @@ func main() {
 	mux.HandleFunc("/api/server/status", serverStatusHandler(bindHost, displayHosts, *port, siteRoot))
 	mux.HandleFunc("/api/server/refresh", serverRefreshHandler(siteRoot))
 	mux.HandleFunc("/api/sessions", sessionsHandler(siteRoot))
+	mux.HandleFunc("/api/kids-lock", kidsLockHandler(siteRoot))
 	mux.HandleFunc("/api/health/links", linkHealthHandler(siteRoot))
 	mux.HandleFunc("/api/wiki/doc", requireUnlockedContent(siteRoot, profileMarkdownDocHandler(siteRoot, "wiki")))
 	mux.HandleFunc("/api/wiki/search", requireUnlockedContent(siteRoot, profileMarkdownSearchHandler(siteRoot, "wiki")))

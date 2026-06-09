@@ -15,6 +15,7 @@ var startupTime = time.Now()
 
 const (
 	encryptedDir        = "ENCRYPTED"
+	kidsKeyFile         = "kids.key"
 	rocketKeyFile       = "rocket.key"
 	sessionsStateDir    = "Sessions-State"
 	sessionKeysDir      = sessionsStateDir + "/Keys"

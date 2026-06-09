@@ -230,6 +230,17 @@ func noCache(next http.Handler) http.Handler {
 	})
 }
 
+func kidsLockHomeRedirect(siteRoot string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cleaned := path.Clean(r.URL.Path)
+		if kidsSessionLocked(siteRoot) && (cleaned == "/" || cleaned == "/index.html") {
+			http.Redirect(w, r, "/ENCRYPTED/Sessions/Family/Profiles/Boys/", http.StatusFound)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // guardEncryptedStatic only exposes authorized dashboard entry pages, config,
 // and assets. Markdown and scripts must always pass through their gated APIs.
 func guardEncryptedStatic(siteRoot string, next http.Handler) http.Handler {

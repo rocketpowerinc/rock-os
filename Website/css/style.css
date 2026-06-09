@@ -409,12 +409,36 @@ html.kid-profile-page body {
 	padding:9px 15px;
 }
 
+:is(body, html).kid-profile-page .nav-links .kids-lock-button {
+	align-items:center;
+	appearance:none;
+	background:rgba(var(--kid-pop-rgb), .16);
+	border:1px solid rgba(var(--kid-pop-rgb), .34);
+	border-radius:999px;
+	box-shadow:0 7px 16px rgba(var(--kid-stamp-rgb), .10), inset 0 1px 0 rgba(255,255,255,.65);
+	color:var(--kid-accent);
+	cursor:pointer;
+	display:inline-flex;
+	font-size:.94rem;
+	height:34px;
+	justify-content:center;
+	line-height:1;
+	padding:0;
+	width:34px;
+}
+
 :is(body, html).kid-profile-page .nav-links a[href$="index.html"]:hover,
-:is(body, html).kid-profile-page .nav-links .kid-profile-switch:hover {
+:is(body, html).kid-profile-page .nav-links .kid-profile-switch:hover,
+:is(body, html).kid-profile-page .nav-links .kids-lock-button:hover {
 	background:rgba(var(--kid-pop-rgb), .24);
 	border-color:rgba(var(--kid-pop-rgb), .48);
 	box-shadow:0 9px 20px rgba(var(--kid-stamp-rgb), .13), inset 0 1px 0 rgba(255,255,255,.75);
 	transform:translateY(-1px);
+}
+
+:is(body, html).kid-profile-page .nav-links .kids-lock-button:disabled {
+	cursor:not-allowed;
+	opacity:.72;
 }
 
 :is(body, html).kid-profile-page .profile-workspace-nav a {
@@ -1608,7 +1632,8 @@ color:#88ff88;
 :is(body, html).kid-profile-page .dashboard-overview-content li,
 :is(body, html).kid-profile-page .content p,
 :is(body, html).kid-profile-page .search-result-meta,
-:is(body, html).kid-profile-page .doc-link .search-result-meta {
+:is(body, html).kid-profile-page .doc-link .search-result-meta,
+:is(body, html).kid-profile-page .wiki-empty-state {
 	color:rgba(var(--kid-stamp-rgb), .88);
 	opacity:1;
 }

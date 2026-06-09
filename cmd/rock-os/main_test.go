@@ -1794,6 +1794,149 @@ func TestSessionsHandlerWritesLocalActiveSessionState(t *testing.T) {
 	}
 }
 
+func TestKidsKeyForcesFamilySession(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+		t.Fatal(err)
+	}
+	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, []byte("kids lock\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	config := readDashboardSessionsConfig(siteRoot)
+	if config.Active != "Family" {
+		t.Fatalf("expected kids key to force Family session, got %#v", config)
+	}
+	if len(config.Sessions) != 1 || !strings.EqualFold(config.Sessions[0].Name, "Family") {
+		t.Fatalf("expected kids key to expose only Family session, got %#v", config.Sessions)
+	}
+	if !dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Boys") {
+		t.Fatal("expected kids key to allow Boys profile")
+	}
+	if !dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Girls") {
+		t.Fatal("expected kids key to allow Girls profile")
+	}
+	if dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Parents") {
+		t.Fatal("expected kids key to block Parents profile")
+	}
+}
+
+func TestSessionsHandlerRejectsSessionChangeWhenKidsKeyExists(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+		t.Fatal(err)
+	}
+	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, []byte("kids lock\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"SysAdmin"}`))
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/index.html")
+	rec := httptest.NewRecorder()
+	sessionsHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403, got %d", rec.Code)
+	}
+}
+
+func TestKidsLockHandlerCreatesKidsKey(t *testing.T) {
+	siteRoot := t.TempDir()
+	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/kids-lock", nil)
+	req.RemoteAddr = "127.0.0.1:49200"
+	req.Header.Set("X-Rock-OS-Requested", "true")
+	req.Header.Set("Origin", "http://127.0.0.1:8000")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/ENCRYPTED/Sessions/Family/Profiles/Boys/")
+	rec := httptest.NewRecorder()
+	kidsLockHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if _, err := os.Stat(filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)); err != nil {
+		t.Fatalf("expected kids key to be created: %v", err)
+	}
+
+	config := readDashboardSessionsConfig(siteRoot)
+	if config.Active != "Family" {
+		t.Fatalf("expected kids lock endpoint to activate Family session, got %#v", config)
+	}
+}
+
+func TestKidsLockHandlerReturnsLockStatus(t *testing.T) {
+	siteRoot := t.TempDir()
+	req := httptest.NewRequest(http.MethodGet, "/api/kids-lock", nil)
+	rec := httptest.NewRecorder()
+	kidsLockHandler(siteRoot).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"locked":false`) {
+		t.Fatalf("expected unlocked response, got %s", rec.Body.String())
+	}
+
+	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, []byte("kids lock\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	rec = httptest.NewRecorder()
+	kidsLockHandler(siteRoot).ServeHTTP(rec, req)
+	if !strings.Contains(rec.Body.String(), `"locked":true`) {
+		t.Fatalf("expected locked response, got %s", rec.Body.String())
+	}
+}
+
+func TestKidsLockHomeRedirect(t *testing.T) {
+	siteRoot := t.TempDir()
+	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, []byte("kids lock\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	nextCalled := false
+	handler := kidsLockHomeRedirect(siteRoot, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nextCalled = true
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/index.html", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	if nextCalled {
+		t.Fatal("expected kids lock redirect to stop the next handler")
+	}
+	if rec.Code != http.StatusFound {
+		t.Fatalf("expected redirect status, got %d", rec.Code)
+	}
+	if location := rec.Header().Get("Location"); location != "/ENCRYPTED/Sessions/Family/Profiles/Boys/" {
+		t.Fatalf("unexpected redirect location %q", location)
+	}
+}
+
 func TestRocketProfileRequiresRocketKey(t *testing.T) {
 	siteRoot := t.TempDir()
 	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {

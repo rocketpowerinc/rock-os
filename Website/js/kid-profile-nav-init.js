@@ -107,6 +107,81 @@
         link.setAttribute('aria-label', `Open ${target.label} profile`);
     }
 
+    function renderKidsLockButton(theme) {
+        const navLinks =
+            document.querySelector('.nav-links');
+        if (!navLinks || !theme) {
+            return;
+        }
+
+        let button =
+            navLinks.querySelector('.kids-lock-button');
+        if (!button) {
+            button =
+                document.createElement('button');
+            button.className =
+                'kids-lock-button';
+            button.type =
+                'button';
+            button.textContent =
+                '🔒';
+            button.title =
+                'Lock Rock-OS to the Family session';
+            button.setAttribute('aria-label', 'Lock Rock-OS to the Family session');
+            const homeLink =
+                navLinks.querySelector('a[href$="index.html"]');
+            navLinks.insertBefore(button, homeLink || navLinks.firstChild);
+        }
+
+        fetch('/api/kids-lock?nocache=' + Date.now())
+            .then(response => response.ok ? response.json() : null)
+            .then(status => {
+                if (!status?.locked) {
+                    return;
+                }
+                const homeLink =
+                    navLinks.querySelector('a[href$="index.html"]');
+                if (homeLink) {
+                    homeLink.remove();
+                }
+                button.disabled =
+                    true;
+                button.title =
+                    'Kids lock is active';
+                button.setAttribute('aria-label', 'Kids lock is active');
+            })
+            .catch(() => {});
+
+        if (button.dataset.lockHandlerBound === 'true') {
+            return;
+        }
+        button.dataset.lockHandlerBound =
+            'true';
+
+        button.addEventListener('click', async () => {
+            button.disabled =
+                true;
+            try {
+                const response =
+                    await fetch('/api/kids-lock', {
+                        method: 'POST',
+                        headers: {
+                            'X-Rock-OS-Requested': 'true'
+                        }
+                    });
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+                window.location.reload();
+            }
+            catch (err) {
+                button.disabled =
+                    false;
+                window.alert(`Rock-OS could not enable kids lock.\n\n${err.message}`);
+            }
+        });
+    }
+
     const profile =
         currentProfile();
     const currentPath =
@@ -136,6 +211,7 @@
         document.documentElement.classList.add('kid-profile-page', `kid-profile-${theme}`);
         document.body?.classList.add('kid-profile-page', `kid-profile-${theme}`);
         renderKidProfileSwitch(theme);
+        renderKidsLockButton(theme);
     }
 
     const encodedProfile =
