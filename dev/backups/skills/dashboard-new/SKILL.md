@@ -43,10 +43,14 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
 
 6. Keep dashboard-specific assets under the dashboard's `assets/` folder. Do not use remote assets at runtime or place them in `Website/assets/`.
 7. Add dashboard-specific visual theme rules to `Website/css/style.css` when requested. Model the structure after the Boys/Girls visual skins when useful: themed border, buttons, panel styling, background treatment, and local CSS assets. Keep the theme scoped to the dashboard page.
-8. Add the dashboard avatar and landing-card icon rules to `Website/css/style.css`.
-9. Dashboards inherit the owning profile's session visibility by default. If the user explicitly asks for dashboard-specific visibility rules, apply them server-side and add focused tests instead of only hiding a frontend card.
-10. Update `documentation/Widgets.md` only when a widget type or supported field changes.
-11. Run relevant checks:
+8. For themed dashboards, hide the global theme dropdown on that dashboard page so the chosen dashboard skin stays intentional.
+9. Add both icon rules to `Website/css/style.css`:
+   - The in-dashboard avatar class used by `dashboard.json`.
+   - The Dashboard tab landing-card selector: `.profiles-card[data-profile="<DashboardName>"] .profile-card-icon`.
+10. Check theme contrast explicitly. Make headings, widget text, sidebar text, buttons, badges, and markdown overview content readable against the chosen theme background.
+11. Dashboards inherit the owning profile's session visibility by default. If the user explicitly asks for dashboard-specific visibility rules, apply them server-side and add focused tests instead of only hiding a frontend card.
+12. Update `documentation/Widgets.md` only when a widget type or supported field changes.
+13. Run relevant checks:
     - `node --check Website\js\profiles.js` when JavaScript changes.
     - `go test ./...` from `cmd/rock-os` when server behavior changes.
     - `git diff --check`.
@@ -58,6 +62,8 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
 - Landing cards show only the icon and title.
 - Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<SessionName>/Profiles/<ProfileName>`.
 - Dashboard themes are visual skins only. Do not create profile-like workspace tabs for dashboards; the top tabs remain the owning profile's standard workspace nav.
+- A themed dashboard page should carry a unique body class, such as `<body class="<dashboard-name>-dashboard-page">`, and all theme CSS should be scoped under that class.
+- Hide `.theme-select` inside themed dashboard pages and keep all text contrast legible in that fixed dashboard skin.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.
 - Do not update `README.md` for an ordinary dashboard addition unless it introduces a new project convention.
 

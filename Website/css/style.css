@@ -1510,6 +1510,161 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
+.gardening-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 10px 14px rgba(20,83,45,.28));
+}
+
+body.gardening-dashboard-page {
+	--garden-leaf:#166534;
+	--garden-leaf-soft:#65a30d;
+	--garden-moss:#365314;
+	--garden-soil:#713f12;
+	--garden-cream:#f7fee7;
+	--garden-panel:rgba(247,254,231,.86);
+	--garden-panel-strong:rgba(236,252,203,.94);
+	background:
+		radial-gradient(circle at 18% 18%, rgba(132,204,22,.16), transparent 28%),
+		radial-gradient(circle at 82% 10%, rgba(22,101,52,.11), transparent 30%),
+		linear-gradient(135deg, rgba(247,254,231,.92), rgba(220,252,231,.74)),
+		var(--bg);
+}
+
+body.gardening-dashboard-page::before {
+	border:10px solid rgba(77,124,15,.72);
+	box-shadow:inset 0 0 0 1px rgba(255,255,255,.52), inset 0 0 48px rgba(77,124,15,.15);
+	content:"";
+	inset:0;
+	pointer-events:none;
+	position:fixed;
+	z-index:20;
+}
+
+body.gardening-dashboard-page .grid-overlay {
+	background-image:
+		linear-gradient(rgba(77,124,15,.08) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(77,124,15,.08) 1px, transparent 1px);
+	background-size:48px 48px;
+	opacity:.58;
+}
+
+body.gardening-dashboard-page .navbar,
+body.gardening-dashboard-page .profile-workspace-nav {
+	background:rgba(247,254,231,.84);
+	border-color:rgba(77,124,15,.26);
+	box-shadow:0 10px 28px rgba(20,83,45,.08);
+}
+
+body.gardening-dashboard-page .nav-links a,
+body.gardening-dashboard-page .profile-workspace-nav a,
+body.gardening-dashboard-page .brand {
+	color:var(--garden-leaf);
+}
+
+body.gardening-dashboard-page .glance-header-card,
+body.gardening-dashboard-page .glance-card,
+body.gardening-dashboard-page .dashboard-overview-card,
+body.gardening-dashboard-page .sidebar {
+	background:
+		linear-gradient(135deg, rgba(255,255,255,.74), rgba(247,254,231,.72)),
+		var(--garden-panel);
+	border-color:rgba(77,124,15,.28);
+	box-shadow:0 18px 38px rgba(20,83,45,.11);
+	color:#1f2937;
+}
+
+body.gardening-dashboard-page .glance-header-text h1,
+body.gardening-dashboard-page .glance-card-header h2,
+body.gardening-dashboard-page .dashboard-overview-content h1,
+body.gardening-dashboard-page .dashboard-overview-content h2,
+body.gardening-dashboard-page .sidebar-header h3,
+body.gardening-dashboard-page .content h1 {
+	color:var(--garden-leaf);
+	text-shadow:none;
+}
+
+body.gardening-dashboard-page .glance-header-text p,
+body.gardening-dashboard-page .dashboard-overview-content p,
+body.gardening-dashboard-page .dashboard-overview-content li,
+body.gardening-dashboard-page .content p {
+	color:#374151;
+}
+
+body.gardening-dashboard-page .glance-btn,
+body.gardening-dashboard-page .icon-sidebar-btn,
+body.gardening-dashboard-page .expand-sidebar-btn,
+body.gardening-dashboard-page .theme-select {
+	background:linear-gradient(135deg, #ecfccb, #bbf7d0);
+	border-color:rgba(77,124,15,.36);
+	color:var(--garden-leaf);
+	box-shadow:0 8px 16px rgba(20,83,45,.12);
+}
+
+body.gardening-dashboard-page .theme-select {
+	display:none;
+}
+
+body.gardening-dashboard-page .glance-badge {
+	background:rgba(132,204,22,.16);
+	border-color:rgba(77,124,15,.32);
+	color:var(--garden-moss);
+}
+
+body.gardening-dashboard-page .glance-bookmark-item,
+body.gardening-dashboard-page .glance-bookmark-banner,
+body.gardening-dashboard-page .glance-feed-item,
+body.gardening-dashboard-page .glance-file-card {
+	background:rgba(255,255,255,.78);
+	border-color:rgba(77,124,15,.24);
+	color:#1f2937;
+}
+
+body.gardening-dashboard-page .glance-bookmark-name,
+body.gardening-dashboard-page .bookmark-banner-name,
+body.gardening-dashboard-page .glance-feed-title,
+body.gardening-dashboard-page .glance-file-name {
+	color:#14351f;
+}
+
+body.gardening-dashboard-page .glance-bookmark-desc,
+body.gardening-dashboard-page .bookmark-banner-desc,
+body.gardening-dashboard-page .glance-feed-meta,
+body.gardening-dashboard-page .glance-file-hint {
+	color:#365314;
+}
+
+body.gardening-dashboard-page .bookmark-banner-arrow,
+body.gardening-dashboard-page .glance-bookmark-arrow {
+	color:#166534;
+	opacity:1;
+}
+
+body.gardening-dashboard-page .bookmark-banner-accent,
+body.gardening-dashboard-page .featuring-banner-visual {
+	background:
+		radial-gradient(circle at 34% 28%, rgba(255,255,255,.58), transparent 32%),
+		linear-gradient(135deg, var(--garden-leaf-soft), var(--garden-leaf));
+	color:#fff;
+}
+
+body.gardening-dashboard-page .glance-card-header h2::before {
+	color:var(--garden-leaf-soft);
+	content:"";
+	display:inline-block;
+	width:.72em;
+	height:.72em;
+	margin-right:.45em;
+	border-radius:72% 0 72% 0;
+	background:linear-gradient(135deg, #bef264, #15803d);
+	transform:rotate(-18deg);
+}
+
 .glance-header-text h1 {
 	margin:0 0 6px 0;
 	color:var(--profile-banner-title);
@@ -2156,6 +2311,11 @@ color:#88ff88;
 .profiles-card[data-profile="Emulation"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Gaming/Emulation/assets/emulation.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
+}
+
+.profiles-card[data-profile="Gardening"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
+	filter:drop-shadow(0 0 8px rgba(20,83,45,.24));
 }
 
 .command-hero {
