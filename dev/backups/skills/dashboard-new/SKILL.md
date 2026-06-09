@@ -12,9 +12,10 @@ Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Sessions/<SessionN
 Ask briefly for any missing values:
 
 - Dashboard name. Prefer one word; ask before using a multi-word name.
-- Owning session and profile. Default to `SysAdmin` / `Rocket` only when the user does not specify one.
+- Owning session and profile. If missing, stop and ask; do not assume a default owner.
 - Dashboard category. Do not use `Profiles`; hand profile requests to `/profile-new`.
 - Icon source or visual direction. Keep the final asset local inside the dashboard.
+- Dashboard theme or vibe. Ask what visual direction the dashboard should use, such as `Professional`, `Manly`, `Feminine`, `Nature`, `Cyberpunk`, `Construction`, `Space`, `Cozy`, `Minimal`, `Military`, `Retro`, or `Luxury`.
 
 ## Folder Convention
 
@@ -41,10 +42,11 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
    ```
 
 6. Keep dashboard-specific assets under the dashboard's `assets/` folder. Do not use remote assets at runtime or place them in `Website/assets/`.
-7. Add the dashboard avatar and landing-card icon rules to `Website/css/style.css`.
-8. Dashboards inherit the owning profile's session visibility by default. If the user explicitly asks for dashboard-specific visibility rules, apply them server-side and add focused tests instead of only hiding a frontend card.
-9. Update `documentation/Widgets.md` only when a widget type or supported field changes.
-10. Run relevant checks:
+7. Add dashboard-specific visual theme rules to `Website/css/style.css` when requested. Model the structure after the Boys/Girls visual skins when useful: themed border, buttons, panel styling, background treatment, and local CSS assets. Keep the theme scoped to the dashboard page.
+8. Add the dashboard avatar and landing-card icon rules to `Website/css/style.css`.
+9. Dashboards inherit the owning profile's session visibility by default. If the user explicitly asks for dashboard-specific visibility rules, apply them server-side and add focused tests instead of only hiding a frontend card.
+10. Update `documentation/Widgets.md` only when a widget type or supported field changes.
+11. Run relevant checks:
     - `node --check Website\js\profiles.js` when JavaScript changes.
     - `go test ./...` from `cmd/rock-os` when server behavior changes.
     - `git diff --check`.
@@ -55,6 +57,7 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
 - Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<SessionName>/Profiles/<ProfileName>`.
+- Dashboard themes are visual skins only. Do not create profile-like workspace tabs for dashboards; the top tabs remain the owning profile's standard workspace nav.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.
 - Do not update `README.md` for an ordinary dashboard addition unless it introduces a new project convention.
 
