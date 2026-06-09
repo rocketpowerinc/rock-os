@@ -19,7 +19,7 @@ Build a compact but useful Rock-OS project briefing before beginning or continui
    - `git diff --check`
 5. Build a lightweight file-structure map:
    - List top-level folders.
-   - List key folders under `Website/`, `cmd/`, `START-HERE/`, `dev/`, and `dev/codex-skills/`.
+   - List key folders under `Website/`, `cmd/`, `START-HERE/`, `dev/`, and `dev/backups/skills/`.
    - Note missing, new, renamed, or surprising structure only; do not dump the full tree.
 6. Review recent history:
    - Inspect the last 12 commits with `git log -12 --oneline --decorate`.
@@ -35,8 +35,8 @@ Build a compact but useful Rock-OS project briefing before beginning or continui
    - Note whether server-source changes imply a release binary may be needed.
    - Note whether launcher, session, git-crypt, dashboard, menu, wiki, or release behavior may be affected.
 9. Inspect Codex skill changes:
-   - List `dev/codex-skills/` directories.
-   - Read any new or recently changed `dev/codex-skills/*/SKILL.md` files.
+   - List `dev/backups/skills/` directories.
+   - Read any new or recently changed `dev/backups/skills/*/SKILL.md` files.
    - Compare with active personal skills under `C:\Users\rocket\.agents\skills\` when a matching active skill exists.
 10. Summarize only what matters for the next task:
    - Current branch and dirty state.

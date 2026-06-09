@@ -26,7 +26,7 @@ works, where it is fragile, and what the user should know before continuing.
 5. Build a project map:
    - List top-level folders.
    - Map `Website/`, `cmd/`, `START-HERE/`, `dev/`, `documentation/`, and
-     `dev/codex-skills/`.
+     `dev/backups/skills/`.
    - Include encrypted-content boundaries, profile workspaces, ignored local-state
      folders/files, generated artifacts, release assets, and binary locations.
 6. Audit server behavior:
@@ -70,7 +70,7 @@ works, where it is fragile, and what the user should know before continuing.
    - Do not install new dependencies, fetch network vulnerability data, or run
      destructive commands without explicit user approval.
 12. Audit Codex skills:
-   - Read `dev/codex-skills/*/SKILL.md`.
+   - Read `dev/backups/skills/*/SKILL.md`.
    - Compare important project skills with active personal skills under
      `C:\Users\rocket\.agents\skills\` when matching active skills exist.
    - Note drift, stale instructions, or unsafe automation behavior.

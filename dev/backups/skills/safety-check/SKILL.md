@@ -24,7 +24,7 @@ coverage.
    - `git diff --check`
 5. Build a lightweight risk map:
    - List top-level folders and key folders under `Website/`, `cmd/`,
-     `START-HERE/`, `dev/`, and `dev/codex-skills/`.
+     `START-HERE/`, `dev/`, and `dev/backups/skills/`.
    - Note only structure that affects safety, privacy, release behavior, or
      maintainability.
 6. Scan for obvious security and privacy issues with targeted searches:

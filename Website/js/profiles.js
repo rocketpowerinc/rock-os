@@ -427,7 +427,7 @@ function renderProfileCard(item) {
     `;
 }
 
-function renderProfilesLanding(files) {
+function renderProfilesLanding(files, ownerProfile = '') {
 
     const sidebar =
         document.getElementById('sidebar');
@@ -478,12 +478,22 @@ function renderProfilesLanding(files) {
                 </section>
             `)
             .join('');
+    const isProfileLanding =
+        Boolean(ownerProfile);
+    const landingTitle =
+        isProfileLanding
+            ? 'Profile Based Dashboard'
+            : appMode.pageTitle;
+    const landingKicker =
+        isProfileLanding
+            ? ''
+            : appMode.landingKicker;
 
     content.classList.add('fullwidth');
     content.innerHTML = `
         <section class="profiles-dashboard">
-            <p class="wiki-error-kicker">${escapeHtml(appMode.landingKicker)}</p>
-            <h1>${escapeHtml(appMode.pageTitle)}</h1>
+            ${landingKicker ? `<p class="wiki-error-kicker">${escapeHtml(landingKicker)}</p>` : ''}
+            <h1>${escapeHtml(landingTitle)}</h1>
             ${appMode.landingDescription ? `<p>${escapeHtml(appMode.landingDescription)}</p>` : ''}
             <button id="refreshProfilesLandingBtn" class="command-button primary" type="button">Refresh</button>
             ${cardsHtml}
@@ -518,7 +528,8 @@ async function loadProfilesLanding() {
             await response.json();
 
         renderProfilesLanding(
-            Array.isArray(files) ? files : []
+            Array.isArray(files) ? files : [],
+            ownerProfile
         );
     }
     catch (err) {

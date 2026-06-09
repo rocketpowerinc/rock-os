@@ -20,7 +20,7 @@ operate.
 4. Build a compact feature map:
    - Inspect top-level folders.
    - Inspect key files under `Website/`, `cmd/rock-os/`, `START-HERE/`,
-     `dev/`, `documentation/`, and `dev/codex-skills/`.
+     `dev/`, `documentation/`, and `dev/backups/skills/`.
    - Use `git status --short --branch` and `git diff --name-status` to account
      for current uncommitted work.
 5. Identify opportunity areas:

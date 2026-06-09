@@ -179,7 +179,7 @@ Never break these without an explicit, specific request from the user:
 
 - When creating a new Codex skill for this project, install the active skill in
   the user's personal skills folder and keep an archival backup copy under
-  `dev/codex-skills/<skill-name>/`. The repo copy is archival only, not the
+  `dev/backups/skills/<skill-name>/`. The repo copy is archival only, not the
   active loaded skill.
 - Use `/dashboard-new` only for ordinary dashboards inside a profile's
   `dashboards/` folder. Use `/profile-new` for profile workspace scaffolding.

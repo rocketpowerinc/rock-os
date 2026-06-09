@@ -47,7 +47,7 @@ if (activeProfile) {
     document.title =
         `Rock-OS ${activeProfile} Scripts`;
     const tabLabel =
-        'Profile-based Scripts';
+        'Profile Based Scripts';
     const sidebarHeading =
         document.querySelector('.sidebar-header h3');
     const pageHeading =

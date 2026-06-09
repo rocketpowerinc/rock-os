@@ -214,7 +214,7 @@ export function startProfileMarkdownSection(config) {
     const contentHeading =
         document.querySelector('#content h1');
     const tabLabel =
-        `Profile-based ${config.label}`;
+        `Profile Based ${config.label}`;
     if (heading) {
         heading.textContent =
             tabLabel;
