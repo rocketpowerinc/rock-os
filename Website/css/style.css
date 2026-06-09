@@ -1529,6 +1529,13 @@ body.gardening-dashboard-page {
 	--garden-cream:#f7fee7;
 	--garden-panel:rgba(247,254,231,.86);
 	--garden-panel-strong:rgba(236,252,203,.94);
+	--dashboard-skin-accent:var(--garden-leaf);
+	--dashboard-skin-accent-2:var(--garden-leaf-soft);
+	--dashboard-skin-text:#14351f;
+	--dashboard-skin-muted:#365314;
+	--dashboard-skin-panel:rgba(255,255,255,.78);
+	--dashboard-skin-active-bg:rgba(132,204,22,.16);
+	--dashboard-skin-active-border:rgba(77,124,15,.42);
 	background:
 		radial-gradient(circle at 18% 18%, rgba(132,204,22,.16), transparent 28%),
 		radial-gradient(circle at 82% 10%, rgba(22,101,52,.11), transparent 30%),
@@ -1663,6 +1670,610 @@ body.gardening-dashboard-page .glance-card-header h2::before {
 	border-radius:72% 0 72% 0;
 	background:linear-gradient(135deg, #bef264, #15803d);
 	transform:rotate(-18deg);
+}
+
+.inventory-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 10px 14px rgba(41,37,36,.34));
+}
+
+body.inventory-dashboard-page {
+	--inventory-brown:#3b2f1f;
+	--inventory-brown-soft:#6f4e2c;
+	--inventory-khaki:#b6a57a;
+	--inventory-olive:#4d5330;
+	--inventory-tan:#efe2c2;
+	--inventory-panel:rgba(239,226,194,.9);
+	--inventory-panel-strong:rgba(228,208,169,.96);
+	--dashboard-skin-accent:var(--inventory-brown);
+	--dashboard-skin-accent-2:var(--inventory-olive);
+	--dashboard-skin-text:#241b12;
+	--dashboard-skin-muted:#4a3724;
+	--dashboard-skin-panel:rgba(255,248,220,.82);
+	--dashboard-skin-active-bg:rgba(77,83,48,.18);
+	--dashboard-skin-active-border:rgba(73,59,39,.42);
+	background:
+		radial-gradient(circle at 18% 18%, rgba(111,78,44,.18), transparent 28%),
+		radial-gradient(circle at 82% 12%, rgba(77,83,48,.16), transparent 32%),
+		linear-gradient(135deg, rgba(239,226,194,.9), rgba(182,165,122,.76)),
+		var(--bg);
+}
+
+body.inventory-dashboard-page::before {
+	border:10px solid rgba(73,59,39,.82);
+	box-shadow:inset 0 0 0 1px rgba(255,248,220,.38), inset 0 0 48px rgba(41,37,36,.18);
+	content:"";
+	inset:0;
+	pointer-events:none;
+	position:fixed;
+	z-index:20;
+}
+
+body.inventory-dashboard-page .grid-overlay {
+	background-image:
+		linear-gradient(45deg, rgba(59,47,31,.08) 25%, transparent 25%, transparent 75%, rgba(59,47,31,.08) 75%),
+		linear-gradient(45deg, rgba(77,83,48,.07) 25%, transparent 25%, transparent 75%, rgba(77,83,48,.07) 75%);
+	background-position:0 0, 22px 22px;
+	background-size:44px 44px;
+	opacity:.48;
+}
+
+body.inventory-dashboard-page .navbar,
+body.inventory-dashboard-page .profile-workspace-nav {
+	background:rgba(239,226,194,.86);
+	border-color:rgba(73,59,39,.34);
+	box-shadow:0 10px 28px rgba(41,37,36,.12);
+}
+
+body.inventory-dashboard-page .nav-links a,
+body.inventory-dashboard-page .profile-workspace-nav a,
+body.inventory-dashboard-page .brand {
+	color:var(--inventory-brown);
+}
+
+body.inventory-dashboard-page .glance-header-card,
+body.inventory-dashboard-page .glance-card,
+body.inventory-dashboard-page .dashboard-overview-card,
+body.inventory-dashboard-page .sidebar {
+	background:
+		linear-gradient(135deg, rgba(255,248,220,.7), rgba(228,208,169,.72)),
+		var(--inventory-panel);
+	border-color:rgba(73,59,39,.34);
+	box-shadow:0 18px 38px rgba(41,37,36,.14);
+	color:#1c1917;
+}
+
+body.inventory-dashboard-page .glance-header-text h1,
+body.inventory-dashboard-page .glance-card-header h2,
+body.inventory-dashboard-page .dashboard-overview-content h1,
+body.inventory-dashboard-page .dashboard-overview-content h2,
+body.inventory-dashboard-page .sidebar-header h3,
+body.inventory-dashboard-page .content h1 {
+	color:var(--inventory-brown);
+	text-shadow:none;
+}
+
+body.inventory-dashboard-page .glance-header-text p,
+body.inventory-dashboard-page .dashboard-overview-content p,
+body.inventory-dashboard-page .dashboard-overview-content li,
+body.inventory-dashboard-page .content p {
+	color:#292524;
+}
+
+body.inventory-dashboard-page .glance-btn,
+body.inventory-dashboard-page .icon-sidebar-btn,
+body.inventory-dashboard-page .expand-sidebar-btn,
+body.inventory-dashboard-page .theme-select {
+	background:linear-gradient(135deg, #d6c7a6, #8a6f47);
+	border-color:rgba(59,47,31,.46);
+	color:#1c1917;
+	box-shadow:0 8px 16px rgba(41,37,36,.16);
+}
+
+body.inventory-dashboard-page .theme-select {
+	display:none;
+}
+
+body.inventory-dashboard-page .glance-badge {
+	background:rgba(77,83,48,.18);
+	border-color:rgba(77,83,48,.38);
+	color:#2f321b;
+}
+
+body.inventory-dashboard-page .glance-bookmark-item,
+body.inventory-dashboard-page .glance-bookmark-banner,
+body.inventory-dashboard-page .glance-feed-item,
+body.inventory-dashboard-page .glance-file-card {
+	background:rgba(255,248,220,.82);
+	border-color:rgba(73,59,39,.28);
+	color:#1c1917;
+}
+
+body.inventory-dashboard-page .glance-bookmark-name,
+body.inventory-dashboard-page .bookmark-banner-name,
+body.inventory-dashboard-page .glance-feed-title,
+body.inventory-dashboard-page .glance-file-name {
+	color:#241b12;
+}
+
+body.inventory-dashboard-page .glance-bookmark-desc,
+body.inventory-dashboard-page .bookmark-banner-desc,
+body.inventory-dashboard-page .glance-feed-meta,
+body.inventory-dashboard-page .glance-file-hint {
+	color:#4a3724;
+}
+
+body.inventory-dashboard-page .bookmark-banner-arrow,
+body.inventory-dashboard-page .glance-bookmark-arrow {
+	color:#4d5330;
+	opacity:1;
+}
+
+body.inventory-dashboard-page .bookmark-banner-accent,
+body.inventory-dashboard-page .featuring-banner-visual {
+	background:
+		radial-gradient(circle at 34% 28%, rgba(255,255,255,.45), transparent 32%),
+		linear-gradient(135deg, var(--inventory-olive), var(--inventory-brown));
+	color:#fff8dc;
+}
+
+body.inventory-dashboard-page .glance-card-header h2::before {
+	background:linear-gradient(135deg, #8a6f47, #3b2f1f);
+	content:"";
+	display:inline-block;
+	width:.82em;
+	height:.52em;
+	margin-right:.45em;
+	transform:skewX(-16deg);
+}
+
+.home-school-dashboard-avatar-display {
+	width:80px;
+	height:80px;
+	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
+	background-size:contain;
+	background-position:center;
+	background-repeat:no-repeat;
+	flex-shrink:0;
+	filter:drop-shadow(0 10px 14px rgba(127,29,29,.28));
+}
+
+body.home-school-dashboard-page {
+	--school-red:#991b1b;
+	--school-red-dark:#7f1d1d;
+	--school-cream:#fff7ed;
+	--school-paper:#fef2f2;
+	--school-gold:#f59e0b;
+	--school-ink:#1f2937;
+	--dashboard-skin-accent:var(--school-red-dark);
+	--dashboard-skin-accent-2:var(--school-red);
+	--dashboard-skin-text:#450a0a;
+	--dashboard-skin-muted:#7f1d1d;
+	--dashboard-skin-panel:rgba(255,255,255,.84);
+	--dashboard-skin-active-bg:rgba(248,113,113,.18);
+	--dashboard-skin-active-border:rgba(153,27,27,.42);
+	background:
+		radial-gradient(circle at 16% 16%, rgba(248,113,113,.18), transparent 28%),
+		radial-gradient(circle at 84% 12%, rgba(245,158,11,.16), transparent 30%),
+		linear-gradient(135deg, rgba(255,247,237,.94), rgba(254,226,226,.82)),
+		var(--bg);
+}
+
+body.home-school-dashboard-page::before {
+	border:10px solid rgba(153,27,27,.78);
+	box-shadow:inset 0 0 0 1px rgba(255,255,255,.48), inset 0 0 48px rgba(127,29,29,.13);
+	content:"";
+	inset:0;
+	pointer-events:none;
+	position:fixed;
+	z-index:20;
+}
+
+body.home-school-dashboard-page .grid-overlay {
+	background-image:
+		linear-gradient(rgba(153,27,27,.07) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(153,27,27,.07) 1px, transparent 1px);
+	background-size:42px 42px;
+	opacity:.52;
+}
+
+body.home-school-dashboard-page .navbar,
+body.home-school-dashboard-page .profile-workspace-nav {
+	background:rgba(255,247,237,.88);
+	border-color:rgba(153,27,27,.28);
+	box-shadow:0 10px 28px rgba(127,29,29,.09);
+}
+
+body.home-school-dashboard-page .nav-links a,
+body.home-school-dashboard-page .profile-workspace-nav a,
+body.home-school-dashboard-page .brand {
+	color:var(--school-red-dark);
+}
+
+body.home-school-dashboard-page .glance-header-card,
+body.home-school-dashboard-page .glance-card,
+body.home-school-dashboard-page .dashboard-overview-card,
+body.home-school-dashboard-page .sidebar {
+	background:
+		linear-gradient(135deg, rgba(255,255,255,.76), rgba(254,242,242,.76)),
+		var(--school-paper);
+	border-color:rgba(153,27,27,.28);
+	box-shadow:0 18px 38px rgba(127,29,29,.1);
+	color:var(--school-ink);
+}
+
+body.home-school-dashboard-page .glance-header-text h1,
+body.home-school-dashboard-page .glance-card-header h2,
+body.home-school-dashboard-page .dashboard-overview-content h1,
+body.home-school-dashboard-page .dashboard-overview-content h2,
+body.home-school-dashboard-page .sidebar-header h3,
+body.home-school-dashboard-page .content h1 {
+	color:var(--school-red-dark);
+	text-shadow:none;
+}
+
+body.home-school-dashboard-page .glance-header-text p,
+body.home-school-dashboard-page .dashboard-overview-content p,
+body.home-school-dashboard-page .dashboard-overview-content li,
+body.home-school-dashboard-page .content p {
+	color:#374151;
+}
+
+body.home-school-dashboard-page .glance-btn,
+body.home-school-dashboard-page .icon-sidebar-btn,
+body.home-school-dashboard-page .expand-sidebar-btn,
+body.home-school-dashboard-page .theme-select {
+	background:linear-gradient(135deg, #fee2e2, #fca5a5);
+	border-color:rgba(153,27,27,.36);
+	color:var(--school-red-dark);
+	box-shadow:0 8px 16px rgba(127,29,29,.12);
+}
+
+body.home-school-dashboard-page .theme-select {
+	display:none;
+}
+
+body.home-school-dashboard-page .glance-badge {
+	background:rgba(245,158,11,.18);
+	border-color:rgba(153,27,27,.28);
+	color:#7c2d12;
+}
+
+body.home-school-dashboard-page .glance-bookmark-item,
+body.home-school-dashboard-page .glance-bookmark-banner,
+body.home-school-dashboard-page .glance-feed-item,
+body.home-school-dashboard-page .glance-file-card {
+	background:rgba(255,255,255,.84);
+	border-color:rgba(153,27,27,.2);
+	color:var(--school-ink);
+}
+
+body.home-school-dashboard-page .glance-bookmark-name,
+body.home-school-dashboard-page .bookmark-banner-name,
+body.home-school-dashboard-page .glance-feed-title,
+body.home-school-dashboard-page .glance-file-name {
+	color:#450a0a;
+}
+
+body.home-school-dashboard-page .glance-bookmark-desc,
+body.home-school-dashboard-page .bookmark-banner-desc,
+body.home-school-dashboard-page .glance-feed-meta,
+body.home-school-dashboard-page .glance-file-hint {
+	color:#7f1d1d;
+}
+
+body.home-school-dashboard-page .bookmark-banner-arrow,
+body.home-school-dashboard-page .glance-bookmark-arrow {
+	color:var(--school-red);
+	opacity:1;
+}
+
+body.home-school-dashboard-page .bookmark-banner-accent,
+body.home-school-dashboard-page .featuring-banner-visual {
+	background:
+		radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), transparent 32%),
+		linear-gradient(135deg, var(--school-red), var(--school-gold));
+	color:#fff;
+}
+
+body.home-school-dashboard-page .glance-card-header h2::before {
+	background:linear-gradient(135deg, #fca5a5, #991b1b);
+	border-radius:50%;
+	content:"";
+	display:inline-block;
+	width:.72em;
+	height:.72em;
+	margin-right:.45em;
+	box-shadow:inset -2px -2px 0 rgba(127,29,29,.28);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .profile-workspace-nav a.is-active,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .profile-workspace-nav a:hover {
+	background:var(--dashboard-skin-active-bg);
+	border-color:var(--dashboard-skin-active-border);
+	color:var(--dashboard-skin-accent);
+	text-shadow:none;
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-card-header,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-bookmark-title {
+	border-color:var(--dashboard-skin-active-border);
+	color:var(--dashboard-skin-accent-2);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-card-header h2,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-bookmark-title,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-badge,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-sys-label,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .wiki-search-status {
+	color:var(--dashboard-skin-accent);
+	text-shadow:none;
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-bookmark-name,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .bookmark-banner-name,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-feed-title,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-file-name,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-sys-val {
+	color:var(--dashboard-skin-text);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-bookmark-desc,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .bookmark-banner-desc,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-feed-meta,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-file-hint,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .wiki-search input {
+	color:var(--dashboard-skin-muted);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-badge,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .glance-sys-box {
+	background:var(--dashboard-skin-active-bg);
+	border-color:var(--dashboard-skin-active-border);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .wiki-search input {
+	background:var(--dashboard-skin-panel);
+	border-color:var(--dashboard-skin-active-border);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-kicker {
+	background:var(--dashboard-skin-active-bg);
+	border:1px solid var(--dashboard-skin-active-border);
+	border-radius:999px;
+	color:var(--dashboard-skin-accent);
+	display:inline-flex;
+	padding:5px 10px;
+	text-shadow:none;
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content {
+	color:var(--dashboard-skin-text);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h1,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h2,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h3,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h4,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h5,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content h6,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content strong {
+	color:var(--dashboard-skin-accent);
+	text-shadow:none;
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content p,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content li,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content td,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content th,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content blockquote {
+	color:var(--dashboard-skin-muted);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content a,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .content .dashboard-overview-content a {
+	color:var(--dashboard-skin-accent-2);
+	text-decoration-color:var(--dashboard-skin-active-border);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content code,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .content .dashboard-overview-content :not(pre) > code {
+	background:var(--dashboard-skin-active-bg);
+	border:1px solid var(--dashboard-skin-active-border);
+	color:var(--dashboard-skin-text);
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content blockquote {
+	border-left-color:var(--dashboard-skin-accent-2);
+	opacity:1;
+}
+
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content table,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content td,
+:is(
+	body.gardening-dashboard-page,
+	body.inventory-dashboard-page,
+	body.home-school-dashboard-page
+) .dashboard-overview-content th {
+	border-color:var(--dashboard-skin-active-border);
 }
 
 .glance-header-text h1 {
@@ -2316,6 +2927,16 @@ body.gardening-dashboard-page .glance-card-header h2::before {
 .profiles-card[data-profile="Gardening"] .profile-card-icon {
 	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
 	filter:drop-shadow(0 0 8px rgba(20,83,45,.24));
+}
+
+.profiles-card[data-profile="Inventory"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
+	filter:drop-shadow(0 0 8px rgba(41,37,36,.28));
+}
+
+.profiles-card[data-profile="Home-School"] .profile-card-icon {
+	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
+	filter:drop-shadow(0 0 8px rgba(127,29,29,.24));
 }
 
 .command-hero {
