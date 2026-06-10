@@ -21,11 +21,10 @@ function profileFromDashboardPath(path) {
         String(path || '').split('/');
 
     if (
-        parts.length >= 5 &&
+        parts.length >= 4 &&
         parts[0] === 'ENCRYPTED' &&
         parts[1] === 'Sessions' &&
-        parts[2] &&
-        parts[3] === 'Profiles'
+        parts[2]
     ) {
         const workspaceSections =
             new Set(['dashboards', 'bookmarks', 'cheatsheets', 'dotfiles', 'bootstraps', 'scripts', 'wiki']);
@@ -47,6 +46,42 @@ function profileFromDashboardPath(path) {
     }
 
     return '';
+}
+
+function profileCategory(profile, sessionName) {
+    const parts =
+        String(profile || '')
+            .split('/')
+            .filter(Boolean);
+    const normalizedSession =
+        String(sessionName || '').trim().toLowerCase();
+
+    if (normalizedSession === 'public' && parts[0] === 'Public') {
+        return parts[1] || 'Public';
+    }
+    if (normalizedSession === 'private' && parts[0] === 'Private') {
+        return '';
+    }
+    return parts[0] || '';
+}
+
+function launchCategorySection(category, profiles) {
+    const section =
+        document.createElement('section');
+    const heading =
+        document.createElement('h3');
+    const grid =
+        document.createElement('div');
+
+    section.className =
+        'launch-profile-category';
+    heading.textContent =
+        category;
+    grid.className =
+        'launch-profile-category-grid';
+    grid.append(...profiles.map(profileCard));
+    section.append(heading, grid);
+    return section;
 }
 
 function profileCard(profile) {
@@ -93,17 +128,22 @@ function profileOrderForSession(sessionName) {
     const normalized =
         String(sessionName || '').trim().toLowerCase();
 
-    if (normalized === 'sysadmin') {
-        return ['SysAdmin/Profiles/Rocket', 'SysAdmin/Profiles/Admin'];
+    if (normalized === 'private') {
+        return ['Private/Profiles/Rocket'];
     }
-    if (normalized === 'family') {
-        return ['Family/Profiles/Parents', 'Family/Profiles/Boys', 'Family/Profiles/Girls', 'Family/Profiles/Education'];
-    }
-    if (normalized === 'doomsday') {
-        return ['Doomsday/Profiles/Prepper', 'Doomsday/Profiles/Offline-Vault'];
+    if (normalized === 'public') {
+        return [
+            'Public/SysAdmin/Profiles/Admin',
+            'Public/Family/Profiles/Parents',
+            'Public/Family/Profiles/Boys',
+            'Public/Family/Profiles/Girls',
+            'Public/Family/Profiles/Education',
+            'Public/Doomsday/Profiles/Prepper',
+            'Public/Doomsday/Profiles/Offline-Vault'
+        ];
     }
 
-    return ['SysAdmin/Profiles/Rocket', 'SysAdmin/Profiles/Admin'];
+    return ['Public/SysAdmin/Profiles/Admin'];
 }
 
 function sortProfilesForSession(profiles, sessionName) {
@@ -127,6 +167,50 @@ function sortProfilesForSession(profiles, sessionName) {
         }
         return first.localeCompare(second, undefined, { sensitivity: 'base' });
     });
+}
+
+function renderProfileLaunchPoints(profiles, sessionName) {
+    const normalizedSession =
+        String(sessionName || '').trim().toLowerCase();
+
+    launchPointsGrid.classList.toggle('has-categories', normalizedSession === 'public');
+    if (normalizedSession !== 'public') {
+        launchPointsGrid.replaceChildren(...profiles.map(profileCard));
+        return;
+    }
+
+    const categoryOrder =
+        ['SysAdmin', 'Family', 'Doomsday'];
+    const groups =
+        new Map();
+
+    for (const profile of profiles) {
+        const category =
+            profileCategory(profile, sessionName) || 'Profiles';
+        if (!groups.has(category)) {
+            groups.set(category, []);
+        }
+        groups.get(category).push(profile);
+    }
+
+    const orderedCategories =
+        Array.from(groups.keys()).sort((first, second) => {
+            const firstRank =
+                categoryOrder.indexOf(first);
+            const secondRank =
+                categoryOrder.indexOf(second);
+            if (firstRank !== -1 || secondRank !== -1) {
+                return (firstRank === -1 ? categoryOrder.length : firstRank) -
+                    (secondRank === -1 ? categoryOrder.length : secondRank);
+            }
+            return first.localeCompare(second, undefined, { sensitivity: 'base' });
+        });
+
+    launchPointsGrid.replaceChildren(
+        ...orderedCategories.map(category =>
+            launchCategorySection(category, groups.get(category) || [])
+        )
+    );
 }
 
 async function loadProfileLaunchPoints() {
@@ -159,7 +243,7 @@ async function loadProfileLaunchPoints() {
             );
         sortProfilesForSession(profiles, sessions?.active);
 
-        launchPointsGrid.replaceChildren(...profiles.map(profileCard));
+        renderProfileLaunchPoints(profiles, sessions?.active);
         if (launchPointsSection) {
             launchPointsSection.hidden =
                 profiles.length === 0;

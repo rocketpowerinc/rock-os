@@ -1,25 +1,25 @@
 ---
 name: profile-new
-description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile workspace under Website/ENCRYPTED/Sessions/<SessionName>/Profiles with its own Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
+description: Use when the user invokes /profile-new or asks to create or scaffold a new Rock-OS profile. Create a special profile workspace under Website/ENCRYPTED/Sessions with its own Dashboards, Bookmarks, Cheatsheets, Dotfiles, Bootstraps, Scripts, and Wiki workspace, local theme assets, and server-enforced session visibility.
 ---
 
 # Profile New
 
-Create a Rock-OS profile workspace under `Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/`.
+Create a Rock-OS profile workspace under `Website/ENCRYPTED/Sessions/<ProfilePath>/`.
 
 ## Required Inputs
 
 Ask briefly for any missing values:
 
 - Profile name. Prefer one word; ask before using a multi-word name.
-- Owning session. Use one of the configured sessions unless the user is also adding a new session.
+- Owning public category or private profile path. For public profiles, use `Public/<Category>/Profiles/<ProfileName>`. For private profiles, use `Private/Profiles/<ProfileName>`.
 - Visual direction or asset source for the profile's Steel, Rugged, Cyberpunk, and Blue-Grass icons. Example: "make one in the same low-poly style" or "use this local image."
 - Sessions that should or should not see the profile. Accept the current default session behavior when the user has no special requirement.
 
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/
+Website/ENCRYPTED/Sessions/<ProfilePath>/
   index.html
   Hub-Overview.md
   dashboard.json
@@ -71,7 +71,7 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/
 ## Conventions
 
 - Profiles are special workspaces, not ordinary dashboard categories. Each profile owns its own `dashboards/` folder.
-- Profiles are session-owned. Do not create compatibility folders under old profile roots.
+- Profiles live under the active session tree. Public profiles are grouped by category; private profiles live under the private profile folder. Do not create compatibility folders under old profile roots.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
 - Internal links open in the same tab; external links follow the existing new-tab behavior.

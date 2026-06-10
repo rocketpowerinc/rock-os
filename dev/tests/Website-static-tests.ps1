@@ -163,6 +163,27 @@ foreach ($root in $scanRoots) {
 }
 Write-OK "Retired path scan complete."
 
+Write-Check "Nested session profile path parsing"
+$pathParserChecks = @(
+    @{
+        File = Join-Path $WebsiteDir 'js\profiles.js'
+        Pattern = "parts[3] !== 'Profiles'"
+    },
+    @{
+        File = Join-Path $WebsiteDir 'js\wiki\links.js'
+        Pattern = "parts[3] === 'Profiles'"
+    }
+)
+foreach ($check in $pathParserChecks) {
+    if (Test-Path -LiteralPath $check.File) {
+        $text = Get-Content -Raw -LiteralPath $check.File
+        if ($text.Contains($check.Pattern)) {
+            Add-Failure "$($check.File) still assumes Profiles is at a fixed session path segment."
+        }
+    }
+}
+Write-OK "Nested session profile path parsing checks complete."
+
 Write-Check "Git whitespace check"
 if (Get-Command git -ErrorAction SilentlyContinue) {
     Push-Location $RepoRoot

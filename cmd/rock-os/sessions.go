@@ -40,40 +40,35 @@ func readDashboardSessionsConfig(siteRoot string) dashboardSessionsConfig {
 	config := defaultDashboardSessionsConfig()
 	content, err := os.ReadFile(filepath.Join(siteRoot, filepath.FromSlash(sessionsFile)))
 	if err != nil {
-		return applyActiveDashboardSessionState(siteRoot, config)
+		return resolveDashboardSessionsForSite(siteRoot, config)
 	}
 
 	if err := json.Unmarshal(content, &config); err != nil {
 		config = defaultDashboardSessionsConfig()
-		return applyActiveDashboardSessionState(siteRoot, config)
+		return resolveDashboardSessionsForSite(siteRoot, config)
 	}
 
 	config = sanitizeDashboardSessionsConfig(config)
-	return applyActiveDashboardSessionState(siteRoot, config)
+	return resolveDashboardSessionsForSite(siteRoot, config)
 }
 
 func defaultDashboardSessionsConfig() dashboardSessionsConfig {
 	return sanitizeDashboardSessionsConfig(dashboardSessionsConfig{
-		Active: "SysAdmin",
+		Active: "Public",
 		Notes: []string{
 			"Rock-OS uses active as the current session.",
-			"Each session renders profiles from ENCRYPTED/Sessions/<SessionName>/Profiles/.",
+			"Public profiles are grouped by category under ENCRYPTED/Sessions/Public/.",
 		},
 		Sessions: []dashboardSession{
 			{
-				Name:        "SysAdmin",
-				AllowedPath: "SysAdmin",
-				Description: "Shows SysAdmin profiles.",
+				Name:        "Public",
+				AllowedPath: "Public",
+				Description: "Shows public profile categories.",
 			},
 			{
-				Name:        "Family",
-				AllowedPath: "Family",
-				Description: "Shows Family profiles.",
-			},
-			{
-				Name:        "Doomsday",
-				AllowedPath: "Doomsday",
-				Description: "Shows Doomsday profiles.",
+				Name:        "Private",
+				AllowedPath: "Private",
+				Description: "Shows private profiles when locally unlocked.",
 			},
 		},
 	})
@@ -92,13 +87,38 @@ func kidsSessionLocked(siteRoot string) bool {
 	return sessionKeyUnlocked(siteRoot, kidsKeyFile)
 }
 
+func resolveDashboardSessionsForSite(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
+	config = filterLockedDashboardSessions(siteRoot, config)
+	return applyActiveDashboardSessionState(siteRoot, config)
+}
+
+func filterLockedDashboardSessions(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
+	if rocketProfileUnlocked(siteRoot) {
+		return config
+	}
+
+	sessions := []dashboardSession{}
+	for _, session := range config.Sessions {
+		if strings.EqualFold(session.Name, "Private") {
+			continue
+		}
+		sessions = append(sessions, session)
+	}
+
+	config.Sessions = sessions
+	if strings.EqualFold(config.Active, "Private") {
+		config.Active = "Public"
+	}
+	return config
+}
+
 func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsConfig) dashboardSessionsConfig {
 	active, ok := readActiveDashboardSessionState(siteRoot)
 	if ok && dashboardSessionExists(config.Sessions, active) {
 		config.Active = active
 	}
 	if !dashboardSessionExists(config.Sessions, config.Active) {
-		config.Active = "SysAdmin"
+		config.Active = "Public"
 	}
 	if !dashboardSessionExists(config.Sessions, config.Active) && len(config.Sessions) > 0 {
 		config.Active = config.Sessions[0].Name
@@ -110,19 +130,20 @@ func applyActiveDashboardSessionState(siteRoot string, config dashboardSessionsC
 }
 
 func applyKidsSessionLock(config dashboardSessionsConfig) dashboardSessionsConfig {
-	family := dashboardSession{
-		Name:        "Family",
-		AllowedPath: "Family",
+	public := dashboardSession{
+		Name:        "Public",
+		AllowedPath: "Public",
 		Description: "Kids lock is active. Delete kids.key to restore normal session switching.",
 	}
 	for _, session := range config.Sessions {
-		if strings.EqualFold(session.Name, "Family") {
-			family = normalizeDashboardSession(session)
+		if strings.EqualFold(session.Name, "Public") {
+			public = normalizeDashboardSession(session)
+			public.Description = "Kids lock is active. Delete kids.key to restore normal session switching."
 			break
 		}
 	}
-	config.Active = "Family"
-	config.Sessions = []dashboardSession{family}
+	config.Active = "Public"
+	config.Sessions = []dashboardSession{public}
 	return config
 }
 
@@ -186,8 +207,8 @@ func resolveDashboardSession(config dashboardSessionsConfig) dashboardSession {
 	}
 
 	return dashboardSession{
-		Name:        "SysAdmin",
-		AllowedPath: "SysAdmin",
+		Name:        "Public",
+		AllowedPath: "Public",
 	}
 }
 
@@ -244,17 +265,14 @@ func filterDashboardFilesForSession(siteRoot string, files []markdownIndexEntry,
 	if kidsSessionLocked(siteRoot) {
 		filtered = filterDashboardFilesForKidsLock(filtered)
 	}
-	if !rocketProfileUnlocked(siteRoot) {
-		filtered = filterDashboardFilesOutsidePath(filtered, "SysAdmin/Profiles/Rocket")
-	}
 	return filtered
 }
 
 func filterDashboardFilesForKidsLock(files []markdownIndexEntry) []markdownIndexEntry {
 	filtered := []markdownIndexEntry{}
 	for _, file := range files {
-		if strings.HasPrefix(file.Path, profilesDir+"/Family/Profiles/Boys/") ||
-			strings.HasPrefix(file.Path, profilesDir+"/Family/Profiles/Girls/") {
+		if strings.HasPrefix(file.Path, profilesDir+"/Public/Family/Profiles/Boys/") ||
+			strings.HasPrefix(file.Path, profilesDir+"/Public/Family/Profiles/Girls/") {
 			filtered = append(filtered, file)
 		}
 	}
@@ -312,7 +330,7 @@ func sessionsHandler(siteRoot string) http.HandlerFunc {
 
 			config := readDashboardSessionsConfig(siteRoot)
 			request.Active = strings.TrimSpace(request.Active)
-			if kidsSessionLocked(siteRoot) && !strings.EqualFold(request.Active, "Family") {
+			if kidsSessionLocked(siteRoot) && !strings.EqualFold(request.Active, "Public") {
 				http.Error(w, "kids lock is active; delete kids.key to restore normal session switching", http.StatusForbidden)
 				return
 			}
@@ -362,7 +380,7 @@ func kidsLockHandler(siteRoot string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+		if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -55,10 +55,10 @@
     function kidTheme(profile) {
         const normalized =
             String(profile || '').toLowerCase();
-        if (normalized === 'family/profiles/boys') {
+        if (normalized === 'public/family/profiles/boys') {
             return 'boys';
         }
-        if (normalized === 'family/profiles/girls') {
+        if (normalized === 'public/family/profiles/girls') {
             return 'girls';
         }
         return '';
@@ -81,11 +81,11 @@
             theme === 'boys'
                 ? {
                     label: 'Girls',
-                    href: '/ENCRYPTED/Sessions/Family/Profiles/Girls/'
+                    href: '/ENCRYPTED/Sessions/Public/Family/Profiles/Girls/'
                 }
                 : {
                     label: 'Boys',
-                    href: '/ENCRYPTED/Sessions/Family/Profiles/Boys/'
+                    href: '/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/'
                 };
 
         let link =

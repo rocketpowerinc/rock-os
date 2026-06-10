@@ -1,24 +1,19 @@
 {
-  "active": "SysAdmin",
+  "active": "Public",
   "notes": [
     "Rock-OS uses active as the current session.",
-    "Each session renders profiles from ENCRYPTED/Sessions/<SessionName>/Profiles/."
+    "Public profiles are grouped by category under ENCRYPTED/Sessions/Public/."
   ],
   "sessions": [
     {
-      "name": "SysAdmin",
-      "path": "SysAdmin",
-      "description": "Shows SysAdmin profiles."
+      "name": "Public",
+      "path": "Public",
+      "description": "Shows public profile categories."
     },
     {
-      "name": "Family",
-      "path": "Family",
-      "description": "Shows Family profiles."
-    },
-    {
-      "name": "Doomsday",
-      "path": "Doomsday",
-      "description": "Shows Doomsday profiles."
+      "name": "Private",
+      "path": "Private",
+      "description": "Shows private profiles when locally unlocked."
     }
   ]
 }

@@ -35,11 +35,14 @@ function profileWorkspacePathInfo(path) {
     const parts =
         String(path || '').split('/');
 
+    const profilesIndex =
+        parts.indexOf('Profiles', 2);
+
     if (
-        parts.length >= 6 &&
+        parts.length >= profilesIndex + 3 &&
         parts[0] === 'ENCRYPTED' &&
         parts[1] === 'Sessions' &&
-        parts[3] === 'Profiles'
+        profilesIndex >= 3
     ) {
         const profileParts = [];
         for (let index = 2; index < parts.length; index++) {

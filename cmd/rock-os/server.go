@@ -234,7 +234,7 @@ func kidsLockHomeRedirect(siteRoot string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cleaned := path.Clean(r.URL.Path)
 		if kidsSessionLocked(siteRoot) && (cleaned == "/" || cleaned == "/index.html") {
-			http.Redirect(w, r, "/ENCRYPTED/Sessions/Family/Profiles/Boys/", http.StatusFound)
+			http.Redirect(w, r, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/", http.StatusFound)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -298,17 +298,16 @@ func encryptedDashboardResource(cleanedPath string) (string, string, bool) {
 		parts[0] != encryptedDir ||
 		parts[1] != "Sessions" ||
 		parts[2] == "" ||
-		parts[3] != "Profiles" ||
-		parts[4] == "" {
+		!encryptedSessionPathContainsProfile(parts) {
 		return "", "", false
 	}
 
-	profileEnd := 4
+	profileEnd := 2
 	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
 		profileEnd++
 	}
 
-	if profileEnd == 4 {
+	if !encryptedSessionProfilePathComplete(parts[:profileEnd]) {
 		return "", "", false
 	}
 
@@ -331,14 +330,17 @@ func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 		parts[0] != encryptedDir ||
 		parts[1] != "Sessions" ||
 		parts[2] == "" ||
-		parts[3] != "Profiles" ||
-		parts[4] == "" {
+		!encryptedSessionPathContainsProfile(parts) {
 		return false
 	}
 
-	profileEnd := 4
+	profileEnd := 2
 	for profileEnd < len(parts) && !isProfileStaticSection(parts[profileEnd]) {
 		profileEnd++
+	}
+
+	if !encryptedSessionProfilePathComplete(parts[:profileEnd]) {
+		return false
 	}
 
 	if profileEnd == len(parts) {
@@ -355,6 +357,24 @@ func encryptedDashboardIndexDirectory(cleanedPath string, fsPath string) bool {
 
 	info, err := os.Stat(filepath.Join(fsPath, "index.html"))
 	return err == nil && !info.IsDir()
+}
+
+func encryptedSessionPathContainsProfile(parts []string) bool {
+	for index := 2; index < len(parts)-1; index++ {
+		if parts[index] == "Profiles" && parts[index+1] != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func encryptedSessionProfilePathComplete(parts []string) bool {
+	for index := 2; index < len(parts)-1; index++ {
+		if parts[index] == "Profiles" && parts[index+1] != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func isProfileStaticSection(value string) bool {

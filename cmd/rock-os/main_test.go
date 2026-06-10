@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	testProfileName = "Family/Profiles/Boys"
+	testProfileName = "Public/Family/Profiles/Boys"
 	markdownDir     = profilesDir + "/" + testProfileName + "/wiki"
 	scriptsDir      = profilesDir + "/" + testProfileName + "/scripts"
 	bootstrapsDir   = profilesDir + "/" + testProfileName + "/bootstraps"
@@ -28,7 +28,7 @@ const (
 
 func withTestProfile(siteRoot string, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_ = writeActiveDashboardSessionState(siteRoot, "Family")
+		_ = writeActiveDashboardSessionState(siteRoot, "Public")
 		_ = os.MkdirAll(filepath.Join(siteRoot, filepath.FromSlash(profilesDir), testProfileName), 0o755)
 		query := r.URL.Query()
 		query.Set("profile", testProfileName)
@@ -395,7 +395,7 @@ func TestScanLinkHealthReportsLocalAndExternalLinks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -432,7 +432,7 @@ func TestScanLinkHealthIgnoresMarkedLinks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(wikiRoot, "Source.md"), []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -457,8 +457,8 @@ func TestScanLinkHealthIgnoresMarkedLinks(t *testing.T) {
 func TestLinkHealthSourceFilesRespectActiveSession(t *testing.T) {
 	siteRoot := t.TempDir()
 	docs := map[string]string{
-		"Family/Profiles/Boys":     "Boys.md",
-		"SysAdmin/Profiles/Rocket": "Rocket.md",
+		"Public/Family/Profiles/Boys": "Boys.md",
+		"Private/Profiles/Rocket":     "Rocket.md",
 	}
 	for profile, name := range docs {
 		docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), filepath.FromSlash(profile), "wiki", name)
@@ -469,7 +469,7 @@ func TestLinkHealthSourceFilesRespectActiveSession(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -478,7 +478,7 @@ func TestLinkHealthSourceFilesRespectActiveSession(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 || files[0] != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Boys.md" {
+	if len(files) != 1 || files[0] != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Boys.md" {
 		t.Fatalf("expected only Family/Boys link-health sources, got %#v", files)
 	}
 }
@@ -566,7 +566,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Test.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Test.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -580,7 +580,7 @@ func TestWikiDocHandlerRendersMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if response.Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Test.md" {
+	if response.Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Test.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 
@@ -605,7 +605,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Unsafe.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Unsafe.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -629,7 +629,7 @@ func TestWikiDocHandlerEscapesRawHTML(t *testing.T) {
 }
 
 func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/../secret.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/wiki/doc?path=ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/../secret.md", nil)
 	recorder := httptest.NewRecorder()
 
 	wikiDocHandler(t.TempDir()).ServeHTTP(recorder, request)
@@ -641,11 +641,11 @@ func TestWikiDocHandlerRejectsTraversal(t *testing.T) {
 
 func TestDashboardsDocHandlerRendersHubOverview(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeActiveDashboardSessionState(siteRoot, "Doomsday"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Doomsday", "Profiles", "Prepper", "Hub-Overview.md")
+	docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Doomsday", "Profiles", "Prepper", "Hub-Overview.md")
 	if err := os.MkdirAll(filepath.Dir(docPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -653,7 +653,7 @@ func TestDashboardsDocHandlerRendersHubOverview(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/api/dashboards/doc?path=ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/Hub-Overview.md", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/dashboards/doc?path=ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/Hub-Overview.md", nil)
 	recorder := httptest.NewRecorder()
 
 	dashboardsDocHandler(siteRoot).ServeHTTP(recorder, request)
@@ -666,7 +666,7 @@ func TestDashboardsDocHandlerRendersHubOverview(t *testing.T) {
 	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
-	if response.Path != "ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/Hub-Overview.md" {
+	if response.Path != "ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/Hub-Overview.md" {
 		t.Fatalf("unexpected response path: %q", response.Path)
 	}
 	if !strings.Contains(response.HTML, "<h1 id=\"prepper-hub-overview\">Prepper Hub Overview</h1>") {
@@ -715,7 +715,7 @@ func TestWikiSearchHandlerFindsFilenameAndContentMatches(t *testing.T) {
 		t.Fatalf("expected one search result, got %#v", response.Results)
 	}
 
-	if response.Results[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Linux/Booting.md" {
+	if response.Results[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Linux/Booting.md" {
 		t.Fatalf("unexpected result path: %#v", response.Results[0])
 	}
 
@@ -851,7 +851,7 @@ func TestMarkdownIndexHandlerRefreshesIndexOnDemand(t *testing.T) {
 		t.Fatalf("expected one indexed file, got %#v", files)
 	}
 
-	if files[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Fresh.md" {
+	if files[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Fresh.md" {
 		t.Fatalf("unexpected index entry: %#v", files[0])
 	}
 }
@@ -992,7 +992,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	}
 
 	// Case 2: unlocked (encrypted content folder exists with readable files)
-	privateDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "SysAdmin", "Profiles", "Rocket")
+	privateDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Private", "Profiles", "Rocket")
 	if err := os.MkdirAll(privateDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1017,7 +1017,7 @@ func TestServerStatusHandlerReturnsGitCryptStatus(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(scriptsLinuxDir, "test.sh"), []byte("#!/bin/sh"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1126,25 +1126,25 @@ func TestResolveBootstrapDoc(t *testing.T) {
 	}
 
 	// Normal resolve
-	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Setup.md")
+	resolvedPath, fullPath, err := resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Setup.md")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resolvedPath != "ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Setup.md" {
-		t.Errorf("expected ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Setup.md, got %q", resolvedPath)
+	if resolvedPath != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Setup.md" {
+		t.Errorf("expected ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Setup.md, got %q", resolvedPath)
 	}
 	if !strings.HasSuffix(fullPath, "Setup.md") {
 		t.Errorf("expected path to end with Setup.md, got %q", fullPath)
 	}
 
 	// Path traversal check
-	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/../secret.md")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/../secret.md")
 	if err == nil {
 		t.Error("expected error for path traversal attempt")
 	}
 
 	// Non-markdown file check
-	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Setup.txt")
+	_, _, err = resolveBootstrapDoc(siteRoot, "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Setup.txt")
 	if err == nil {
 		t.Error("expected error for non-markdown extension")
 	}
@@ -1179,8 +1179,8 @@ func TestBootstrapsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Install.md" {
-		t.Errorf("expected ENCRYPTED/Sessions/Family/Profiles/Boys/bootstraps/Install.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Install.md" {
+		t.Errorf("expected ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bootstraps/Install.md, got %q", index[0].Path)
 	}
 }
 
@@ -1213,8 +1213,8 @@ func TestCheatsheetsIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/cheatsheets/Commands.md" {
-		t.Errorf("expected ENCRYPTED/Sessions/Family/Profiles/Boys/cheatsheets/Commands.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/cheatsheets/Commands.md" {
+		t.Errorf("expected ENCRYPTED/Sessions/Public/Family/Profiles/Boys/cheatsheets/Commands.md, got %q", index[0].Path)
 	}
 }
 
@@ -1247,8 +1247,8 @@ func TestDotfilesIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/dotfiles/Shell.md" {
-		t.Errorf("expected ENCRYPTED/Sessions/Family/Profiles/Boys/dotfiles/Shell.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/dotfiles/Shell.md" {
+		t.Errorf("expected ENCRYPTED/Sessions/Public/Family/Profiles/Boys/dotfiles/Shell.md, got %q", index[0].Path)
 	}
 }
 
@@ -1281,15 +1281,15 @@ func TestBookmarksIndexHandler(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 index entry, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/bookmarks/Links.md" {
-		t.Errorf("expected ENCRYPTED/Sessions/Family/Profiles/Boys/bookmarks/Links.md, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bookmarks/Links.md" {
+		t.Errorf("expected ENCRYPTED/Sessions/Public/Family/Profiles/Boys/bookmarks/Links.md, got %q", index[0].Path)
 	}
 }
 
 func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) {
 	siteRoot := t.TempDir()
-	kidsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "wiki")
-	rocketWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "SysAdmin", "Profiles", "Rocket", "wiki")
+	kidsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "wiki")
+	rocketWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Private", "Profiles", "Rocket", "wiki")
 	for _, dir := range []string{kidsWiki, rocketWiki} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
@@ -1301,11 +1301,11 @@ func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) 
 	if err := os.WriteFile(filepath.Join(rocketWiki, "Rocket.md"), []byte("# Rocket"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Family%2FProfiles%2FBoys", nil)
+	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Public%2FFamily%2FProfiles%2FBoys", nil)
 	rec := httptest.NewRecorder()
 	profileMarkdownIndexHandler(siteRoot, "wiki").ServeHTTP(rec, req)
 
@@ -1317,14 +1317,14 @@ func TestProfileMarkdownIndexHandlerScopesFilesToRequestedProfile(t *testing.T) 
 	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Kids.md" {
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Kids.md" {
 		t.Fatalf("expected only Kids wiki content, got %#v", index)
 	}
 }
 
 func TestAllowedProfileNamesIncludesActiveSessionProfiles(t *testing.T) {
 	siteRoot := t.TempDir()
-	for _, profile := range []string{"Family/Profiles/Boys", "Family/Profiles/Girls", "SysAdmin/Profiles/Rocket"} {
+	for _, profile := range []string{"Public/Family/Profiles/Boys", "Public/Family/Profiles/Girls", "Private/Profiles/Rocket"} {
 		profileRoot := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), filepath.FromSlash(profile))
 		if err := os.MkdirAll(profileRoot, 0o755); err != nil {
 			t.Fatal(err)
@@ -1333,7 +1333,7 @@ func TestAllowedProfileNamesIncludesActiveSessionProfiles(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1343,8 +1343,8 @@ func TestAllowedProfileNamesIncludesActiveSessionProfiles(t *testing.T) {
 	}
 
 	expected := map[string]bool{
-		"Family/Profiles/Boys":  true,
-		"Family/Profiles/Girls": true,
+		"Public/Family/Profiles/Boys":  true,
+		"Public/Family/Profiles/Girls": true,
 	}
 	if len(profiles) != len(expected) {
 		t.Fatalf("expected active Family profiles only, got %#v", profiles)
@@ -1358,8 +1358,8 @@ func TestAllowedProfileNamesIncludesActiveSessionProfiles(t *testing.T) {
 
 func TestNestedProfileMarkdownIndexScopesToRequestedChildProfile(t *testing.T) {
 	siteRoot := t.TempDir()
-	boysWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "wiki")
-	girlsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Girls", "wiki")
+	boysWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "wiki")
+	girlsWiki := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Girls", "wiki")
 	for _, dir := range []string{boysWiki, girlsWiki} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
@@ -1371,11 +1371,11 @@ func TestNestedProfileMarkdownIndexScopesToRequestedChildProfile(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(girlsWiki, "Girls.md"), []byte("# Girls"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Family%2FProfiles%2FBoys", nil)
+	req := httptest.NewRequest(http.MethodGet, "/wiki-index.json?profile=Public%2FFamily%2FProfiles%2FBoys", nil)
 	rec := httptest.NewRecorder()
 	profileMarkdownIndexHandler(siteRoot, "wiki").ServeHTTP(rec, req)
 
@@ -1387,19 +1387,19 @@ func TestNestedProfileMarkdownIndexScopesToRequestedChildProfile(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Boys.md" {
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Boys.md" {
 		t.Fatalf("expected only Boys wiki content, got %#v", index)
 	}
 }
 
 func TestProfileContentHandlersRejectProfilesOutsideActiveSession(t *testing.T) {
 	siteRoot := t.TempDir()
-	for _, profile := range []string{"Family/Profiles/Boys", "SysAdmin/Profiles/Rocket"} {
+	for _, profile := range []string{"Public/Family/Profiles/Boys", "Private/Profiles/Rocket"} {
 		if err := os.MkdirAll(filepath.Join(siteRoot, filepath.FromSlash(profilesDir), filepath.FromSlash(profile)), 0o755); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1411,12 +1411,12 @@ func TestProfileContentHandlersRejectProfilesOutsideActiveSession(t *testing.T) 
 		{
 			name:    "wiki index",
 			handler: profileMarkdownIndexHandler(siteRoot, "wiki"),
-			target:  "/wiki-index.json?profile=SysAdmin%2FProfiles%2FRocket",
+			target:  "/wiki-index.json?profile=Private%2FProfiles%2FRocket",
 		},
 		{
 			name:    "scripts list",
 			handler: scriptsListHandler(siteRoot),
-			target:  "/api/scripts?profile=SysAdmin%2FProfiles%2FRocket",
+			target:  "/api/scripts?profile=Private%2FProfiles%2FRocket",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1436,14 +1436,14 @@ func TestDashboardsIndexExcludesProfileWorkspaceMarkdown(t *testing.T) {
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Boys", "Hub-Overview.md"); err != nil {
 		t.Fatal(err)
 	}
-	wikiDoc := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "wiki", "Private.md")
+	wikiDoc := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "wiki", "Private.md")
 	if err := os.MkdirAll(filepath.Dir(wikiDoc), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(wikiDoc, []byte("# Private"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1455,14 +1455,14 @@ func TestDashboardsIndexExcludesProfileWorkspaceMarkdown(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &index); err != nil {
 		t.Fatal(err)
 	}
-	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/Hub-Overview.md" {
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/Hub-Overview.md" {
 		t.Fatalf("expected only Family/Boys profile notes, got %#v", index)
 	}
 }
 
 func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	siteRoot := t.TempDir()
-	profileRoot := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys")
+	profileRoot := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys")
 	if err := os.MkdirAll(profileRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -1471,7 +1471,7 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	if err := os.WriteFile(docPath, []byte("# Boys"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeSessionFile(siteRoot, "Family"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1491,12 +1491,12 @@ func TestDashboardsIndexHandlerIncludesProfilesCategory(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected 1 profile file, got %d", len(index))
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/Hub-Overview.md" {
-		t.Errorf("expected Family/Profiles/Boys profile file, got %q", index[0].Path)
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/Hub-Overview.md" {
+		t.Errorf("expected Public/Family/Profiles/Boys profile file, got %q", index[0].Path)
 	}
 }
 
-func TestDashboardsIndexHandlerUsesSysAdminByDefaultWithoutRocketKey(t *testing.T) {
+func TestDashboardsIndexHandlerUsesPublicByDefaultWithoutRocketKey(t *testing.T) {
 	siteRoot := t.TempDir()
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Kids", "Hub-Overview.md"); err != nil {
 		t.Fatal(err)
@@ -1518,8 +1518,8 @@ func TestDashboardsIndexHandlerUsesSysAdminByDefaultWithoutRocketKey(t *testing.
 		t.Fatal(err)
 	}
 
-	if len(index) != 0 {
-		t.Fatalf("expected default SysAdmin session without Rocket key to hide Rocket files, got %#v", index)
+	if len(index) != 1 || index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/Hub-Overview.md" {
+		t.Fatalf("expected default Public session to include Public files only, got %#v", index)
 	}
 }
 
@@ -1531,7 +1531,7 @@ func TestDashboardsIndexHandlerUsesNamedProfileSession(t *testing.T) {
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Rocket", "Hub-Overview.md"); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeSessionFile(siteRoot, "Family"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1547,12 +1547,12 @@ func TestDashboardsIndexHandlerUsesNamedProfileSession(t *testing.T) {
 	if len(index) != 1 {
 		t.Fatalf("expected only Kids profile file, got %#v", index)
 	}
-	if index[0].Path != "ENCRYPTED/Sessions/Family/Profiles/Boys/Hub-Overview.md" {
+	if index[0].Path != "ENCRYPTED/Sessions/Public/Family/Profiles/Boys/Hub-Overview.md" {
 		t.Fatalf("unexpected dashboard file: %#v", index[0])
 	}
 }
 
-func TestDashboardsIndexHandlerUsesSysAdminWithoutRocketKey(t *testing.T) {
+func TestDashboardsIndexHandlerUsesPublicWithoutRocketKey(t *testing.T) {
 	siteRoot := t.TempDir()
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Admin", "Hub-Overview.md"); err != nil {
 		t.Fatal(err)
@@ -1563,7 +1563,7 @@ func TestDashboardsIndexHandlerUsesSysAdminWithoutRocketKey(t *testing.T) {
 	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Dashboard-Overview.md"); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1582,16 +1582,16 @@ func TestDashboardsIndexHandlerUsesSysAdminWithoutRocketKey(t *testing.T) {
 	}
 
 	if len(index) != 1 ||
-		!paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/Hub-Overview.md"] {
-		t.Fatalf("expected SysAdmin without rocket key to hide Rocket profile, got %#v", index)
+		!paths["ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/Hub-Overview.md"] {
+		t.Fatalf("expected Public without local private unlock to hide Rocket profile, got %#v", index)
 	}
-	if paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/Hub-Overview.md"] ||
-		paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
-		t.Fatalf("expected SysAdmin without rocket key to hide Rocket profile, got %#v", index)
+	if paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/Hub-Overview.md"] ||
+		paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
+		t.Fatalf("expected Public without local private unlock to hide Rocket profile, got %#v", index)
 	}
 }
 
-func TestDashboardsIndexHandlerUsesSysAdminWithRocketKey(t *testing.T) {
+func TestDashboardsIndexHandlerUsesPrivateWithRocketKey(t *testing.T) {
 	siteRoot := t.TempDir()
 	createRocketKey(t, siteRoot)
 	if err := writeDashboardTestDoc(siteRoot, "Profiles", "Admin", "Hub-Overview.md"); err != nil {
@@ -1603,7 +1603,7 @@ func TestDashboardsIndexHandlerUsesSysAdminWithRocketKey(t *testing.T) {
 	if err := writeDashboardTestDoc(siteRoot, "OS", "Windows", "Dashboard-Overview.md"); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Private"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1621,11 +1621,10 @@ func TestDashboardsIndexHandlerUsesSysAdminWithRocketKey(t *testing.T) {
 		paths[entry.Path] = true
 	}
 
-	if len(index) != 3 ||
-		!paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/Hub-Overview.md"] ||
-		!paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/Hub-Overview.md"] ||
-		!paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
-		t.Fatalf("expected SysAdmin with rocket key to include Rocket profile, got %#v", index)
+	if len(index) != 2 ||
+		!paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/Hub-Overview.md"] ||
+		!paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
+		t.Fatalf("expected Private with local unlock to include Rocket profile, got %#v", index)
 	}
 }
 
@@ -1642,7 +1641,7 @@ func TestDashboardsIndexHandlerUsesMappedSession(t *testing.T) {
 	config.Active = "SelfHosting"
 	config.Sessions = append(config.Sessions, dashboardSession{
 		Name:        "SelfHosting",
-		AllowedPath: "SysAdmin",
+		AllowedPath: "Private",
 		Description: "Shows only Rocket.",
 	})
 	if err := writeDashboardSessionsConfig(siteRoot, config); err != nil {
@@ -1665,8 +1664,8 @@ func TestDashboardsIndexHandlerUsesMappedSession(t *testing.T) {
 	for _, entry := range index {
 		paths[entry.Path] = true
 	}
-	if !paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/SelfHosting/Dashboard-Overview.md"] ||
-		!paths["ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
+	if !paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/SelfHosting/Dashboard-Overview.md"] ||
+		!paths["ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/Dashboard-Overview.md"] {
 		t.Fatalf("unexpected dashboard files: %#v", index)
 	}
 }
@@ -1676,15 +1675,15 @@ func writeDashboardTestDoc(siteRoot string, category string, dashboard string, f
 	if category == "Profiles" {
 		switch dashboard {
 		case "Admin":
-			dashboard = "SysAdmin/Profiles/Admin"
+			dashboard = "Public/SysAdmin/Profiles/Admin"
 		case "Rocket":
-			dashboard = "SysAdmin/Profiles/Rocket"
+			dashboard = "Private/Profiles/Rocket"
 		case "Kids", "Boys":
-			dashboard = "Family/Profiles/Boys"
+			dashboard = "Public/Family/Profiles/Boys"
 		}
 		root = filepath.Join(siteRoot, filepath.FromSlash(profilesDir), dashboard)
 	} else {
-		root = filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "SysAdmin", "Profiles", "Rocket", dashboardsSection, category, dashboard)
+		root = filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Private", "Profiles", "Rocket", dashboardsSection, category, dashboard)
 	}
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		return err
@@ -1694,7 +1693,7 @@ func writeDashboardTestDoc(siteRoot string, category string, dashboard string, f
 
 func TestSessionsHandlerReturnsConfig(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "Family"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1711,13 +1710,11 @@ func TestSessionsHandlerReturnsConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if config.Active != "Family" {
-		t.Fatalf("expected active Family session, got %#v", config)
+	if config.Active != "Public" {
+		t.Fatalf("expected active Public session, got %#v", config)
 	}
-	if !dashboardSessionExists(config.Sessions, "SysAdmin") ||
-		!dashboardSessionExists(config.Sessions, "Family") ||
-		!dashboardSessionExists(config.Sessions, "Doomsday") {
-		t.Fatalf("expected starter sessions, got %#v", config.Sessions)
+	if len(config.Sessions) != 1 || !dashboardSessionExists(config.Sessions, "Public") {
+		t.Fatalf("expected only Public session without local private unlock, got %#v", config.Sessions)
 	}
 	if dashboardSessionExists(config.Sessions, "Rocket") {
 		t.Fatalf("did not expect Rocket as a session, got %#v", config.Sessions)
@@ -1726,11 +1723,11 @@ func TestSessionsHandlerReturnsConfig(t *testing.T) {
 
 func TestSessionsHandlerUpdatesFamilySessionFromLoopback(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Family"}`))
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Public"}`))
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
@@ -1743,14 +1740,15 @@ func TestSessionsHandlerUpdatesFamilySessionFromLoopback(t *testing.T) {
 	}
 
 	config := readDashboardSessionsConfig(siteRoot)
-	if config.Active != "Family" {
-		t.Fatalf("expected active Family session, got %#v", config)
+	if config.Active != "Public" {
+		t.Fatalf("expected active Public session, got %#v", config)
 	}
 }
 
 func TestSessionsHandlerWritesLocalActiveSessionState(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	createRocketKey(t, siteRoot)
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 	configPath := filepath.Join(siteRoot, filepath.FromSlash(sessionsFile))
@@ -1759,7 +1757,7 @@ func TestSessionsHandlerWritesLocalActiveSessionState(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Doomsday"}`))
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Private"}`))
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
@@ -1789,14 +1787,14 @@ func TestSessionsHandlerWritesLocalActiveSessionState(t *testing.T) {
 	if err := json.Unmarshal(content, &state); err != nil {
 		t.Fatal(err)
 	}
-	if state.Active != "Doomsday" {
-		t.Fatalf("expected local active session to be Doomsday, got %#v", state)
+	if state.Active != "Private" {
+		t.Fatalf("expected local active session to be Private, got %#v", state)
 	}
 }
 
 func TestKidsKeyForcesFamilySession(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
@@ -1808,26 +1806,26 @@ func TestKidsKeyForcesFamilySession(t *testing.T) {
 	}
 
 	config := readDashboardSessionsConfig(siteRoot)
-	if config.Active != "Family" {
-		t.Fatalf("expected kids key to force Family session, got %#v", config)
+	if config.Active != "Public" {
+		t.Fatalf("expected kids key to force Public session, got %#v", config)
 	}
-	if len(config.Sessions) != 1 || !strings.EqualFold(config.Sessions[0].Name, "Family") {
-		t.Fatalf("expected kids key to expose only Family session, got %#v", config.Sessions)
+	if len(config.Sessions) != 1 || !strings.EqualFold(config.Sessions[0].Name, "Public") {
+		t.Fatalf("expected kids key to expose only Public session, got %#v", config.Sessions)
 	}
-	if !dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Boys") {
+	if !dashboardSessionAllowsPath(siteRoot, "Public/Family/Profiles/Boys") {
 		t.Fatal("expected kids key to allow Boys profile")
 	}
-	if !dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Girls") {
+	if !dashboardSessionAllowsPath(siteRoot, "Public/Family/Profiles/Girls") {
 		t.Fatal("expected kids key to allow Girls profile")
 	}
-	if dashboardSessionAllowsPath(siteRoot, "Family/Profiles/Parents") {
+	if dashboardSessionAllowsPath(siteRoot, "Public/Family/Profiles/Parents") {
 		t.Fatal("expected kids key to block Parents profile")
 	}
 }
 
 func TestSessionsHandlerRejectsSessionChangeWhenKidsKeyExists(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 	keyPath := filepath.Join(siteRoot, filepath.FromSlash(sessionKeysDir), kidsKeyFile)
@@ -1838,7 +1836,7 @@ func TestSessionsHandlerRejectsSessionChangeWhenKidsKeyExists(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"SysAdmin"}`))
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Private"}`))
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
@@ -1853,7 +1851,7 @@ func TestSessionsHandlerRejectsSessionChangeWhenKidsKeyExists(t *testing.T) {
 
 func TestKidsLockHandlerCreatesKidsKey(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1861,7 +1859,7 @@ func TestKidsLockHandlerCreatesKidsKey(t *testing.T) {
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
-	req.Header.Set("Referer", "http://127.0.0.1:8000/ENCRYPTED/Sessions/Family/Profiles/Boys/")
+	req.Header.Set("Referer", "http://127.0.0.1:8000/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/")
 	rec := httptest.NewRecorder()
 	kidsLockHandler(siteRoot).ServeHTTP(rec, req)
 
@@ -1873,8 +1871,8 @@ func TestKidsLockHandlerCreatesKidsKey(t *testing.T) {
 	}
 
 	config := readDashboardSessionsConfig(siteRoot)
-	if config.Active != "Family" {
-		t.Fatalf("expected kids lock endpoint to activate Family session, got %#v", config)
+	if config.Active != "Public" {
+		t.Fatalf("expected kids lock endpoint to activate Public session, got %#v", config)
 	}
 }
 
@@ -1932,32 +1930,35 @@ func TestKidsLockHomeRedirect(t *testing.T) {
 	if rec.Code != http.StatusFound {
 		t.Fatalf("expected redirect status, got %d", rec.Code)
 	}
-	if location := rec.Header().Get("Location"); location != "/ENCRYPTED/Sessions/Family/Profiles/Boys/" {
+	if location := rec.Header().Get("Location"); location != "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/" {
 		t.Fatalf("unexpected redirect location %q", location)
 	}
 }
 
 func TestRocketProfileRequiresRocketKey(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	if dashboardSessionAllowsPath(siteRoot, "SysAdmin/Profiles/Rocket") {
+	if dashboardSessionAllowsPath(siteRoot, "Private/Profiles/Rocket") {
 		t.Fatal("expected Rocket profile to be blocked without rocket key")
 	}
-	if !dashboardSessionAllowsPath(siteRoot, "SysAdmin/Profiles/Admin") {
+	if !dashboardSessionAllowsPath(siteRoot, "Public/SysAdmin/Profiles/Admin") {
 		t.Fatal("expected Admin profile to be available without rocket key")
 	}
 	createRocketKey(t, siteRoot)
-	if !dashboardSessionAllowsPath(siteRoot, "SysAdmin/Profiles/Rocket") {
+	if err := writeActiveDashboardSessionState(siteRoot, "Private"); err != nil {
+		t.Fatal(err)
+	}
+	if !dashboardSessionAllowsPath(siteRoot, "Private/Profiles/Rocket") {
 		t.Fatal("expected Rocket profile to be available with rocket key")
 	}
 }
 
 func TestSessionsHandlerRejectsRocketAsSession(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1974,13 +1975,13 @@ func TestSessionsHandlerRejectsRocketAsSession(t *testing.T) {
 	}
 }
 
-func TestSessionsHandlerRejectsPublicSession(t *testing.T) {
+func TestSessionsHandlerRejectsPrivateSessionWithoutLocalUnlock(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Public"}`))
+	req := httptest.NewRequest(http.MethodPost, "http://127.0.0.1:8000/api/sessions", strings.NewReader(`{"active":"Private"}`))
 	req.RemoteAddr = "127.0.0.1:49200"
 	req.Header.Set("X-Rock-OS-Requested", "true")
 	req.Header.Set("Origin", "http://127.0.0.1:8000")
@@ -1995,7 +1996,7 @@ func TestSessionsHandlerRejectsPublicSession(t *testing.T) {
 
 func TestSessionsHandlerRejectsUnknownSession(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeSessionFile(siteRoot, "SysAdmin"); err != nil {
+	if err := writeSessionFile(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2101,11 +2102,11 @@ func TestGuardEncryptedStaticBlocksSessionKeys(t *testing.T) {
 func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 	siteRoot := t.TempDir()
 	createRocketKey(t, siteRoot)
-	if err := writeActiveDashboardSessionState(siteRoot, "SysAdmin"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Private"); err != nil {
 		t.Fatal(err)
 	}
 
-	assetDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "SysAdmin", "Profiles", "Rocket", dashboardsSection, "Foo", "Bar", "assets")
+	assetDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Private", "Profiles", "Rocket", dashboardsSection, "Foo", "Bar", "assets")
 	if err := os.MkdirAll(assetDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2118,7 +2119,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Directory requests must return 404 (no listing) rather than leaking the
 	// names of private folders/documents.
-	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Foo/Bar/assets/"} {
+	for _, dirPath := range []string{"/ENCRYPTED", "/ENCRYPTED/", "/ENCRYPTED/dashboards", "/ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Foo/Bar/assets/"} {
 		req := httptest.NewRequest(http.MethodGet, dirPath, nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
@@ -2129,7 +2130,7 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 	// Individual asset files are still served while unlocked (dashboards need
 	// their local icons/images).
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Foo/Bar/assets/icon.txt", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Foo/Bar/assets/icon.txt", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -2142,19 +2143,19 @@ func TestGuardEncryptedStaticBlocksDirectoryListing(t *testing.T) {
 
 func TestGuardEncryptedStaticBlocksRawProfileMarkdown(t *testing.T) {
 	siteRoot := t.TempDir()
-	docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "wiki", "Secret.md")
+	docPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "wiki", "Secret.md")
 	if err := os.MkdirAll(filepath.Dir(docPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(docPath, []byte("# Secret"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 	invalidatePrivateMarkdownStatus()
 
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Secret.md", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Secret.md", nil)
 	rec := httptest.NewRecorder()
 	newEncryptedGuardServer(siteRoot).ServeHTTP(rec, req)
 
@@ -2166,11 +2167,11 @@ func TestGuardEncryptedStaticBlocksRawProfileMarkdown(t *testing.T) {
 func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 	siteRoot := t.TempDir()
 	createRocketKey(t, siteRoot)
-	if err := writeActiveDashboardSessionState(siteRoot, "SysAdmin"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Private"); err != nil {
 		t.Fatal(err)
 	}
 
-	dashboardDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "SysAdmin", "Profiles", "Rocket", dashboardsSection, "OS", "Windows")
+	dashboardDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Private", "Profiles", "Rocket", dashboardsSection, "OS", "Windows")
 	if err := os.MkdirAll(dashboardDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2180,7 +2181,7 @@ func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
@@ -2194,11 +2195,11 @@ func TestGuardEncryptedStaticAllowsDashboardIndexDirectory(t *testing.T) {
 
 func TestGuardEncryptedStaticAllowsNestedProfileIndexDirectory(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	profileDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys")
+	profileDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys")
 	if err := os.MkdirAll(profileDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2208,7 +2209,7 @@ func TestGuardEncryptedStaticAllowsNestedProfileIndexDirectory(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Family/Profiles/Boys/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
@@ -2222,11 +2223,11 @@ func TestGuardEncryptedStaticAllowsNestedProfileIndexDirectory(t *testing.T) {
 
 func TestGuardEncryptedStaticAllowsNestedProfileRootConfigFiles(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	profileDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys")
+	profileDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys")
 	if err := os.MkdirAll(profileDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2239,7 +2240,7 @@ func TestGuardEncryptedStaticAllowsNestedProfileRootConfigFiles(t *testing.T) {
 
 	handler := newEncryptedGuardServer(siteRoot)
 	for _, file := range []string{"dashboard.json", "widgets.txt"} {
-		req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Family/Profiles/Boys/"+file, nil)
+		req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/"+file, nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
 
@@ -2254,11 +2255,11 @@ func TestGuardEncryptedStaticAllowsNestedProfileRootConfigFiles(t *testing.T) {
 
 func TestGuardEncryptedStaticAllowsNestedProfileAssets(t *testing.T) {
 	siteRoot := t.TempDir()
-	if err := writeActiveDashboardSessionState(siteRoot, "Family"); err != nil {
+	if err := writeActiveDashboardSessionState(siteRoot, "Public"); err != nil {
 		t.Fatal(err)
 	}
 
-	assetPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "assets", "Boys-Steel.svg")
+	assetPath := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "assets", "Boys-Steel.svg")
 	if err := os.MkdirAll(filepath.Dir(assetPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2268,7 +2269,7 @@ func TestGuardEncryptedStaticAllowsNestedProfileAssets(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Steel.svg", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Steel.svg", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
@@ -2282,7 +2283,7 @@ func TestGuardEncryptedStaticAllowsNestedProfileAssets(t *testing.T) {
 
 func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	siteRoot := t.TempDir()
-	wikiDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Family", "Profiles", "Boys", "wiki")
+	wikiDir := filepath.Join(siteRoot, filepath.FromSlash(profilesDir), "Public", "Family", "Profiles", "Boys", "wiki")
 	if err := os.MkdirAll(wikiDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -2292,7 +2293,7 @@ func TestGuardEncryptedStaticBlocksWhenLocked(t *testing.T) {
 	invalidatePrivateMarkdownStatus()
 
 	handler := newEncryptedGuardServer(siteRoot)
-	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Family/Profiles/Boys/wiki/Secret.md", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ENCRYPTED/Sessions/Public/Family/Profiles/Boys/wiki/Secret.md", nil)
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusLocked {

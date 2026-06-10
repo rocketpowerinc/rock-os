@@ -223,10 +223,10 @@ function kidProfileTheme(profile) {
     const normalized =
         String(profile || '').toLowerCase();
 
-    if (normalized === 'family/profiles/boys') {
+    if (normalized === 'public/family/profiles/boys') {
         return 'boys';
     }
-    if (normalized === 'family/profiles/girls') {
+    if (normalized === 'public/family/profiles/girls') {
         return 'girls';
     }
     return '';
@@ -260,7 +260,14 @@ function profileItemFromPath(path) {
         return null;
     }
 
-    if (parts[1] !== 'Sessions' || parts[3] !== 'Profiles' || parts.length < 5) {
+    if (parts[1] !== 'Sessions') {
+        return null;
+    }
+
+    const profilesIndex =
+        parts.indexOf('Profiles', 2);
+
+    if (profilesIndex < 3 || parts.length < profilesIndex + 2) {
         return null;
     }
 

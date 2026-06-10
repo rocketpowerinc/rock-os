@@ -1156,6 +1156,35 @@ color:#88ff88;
 	margin-top:28px;
 }
 
+.profiles-card-grid.has-categories {
+	display:block;
+}
+
+.launch-profile-category {
+	margin-top:26px;
+}
+
+.launch-profile-category:first-child {
+	margin-top:0;
+}
+
+.launch-profile-category h3 {
+	border-bottom:1px solid var(--border);
+	color:var(--heading);
+	font-size:clamp(1rem, 2vw, 1.24rem);
+	font-weight:900;
+	letter-spacing:.12em;
+	margin:0 0 14px;
+	padding-bottom:10px;
+	text-transform:uppercase;
+}
+
+.launch-profile-category-grid {
+	display:grid;
+	gap:18px;
+	grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .dashboard-category {
 	margin-top:30px;
 }
@@ -1331,10 +1360,10 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Cyberpunk.svg'); }
-:root[data-theme="steel"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Steel.svg'); }
-:root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Rugged.svg'); }
-:root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Cyberpunk.svg'); }
+:root[data-theme="steel"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Steel.svg'); }
+:root[data-theme="rugged"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Rugged.svg'); }
+:root[data-theme="blue-grass"] .prepper-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Blue-Grass.svg'); }
 
 .boys-avatar-display,
 .girls-avatar-display,
@@ -1349,22 +1378,22 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Cyberpunk.svg'); }
-:root[data-theme="steel"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Steel.svg'); }
-:root[data-theme="rugged"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Rugged.svg'); }
-:root[data-theme="blue-grass"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Blue-Grass.svg'); }
-:root[data-theme="cyberpunk"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Cyberpunk.svg'); }
-:root[data-theme="steel"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Steel.svg'); }
-:root[data-theme="rugged"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Rugged.svg'); }
-:root[data-theme="blue-grass"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Blue-Grass.svg'); }
-:root[data-theme="cyberpunk"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Cyberpunk.svg'); }
-:root[data-theme="steel"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Steel.svg'); }
-:root[data-theme="rugged"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Rugged.svg'); }
-:root[data-theme="blue-grass"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Blue-Grass.svg'); }
-:root[data-theme="cyberpunk"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Cyberpunk.svg'); }
-:root[data-theme="steel"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Steel.svg'); }
-:root[data-theme="rugged"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Rugged.svg'); }
-:root[data-theme="blue-grass"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Cyberpunk.svg'); }
+:root[data-theme="steel"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Steel.svg'); }
+:root[data-theme="rugged"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Rugged.svg'); }
+:root[data-theme="blue-grass"] .boys-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Cyberpunk.svg'); }
+:root[data-theme="steel"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Steel.svg'); }
+:root[data-theme="rugged"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Rugged.svg'); }
+:root[data-theme="blue-grass"] .girls-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Cyberpunk.svg'); }
+:root[data-theme="steel"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Steel.svg'); }
+:root[data-theme="rugged"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Rugged.svg'); }
+:root[data-theme="blue-grass"] .education-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Cyberpunk.svg'); }
+:root[data-theme="steel"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Steel.svg'); }
+:root[data-theme="rugged"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Rugged.svg'); }
+:root[data-theme="blue-grass"] .offline-vault-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Blue-Grass.svg'); }
 
 .parents-avatar-display {
 	width:80px;
@@ -1376,10 +1405,10 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Cyberpunk.svg'); }
-:root[data-theme="steel"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Steel.svg'); }
-:root[data-theme="rugged"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Rugged.svg'); }
-:root[data-theme="blue-grass"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Cyberpunk.svg'); }
+:root[data-theme="steel"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Steel.svg'); }
+:root[data-theme="rugged"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Rugged.svg'); }
+:root[data-theme="blue-grass"] .parents-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Blue-Grass.svg'); }
 
 .admin-avatar-display {
 	width:80px;
@@ -1391,10 +1420,10 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Cyberpunk.svg'); }
-:root[data-theme="steel"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Steel.svg'); }
-:root[data-theme="rugged"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Rugged.svg'); }
-:root[data-theme="blue-grass"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Cyberpunk.svg'); }
+:root[data-theme="steel"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Steel.svg'); }
+:root[data-theme="rugged"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Rugged.svg'); }
+:root[data-theme="blue-grass"] .admin-avatar-display { background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Blue-Grass.svg'); }
 
 .rocket-avatar-display {
 	width:80px;
@@ -1406,15 +1435,15 @@ color:#88ff88;
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.3));
 }
 
-:root[data-theme="cyberpunk"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Cyberpunk.svg'); }
-:root[data-theme="steel"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Steel.svg'); }
-:root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Rugged.svg'); }
-:root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Blue-Grass.svg'); }
+:root[data-theme="cyberpunk"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Cyberpunk.svg'); }
+:root[data-theme="steel"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Steel.svg'); }
+:root[data-theme="rugged"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Rugged.svg'); }
+:root[data-theme="blue-grass"] .rocket-avatar-display { background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Blue-Grass.svg'); }
 
 .windows-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1425,7 +1454,7 @@ color:#88ff88;
 .linux-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Linux/assets/linux.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Linux/assets/linux.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1436,7 +1465,7 @@ color:#88ff88;
 .android-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Mobile/Android/assets/android.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Mobile/Android/assets/android.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1447,7 +1476,7 @@ color:#88ff88;
 .ios-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Mobile/iOS/assets/ios.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Mobile/iOS/assets/ios.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1458,7 +1487,7 @@ color:#88ff88;
 .macos-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/MacOS/assets/macos.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/MacOS/assets/macos.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1469,7 +1498,7 @@ color:#88ff88;
 .pirating-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/Pirating/assets/ship.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/Pirating/assets/ship.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1480,7 +1509,7 @@ color:#88ff88;
 .selfhosting-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1491,7 +1520,7 @@ color:#88ff88;
 .artificial-intelligence-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1502,7 +1531,7 @@ color:#88ff88;
 .emulation-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Gaming/Emulation/assets/emulation.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Gaming/Emulation/assets/emulation.png');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1513,7 +1542,7 @@ color:#88ff88;
 .gardening-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1675,7 +1704,7 @@ body.gardening-dashboard-page .glance-card-header h2::before {
 .inventory-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -1836,7 +1865,7 @@ body.inventory-dashboard-page .glance-card-header h2::before {
 .home-school-dashboard-avatar-display {
 	width:80px;
 	height:80px;
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
 	background-size:contain;
 	background-position:center;
 	background-repeat:no-repeat;
@@ -2777,165 +2806,165 @@ body.home-school-dashboard-page .glance-card-header h2::before {
 
 /* Cyberpunk */
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Parents"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Admin"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Boys"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Girls"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Education"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Cyberpunk.svg');
 }
 :root[data-theme="cyberpunk"] .profiles-card[data-profile="Offline-Vault"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Cyberpunk.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Cyberpunk.svg');
 }
 
 /* Steel */
 :root[data-theme="steel"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Parents"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Admin"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Boys"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Girls"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Education"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Steel.svg');
 }
 :root[data-theme="steel"] .profiles-card[data-profile="Offline-Vault"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Steel.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Steel.svg');
 }
 
 /* Rugged */
 :root[data-theme="rugged"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Parents"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Admin"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Boys"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Girls"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Education"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Rugged.svg');
 }
 :root[data-theme="rugged"] .profiles-card[data-profile="Offline-Vault"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Rugged.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Rugged.svg');
 }
 
 /* Blue-Grass */
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Rocket"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/assets/Rocket-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/assets/Rocket-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Parents"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Parents/assets/Parents-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Parents/assets/Parents-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Admin"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Admin/assets/Admin-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/SysAdmin/Profiles/Admin/assets/Admin-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Boys"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Boys/assets/Boys-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Boys/assets/Boys-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Girls"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Girls/assets/Girls-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Girls/assets/Girls-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Education"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/assets/Education-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/assets/Education-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Prepper"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/assets/Prepper-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/assets/Prepper-Blue-Grass.svg');
 }
 :root[data-theme="blue-grass"] .profiles-card[data-profile="Offline-Vault"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Blue-Grass.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Offline-Vault/assets/Offline-Vault-Blue-Grass.svg');
 }
 
 .profiles-card[data-profile="Windows"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Windows/assets/windows.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Linux"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/Linux/assets/linux.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/Linux/assets/linux.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Android"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Mobile/Android/assets/android.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Mobile/Android/assets/android.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="iOS"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Mobile/iOS/assets/ios.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Mobile/iOS/assets/ios.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="MacOS"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/OS/MacOS/assets/macos.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/OS/MacOS/assets/macos.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Pirating"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/Pirating/assets/ship.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/Pirating/assets/ship.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="SelfHosting"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/SelfHosting/assets/selfhosting.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Artificial-Intelligence"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Homelab/Artificial-Intelligence/assets/artificial-intelligence.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Emulation"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/SysAdmin/Profiles/Rocket/dashboards/Gaming/Emulation/assets/emulation.png');
+	background-image:url('../ENCRYPTED/Sessions/Private/Profiles/Rocket/dashboards/Gaming/Emulation/assets/emulation.png');
 	filter:drop-shadow(0 0 8px rgba(var(--accent-rgb), .24));
 }
 
 .profiles-card[data-profile="Gardening"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/dashboards/Skills/Gardening/assets/gardening.svg');
 	filter:drop-shadow(0 0 8px rgba(20,83,45,.24));
 }
 
 .profiles-card[data-profile="Inventory"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Doomsday/Profiles/Prepper/dashboards/Supplies/Inventory/assets/inventory.svg');
 	filter:drop-shadow(0 0 8px rgba(41,37,36,.28));
 }
 
 .profiles-card[data-profile="Home-School"] .profile-card-icon {
-	background-image:url('../ENCRYPTED/Sessions/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
+	background-image:url('../ENCRYPTED/Sessions/Public/Family/Profiles/Education/dashboards/Resources/Home-School/assets/home-school.svg');
 	filter:drop-shadow(0 0 8px rgba(127,29,29,.24));
 }
 

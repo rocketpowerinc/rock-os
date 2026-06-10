@@ -5,14 +5,14 @@ description: Use when the user invokes /dashboard-new or asks to create or scaff
 
 # Dashboard New
 
-Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/`.
+Create an ordinary Rock-OS dashboard under `Website/ENCRYPTED/Sessions/<ProfilePath>/dashboards/<Category>/<DashboardName>/`.
 
 ## Required Inputs
 
 Ask briefly for any missing values:
 
 - Dashboard name. Prefer one word; ask before using a multi-word name.
-- Owning session and profile. If missing, stop and ask; do not assume a default owner.
+- Owning profile path. If missing, stop and ask; do not assume a default owner. Examples: `Public/Doomsday/Profiles/Prepper`, `Public/Family/Profiles/Education`, or `Private/Profiles/Rocket`.
 - Dashboard category. Do not use `Profiles`; hand profile requests to `/profile-new`.
 - Icon source or visual direction. Keep the final asset local inside the dashboard.
 - Dashboard theme or vibe. Ask what visual direction the dashboard should use, such as `Professional`, `Manly`, `Feminine`, `Nature`, `Cyberpunk`, `Construction`, `Space`, `Cozy`, `Minimal`, `Military`, `Retro`, or `Luxury`.
@@ -20,7 +20,7 @@ Ask briefly for any missing values:
 ## Folder Convention
 
 ```text
-Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Category>/<DashboardName>/
+Website/ENCRYPTED/Sessions/<ProfilePath>/dashboards/<Category>/<DashboardName>/
   index.html
   Dashboard-Overview.md
   dashboard.json
@@ -60,7 +60,7 @@ Website/ENCRYPTED/Sessions/<SessionName>/Profiles/<ProfileName>/dashboards/<Cate
 - Use `index.html`, `Dashboard-Overview.md`, `dashboard.json`, and `widgets.txt`.
 - Preserve exact casing and punctuation when the user specifies it.
 - Landing cards show only the icon and title.
-- Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<SessionName>/Profiles/<ProfileName>`.
+- Dashboards are profile-owned. The profile workspace bar links to `dashboards.html?profile=<ProfilePath>`.
 - Dashboard themes are visual skins only. Do not create profile-like workspace tabs for dashboards; the top tabs remain the owning profile's standard workspace nav.
 - A themed dashboard page should carry a unique body class, such as `<body class="<dashboard-name>-dashboard-page">`, and all theme CSS should be scoped under that class.
 - Hide `.theme-select` inside themed dashboard pages and keep all text contrast legible in that fixed dashboard skin.

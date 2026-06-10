@@ -26,10 +26,10 @@
         const profilePath =
             `${pagePath}/${profile}`.replaceAll('%2f', '/');
 
-        if (profilePath.includes('family/profiles/boys')) {
+        if (profilePath.includes('public/family/profiles/boys')) {
             document.documentElement.classList.add('kid-profile-page', 'kid-profile-boys');
         }
-        else if (profilePath.includes('family/profiles/girls')) {
+        else if (profilePath.includes('public/family/profiles/girls')) {
             document.documentElement.classList.add('kid-profile-page', 'kid-profile-girls');
         }
     }
