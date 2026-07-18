@@ -2,4 +2,4 @@ module rock-os
 
 go 1.22
 
-require github.com/yuin/goldmark v1.8.2
+require github.com/yuin/goldmark v1.8.4
